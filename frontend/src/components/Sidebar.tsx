@@ -2,23 +2,22 @@
 
 import { usePathname } from 'next/navigation';
 import React, { useMemo } from 'react';
-import { twMerge } from 'tailwind-merge'; 
-import { RxDashboard } from 'react-icons/rx'; 
-import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa'; 
-import { MdAssignment } from 'react-icons/md'; 
+import { twMerge } from 'tailwind-merge';
+import { RxDashboard } from 'react-icons/rx';
+import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
+import { MdAssignment } from 'react-icons/md';
+import { IoSettings } from 'react-icons/io5'; // Import ikon Settings
 
 
 import Box from './Box';
 import SidebarItem from './SidebarItem';
-import Logo from './Logo'; 
+import LogoWhite from './LogoWhite';
 
 interface SidebarProps {
   children: React.ReactNode;
-  // Jika Anda memiliki data user atau player yang mempengaruhi sidebar, bisa ditambahkan di sini
-  // user?: any; // Contoh: untuk menampilkan nama user atau mengatur menu berdasarkan role
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ children /*, user */ }) => {
+const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const pathname = usePathname();
 
   const routes = useMemo(
@@ -26,51 +25,58 @@ const Sidebar: React.FC<SidebarProps> = ({ children /*, user */ }) => {
       {
         icon: RxDashboard,
         label: 'Dashboard',
-        active: pathname === '/', 
-        href: '/',
+        active: pathname === '/dashboard',
+        href: '/dashboard',
       },
       {
         icon: FaBookOpen,
         label: 'Course',
-        active: pathname === '/course',
+        active: pathname.startsWith('/course'),
         href: '/course',
       },
       {
         icon: MdAssignment,
         label: 'Assignment',
-        active: pathname === '/assignment',
+        active: pathname.startsWith('/assignment'),
         href: '/assignment',
       },
       {
-        icon: FaChartLine, 
+        icon: FaChartLine,
         label: 'Leaderboard',
-        active: pathname === '/leaderboard',
+        active: pathname.startsWith('/leaderboard'),
         href: '/leaderboard',
       },
       {
-        icon: FaHistory, 
+        icon: FaHistory,
         label: 'History',
-        active: pathname === '/history',
+        active: pathname.startsWith('/history'),
         href: '/history',
       },
       {
         icon: FaBookmark,
         label: 'Bookmark',
-        active: pathname === '/bookmark',
+        active: pathname.startsWith('/bookmark'),
         href: '/bookmark',
       },
       {
         icon: FaComments,
         label: 'Discussion',
-        active: pathname === '/discussion',
+        active: pathname.startsWith('/discussion'),
         href: '/discussion',
+      },
+      { // Menambahkan item Settings
+        icon: IoSettings, // Ikon Settings
+        label: 'Settings',
+        active: pathname.startsWith('/settings'),
+        href: '/settings',
       },
     ],
     [pathname]
   );
 
   return (
-    <div className={twMerge(`flex h-full` /*, player.activeId && 'h-[calc(100%-80px)]' */)}>
+    <div className="flex h-screen w-full"> {/* Pastikan outer div mengambil seluruh tinggi dan lebar layar */}
+      {/* Sidebar itu sendiri */}
       <div
         className="
           hidden
@@ -78,30 +84,37 @@ const Sidebar: React.FC<SidebarProps> = ({ children /*, user */ }) => {
           flex-col
           gap-y-2
           h-full
-          bg-[#28094B]
+          bg-gradient-to-b 
+          from-[#2B2F7F]
+          via-[#5D2E9B]
+          to-[#1D2E5E]
           w-[250px]
           p-2
+          flex-shrink-0
+          overflow-y-auto
         "
-        style={{
-          boxShadow: '4px 0px 10px rgba(0, 0, 0, 0.2)', 
-        }}
       >
         <Box className="bg-transparent p-0 rounded-none h-auto">
-          <Logo />
+          <LogoWhite />
         </Box>
-        <Box className="bg-transparent p-0 rounded-none h-full overflow-y-auto">
-          <div className="flex flex-col gap-y-1 px-3 py-2">
+        <Box className="bg-transparent p-0 rounded-none h-full overflow-y-auto scrollbar-hide"> {/* Scrollbar hide untuk item sidebar juga */}
+          <div className="flex flex-col gap-y-1 px-2 py-1">
             {routes.map((item) => (
               <SidebarItem key={item.label} {...item} />
             ))}
+        <div className="mt-auto px-2 py-1"> {/* Push settings to bottom */}
+          <SidebarItem
+            icon={IoSettings}
+            label="Settings"
+            active={pathname.startsWith('/settings')}
+            href="/settings"
+          />
+        </div>
           </div>
         </Box>
-        {/* Jika ada komponen Library atau lainnya di bawah menu, bisa ditambahkan di sini */}
-        {/* <Box className="overflow-y-auto h-full">
-          <Library />
-        </Box> */}
       </div>
-      <main className="h-full flex-1 overflow-y-auto py-2">
+      {/* Konten utama yang dibungkus oleh Sidebar (children) */}
+      <main className="h-full flex-1 overflow-auto bg-[#F1F5F9] scrollbar-hide"> {/* Tambahkan scrollbar-hide untuk konten utama */}
         {children}
       </main>
     </div>
