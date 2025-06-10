@@ -1,12 +1,13 @@
 import { useEffect, useState, createContext, useContext } from 'react';
 import { useSessionContext, useUser as useSupabaseUser } from '@supabase/auth-helpers-react';
+import { User } from '@supabase/supabase-js'; 
 import { UserDetails } from '@/types_db';
 
 type Role = 'admin' | 'user' | null;
 
 type UserContextType = {
   accessToken: string | null;
-  user: any | null;
+  user: User | null;
   userDetails: UserDetails | null;
   role: Role;
   isLoading: boolean;
@@ -14,11 +15,11 @@ type UserContextType = {
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export interface Props {
-  [propName: string]: any;
+interface MyUserContextProviderProps {
+  children: React.ReactNode; 
 }
 
-export const MyUserContextProvider = (props: Props) => {
+export const MyUserContextProvider = ({ children }: MyUserContextProviderProps) => {
   const {
     session,
     isLoading: isLoadingSession,
@@ -72,7 +73,7 @@ export const MyUserContextProvider = (props: Props) => {
     isLoading: isLoadingSession || isLoadingData,
   };
 
-  return <UserContext.Provider value={value} {...props} />;
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {
