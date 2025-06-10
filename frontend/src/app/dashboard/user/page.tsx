@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useUser } from '@/hooks/useUser.tsx';
 import Button from '@/components/Button';
-import DashboardHeader from './components/DashboardHeader';
+import DashboardHeader from '../components/DashboardHeader';
 import Sidebar from '@/components/Sidebar';
-import DashboardCard from './components/DashboardCard';
-import ProgressBar from './components/ProgressBar';
+import DashboardCard from '../components/DashboardCard';
+import ProgressBar from '../components/ProgressBar';
 import Image from 'next/image';
+import RoleGuard from '@/components/RoleGuard';
 
 const DashboardPage = () => {
   const router = useRouter();
@@ -48,6 +49,7 @@ const DashboardPage = () => {
   ];
 
   return (
+    <RoleGuard allowed="user">
     <div className="flex h-screen bg-white">
       <Sidebar>
         <div className="flex flex-col flex-1 overflow-y-auto">
@@ -169,6 +171,7 @@ const DashboardPage = () => {
         </div>
       </Sidebar>
     </div>
+    </RoleGuard>
   );
 };
 

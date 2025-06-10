@@ -36,7 +36,6 @@ const RegisterPage = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           full_name: email.split('@')[0],
           role: 'user',
@@ -54,6 +53,7 @@ const RegisterPage = () => {
     setIsLoading(false);
   };
 
+
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     setError(null);
@@ -61,7 +61,7 @@ const RegisterPage = () => {
     const { error: googleError } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/dashboard/user`,
       },
     });
 

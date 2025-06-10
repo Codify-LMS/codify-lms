@@ -24,7 +24,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (user) {
-      router.push('/dashboard');
+      router.push('/dashboard/user');
     }
   }, [user, router]);
 
@@ -38,11 +38,31 @@ const LoginPage = () => {
       password,
     });
 
-    if (signInError) {
+        if (signInError) {
       setError(signInError.message);
     } else {
-      router.push('/dashboard');
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
+
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+
+      if (profileError) {
+        setError('Failed to get user profile');
+        return;
+      }
+
+      if (profile?.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard/user');
+      }
     }
+
 
     setIsLoading(false);
   };
@@ -54,7 +74,7 @@ const LoginPage = () => {
     const { error: googleError } = await supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/dashboard/user`,
       },
     });
 

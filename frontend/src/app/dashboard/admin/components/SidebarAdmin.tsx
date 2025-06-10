@@ -4,15 +4,15 @@ import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { RxDashboard } from 'react-icons/rx';
-import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
+import { FaBookOpen, FaChartLine,  FaComments } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
 import { IoSettings } from 'react-icons/io5';
 
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
-import Box from './Box';
-import SidebarItem from './SidebarItem';
-import LogoWhite from './LogoWhite';
+import Box from '@/components/Box';
+import SidebarItem from '@/components/SidebarItem';
+import LogoWhite from '@/components/LogoWhite';
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -54,9 +54,9 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       },
       {
         icon: FaBookOpen,
-        label: 'Course',
-        active: pathname.startsWith('/course'),
-        href: '/course',
+        label: 'Upload Material',
+        active: pathname.startsWith('/dashboard/upload-material'),
+        href: '/dashboard/upload-material',
       },
       {
         icon: MdAssignment,
@@ -69,18 +69,6 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         label: 'Leaderboard',
         active: pathname.startsWith('/leaderboard'),
         href: '/leaderboard',
-      },
-      {
-        icon: FaHistory,
-        label: 'History',
-        active: pathname.startsWith('/history'),
-        href: '/history',
-      },
-      {
-        icon: FaBookmark,
-        label: 'Bookmark',
-        active: pathname.startsWith('/bookmark'),
-        href: '/bookmark',
       },
       {
         icon: FaComments,
