@@ -12,11 +12,20 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import org.hibernate.annotations.OnDelete; 
+import org.hibernate.annotations.OnDeleteAction; 
 
 @Entity
+@Builder
 @Data
 @Table(name = "modules")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Module {
 
     @Id
@@ -31,6 +40,7 @@ public class Module {
     // ✅ Relasi ke Course
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Course course;
 
     @Column(name = "created_at")

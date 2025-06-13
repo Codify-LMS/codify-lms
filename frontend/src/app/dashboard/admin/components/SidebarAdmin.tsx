@@ -2,9 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import { RxDashboard } from 'react-icons/rx';
-import { FaBookOpen, FaChartLine,  FaComments } from 'react-icons/fa';
+import { FaBookOpen, FaComments, FaEdit } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
 import { IoSettings } from 'react-icons/io5';
 
@@ -43,14 +42,14 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   }, [supabase]);
 
   const routes = useMemo(() => {
-    if (!role) return []; // tunggu sampai role tersedia
+    if (!role) return []; 
 
     return [
       {
         icon: RxDashboard,
         label: 'Dashboard',
-        active: pathname.startsWith('/dashboard'),
-        href: role === 'admin' ? '/dashboard/admin' : '/dashboard/user',
+        active: pathname === '/dashboard/admin',
+        href: '/dashboard/admin',
       },
       {
         icon: FaBookOpen,
@@ -60,32 +59,25 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       },
       {
         icon: MdAssignment,
-        label: 'Assignment',
-        active: pathname.startsWith('/assignment'),
-        href: '/assignment',
+        label: 'Upload Quiz',
+        active: pathname.startsWith('/dashboard/upload-quiz'),
+        href: '/dashboard/upload-quiz',
       },
       {
-        icon: FaChartLine,
-        label: 'Leaderboard',
-        active: pathname.startsWith('/leaderboard'),
-        href: '/leaderboard',
+        icon: FaEdit,
+        label: 'Edit Material',
+        active: pathname.startsWith('/dashboard/edit-material'),
+        href: '/dashboard/edit-material',
       },
       {
-        icon: FaComments,
-        label: 'Discussion',
-        active: pathname.startsWith('/discussion'),
-        href: '/discussion',
-      },
-      {
-        icon: IoSettings,
-        label: 'Settings',
-        active: pathname.startsWith('/settings'),
-        href: '/settings',
+        icon: FaEdit,
+        label: 'Edit Quiz',
+        active: pathname.startsWith('/dashboard/edit-quiz'),
+        href: '/dashboard/edit-quiz',
       }
     ];
   }, [pathname, role]);
 
-  // Optional loading state (saat role belum tersedia)
   if (role === null) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">

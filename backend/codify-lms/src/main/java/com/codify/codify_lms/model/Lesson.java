@@ -1,13 +1,24 @@
 package com.codify.codify_lms.model;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
+@Builder
 @Data
 @Table(name = "lessons")
 public class Lesson {
@@ -25,8 +36,10 @@ public class Lesson {
     @Column(name = "video_url")
     private String videoUrl;
 
-    @Column(name = "module_id")
-    private UUID moduleId;
+    @ManyToOne
+    @JoinColumn(name = "module_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Module module;
 
     @Column(name = "created_at")
     @CreationTimestamp
