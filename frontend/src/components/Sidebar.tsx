@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import { RxDashboard } from 'react-icons/rx';
 import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
@@ -55,8 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaBookOpen,
         label: 'Course',
-        active: pathname.startsWith('/course'),
-        href: '/course',
+        active: pathname.startsWith('/dashboard/course'),
+        href: '/dashboard/course',
       },
       {
         icon: MdAssignment,

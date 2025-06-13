@@ -57,7 +57,7 @@ const UploadLessonForm = ({
 
   const submitAllToBackend = async () => {
     try {
-      const coursers = await fetch('http://localhost:8080/api/courses', {
+      const coursers = await fetch('http://localhost:8080/api/v1/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData.course),
@@ -114,7 +114,7 @@ const UploadLessonForm = ({
           moduleId,
         };
 
-        const lessonRes = await fetch('http://localhost:8080/api/lessons', {
+        const lessonRes = await fetch('http://localhost:8080/api/v1/lessons', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify([lessonPayload]),

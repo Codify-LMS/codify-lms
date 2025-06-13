@@ -1,4 +1,3 @@
-// frontend/src/app/layout.tsx
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -23,6 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+      </head>
       <body className={`${poppins.variable} font-sans`}>
         <SupabaseProvider>
           <UserProvider>
