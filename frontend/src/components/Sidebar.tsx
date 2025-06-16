@@ -90,8 +90,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: IoSettings,
         label: 'Settings',
-        active: pathname.startsWith('/settings'),
-        href: '/settings',
+        active: pathname.startsWith('/dashboard/settings'),
+        href: '/dashboard/settings',
       }
     ];
   }, [pathname, role]);

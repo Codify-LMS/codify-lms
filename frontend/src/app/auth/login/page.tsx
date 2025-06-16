@@ -20,13 +20,13 @@ const LoginPage = () => {
 
   const supabaseClient = useSupabaseClient();
   const router = useRouter();
-  const { user } = useUser();
+  // const { user } = useUser();
 
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard/user');
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push('/dashboard/user');
+  //   }
+  // }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
-import { LessonData, ModuleData, CourseData, ModuleWithCourse } from '@/types';
+import { LessonData, ModuleData, CourseData } from '@/types';
 import { createClient } from '@supabase/supabase-js';
+import { useUser } from '@/hooks/useUser'; // Import useUser hook
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -16,12 +17,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export default function LessonPage() {
 
   const { lessonId } = useParams() as { lessonId: string };
-  console.log('lessonId: ', lessonId);
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [module, setModule] = useState<ModuleData | null>(null);
   const [course, setCourse] = useState<CourseData | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading: isLoadingUser } = useUser(); // Use the useUser hook
+  const [loadingContent, setLoadingContent] = useState(true); // Separate loading state for content fetch
   const [answers, setAnswers] = useState<
     {
       questionId: string;
@@ -40,71 +40,55 @@ export default function LessonPage() {
     );
   };
 
-
+  // Combine fetching user and lesson data to ensure user is loaded first
   useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+    const fetchAllData = async () => {
+      setLoadingContent(true); // Start loading content
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        console.log("✅ User from Supabase:", user);
-        setUserId(user.id);
-      } else {
-        console.error("❌ No user found from Supabase");
+      // Ensure user is loaded before fetching other data
+      if (isLoadingUser) {
+        return; // Wait for user to load
       }
-    };
+      if (!user) {
+          console.error("❌ No user found, redirecting or showing error.");
+          // You might want to redirect to login or show an error here
+          return;
+      }
 
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const fetchLessonData = async () => {
       try {
         // 1. Fetch lesson
         const lessonRes = await axios.get(`http://localhost:8080/api/v1/lessons/${lessonId}`);
         const lessonData: LessonData = lessonRes.data;
-        console.log("✅ lessonData:", lessonData);
         setLesson(lessonData);
 
-        // 2. Fetch module
-        const moduleRes = await axios.get<ModuleWithCourse>(`http://localhost:8080/api/modules/${lessonData.moduleId}/full`);
-        const moduleData: ModuleData = moduleRes.data;
-        console.log("✅ moduleData:", moduleData);
+        // 2. Fetch full module to get courseId
+        const moduleRes = await axios.get(`http://localhost:8080/api/modules/${lessonData.moduleId}/full`);
+        const moduleData = moduleRes.data;
         setModule(moduleData);
 
-        // 3. Fetch full course
-        const courseId = moduleRes.data.courseId;
-        console.log("📦 moduleRes.data", moduleRes.data);
+        // 3. Fetch full course using the courseId from the module
+        const courseId = moduleData.courseId;
         if (!courseId) {
-          console.error("❌ courseId is undefined!");
+          console.error("❌ courseId is undefined from module data!");
           return;
         }
 
         const courseRes = await axios.get(`http://localhost:8080/api/v1/courses/${courseId}/full`);
         const courseData: CourseData = courseRes.data;
-
-        console.log("✅ courseData:", courseData);
         setCourse(courseData);
 
-
-        console.log("✅ courseData:", courseData);
-        setCourse(courseData);
       } catch (error) {
         console.error("❌ Error fetching lesson/module/course:", error);
+        // Handle error, e.g., show a toast or redirect
       } finally {
-        setLoading(false); 
+        setLoadingContent(false); // End loading content
       }
     };
 
-    if (lessonId) {
-      fetchLessonData();
+    if (lessonId && !isLoadingUser) { // Only fetch if lessonId is available and user loading is complete
+      fetchAllData();
     }
-  }, [lessonId]);
+  }, [lessonId, user, isLoadingUser]); // Re-run when lessonId or user changes
 
   useEffect(() => {
     if (lesson?.quiz?.questions) {
@@ -116,9 +100,35 @@ export default function LessonPage() {
     }
   }, [lesson?.quiz]);
 
+  const handleSubmitQuiz = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (loading) return <div className="p-6 text-gray-600">Loading lesson...</div>;
-  if (!lesson || !course) return <div className="p-6 text-red-600">Lesson or course not found.</div>;
+    if (!user?.id || !lesson?.quiz?.id || !lesson?.id || answers.length === 0) {
+      alert("Ada data yang belum lengkap untuk submit quiz! (User ID, Quiz ID, Lesson ID, or Answers are missing)");
+      return;
+    }
+
+    const payload = {
+      userId: user.id,
+      quizId: lesson.quiz.id,
+      //lessonId: lesson.id,
+      answers,
+    };
+
+    console.log("🔥 SUBMITTING:", payload);
+
+    try {
+      const res = await axios.post('http://localhost:8080/api/v1/quiz-submissions', payload);
+      alert("Quiz submitted successfully!");
+    } catch (err) {
+      console.error("❌ Quiz submission failed", err);
+      alert("Failed to submit quiz.");
+    }
+  };
+
+
+  if (isLoadingUser || loadingContent) return <div className="p-6 text-gray-600">Loading lesson content and user data...</div>;
+  if (!lesson || !course || !user) return <div className="p-6 text-red-600">Lesson, course, or user not found. Please log in.</div>;
 
   return (
     <div className="flex h-screen bg-white">
@@ -132,41 +142,7 @@ export default function LessonPage() {
         {lesson.quiz && lesson.quiz.questions && (
         <form
           className="mt-8 p-6 border rounded-lg bg-gray-50"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const payload = {
-              userId,
-              quizId: lesson.quiz?.id,
-              lessonId: lesson.id,
-              answers,
-            };
-
-            console.log("🧾 Payload before submit:", {
-            userId,
-            quizId: lesson.quiz?.id,
-            lessonId: lesson.id,
-            answers,
-          });
-
-          console.log("👤 Supabase userId:", userId);
-
-
-            console.log("🔥 SUBMITTING:", payload);
-
-            if (!userId || !lesson.quiz?.id || !lesson.id || answers.length === 0) {
-              alert("Ada data yang belum lengkap untuk submit quiz!");
-              return;
-            }
-
-            try {
-              const res = await axios.post('http://localhost:8080/api/v1/quiz-submissions', payload);
-              alert("Quiz submitted successfully!");
-            } catch (err) {
-              console.error("❌ Quiz submission failed", err);
-              alert("Failed to submit quiz.");
-            }
-          }}
-
+          onSubmit={handleSubmitQuiz}
         >
           <h2 className="text-xl font-bold text-indigo-600 mb-4">Quiz: {lesson.quiz.title}</h2>
           <p className="text-gray-600 mb-4 text-xs ">{lesson.quiz.description}</p>
@@ -205,6 +181,7 @@ export default function LessonPage() {
           <button
             type="submit"
             className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            disabled={!user?.id} // Disable button if user ID is not available
           >
             Submit Quiz
           </button>
