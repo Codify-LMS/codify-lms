@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileDto {
+    private String id;
+    private String email;
     private String firstName;
     private String lastName;
     private String username;
     private String avatarUrl;
-    private String email;
 }

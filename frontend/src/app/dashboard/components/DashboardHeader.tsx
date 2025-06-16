@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { HiOutlineLogout } from 'react-icons/hi';
 
 const DashboardHeader = () => {
-  const { userDetails } = useUser();
+  const { userDetails } = useUser(); // ✅ diambil dari global context
   const supabaseClient = useSupabaseClient();
   const router = useRouter();
 
@@ -20,20 +20,20 @@ const DashboardHeader = () => {
     }
   };
 
-  // const username =
-  //   userDetails?.username ||
-  //   userDetails?.full_name ||
-  //   user?.email?.split('@')[0] ||
-  //   'User';
+  // Fallback nama
+  const displayName =
+    userDetails?.firstName && userDetails?.lastName
+      ? `${userDetails.firstName} ${userDetails.lastName}`
+      : userDetails?.username || 'User';
 
-  // fallback default avatar
+  // Fallback avatar
   const avatarUrl = userDetails?.avatarUrl || '/default-avatar.png';
 
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
       {/* Left: Greeting */}
       <h1 className="text-xl font-semibold text-gray-800">
-        Hai, {userDetails?.username || userDetails?.full_name || 'User'}!
+        Hai, {displayName}!
       </h1>
 
       {/* Right: Avatar & Logout */}

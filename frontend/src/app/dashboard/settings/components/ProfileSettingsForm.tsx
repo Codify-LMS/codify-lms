@@ -7,7 +7,6 @@ import { UserProfile } from '@/types'
 import AvatarUploader from '@/components/AvatarUploader'
 import { useUser } from '@/hooks/useUser'
 
-
 export default function ProfileSettingsForm({
   data,
   onSave,
@@ -15,67 +14,78 @@ export default function ProfileSettingsForm({
   data: UserProfile
   onSave: (profile: UserProfile) => void
 }) {
-  const [formData, setFormData] = useState<UserProfile>(data);
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [formData, setFormData] = useState<UserProfile>(data)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
   const [isUploading, setUploading] = useState(false)
+
+  const { refreshUserDetails } = useUser()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const selected = e.target.files?.[0];
-  if (selected) {
-    setFile(selected);
-    setPreview(URL.createObjectURL(selected)); 
-  }
-};
-
-
   const handleAvatarUpload = async (): Promise<string | null> => {
-    if (!file) return null;
-    const ext = file.name.split('.').pop();
-    const filePath = `avatars/${formData.email}-${Date.now()}.${ext}`;
+    if (!file) return null
 
-    const { error } = await supabase.storage.from('avatars').upload(filePath, file);
+    const ext = file.name.split('.').pop()
+    const filePath = `avatars/${formData.email}-${Date.now()}.${ext}`
+
+    const { error } = await supabase.storage.from('avatars').upload(filePath, file)
     if (error) {
-        console.error('Upload failed:', error.message);
-        return null;
+      console.error('Upload failed:', error.message)
+      return null
     }
 
-    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    return data.publicUrl;
-    };
-
-const { refreshUserDetails } = useUser()
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setUploading(true)
-
-  const avatarUrl = await handleAvatarUpload()
-  const payload = { ...formData, avatarUrl }
-
-  try {
-    await axios.put(`http://localhost:8080/api/v1/users/me?email=${formData.email}`, payload)
-    
-    onSave(payload)           // local state update
-    await refreshUserDetails() // update context global
-    alert('✅ Profile updated!')
-  } catch (err) {
-    console.error(err)
-    alert('❌ Failed to update profile')
-  } finally {
-    setUploading(false)
+    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
+    return data.publicUrl
   }
-}
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setUploading(true)
+
+    let avatarUrl = formData.avatarUrl
+
+    // Jika ada file baru, upload dulu ke Supabase
+    if (file) {
+      const uploadedUrl = await handleAvatarUpload()
+      if (uploadedUrl) {
+        avatarUrl = uploadedUrl
+      }
+    }
+
+    const payload = { ...formData, avatarUrl }
+
+    try {
+      const res = await axios.put('http://localhost:8080/api/v1/users/me', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (res.status === 200) {
+        onSave(res.data)
+        await refreshUserDetails()
+        alert('✅ Profile updated successfully!')
+      } else {
+        throw new Error('Unexpected response from server')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('❌ Failed to update profile')
+    } finally {
+      setUploading(false)
+      setFile(null)
+      setPreview(null)
+    }
+  }
 
   const handleDeleteAvatar = () => {
     setFormData((prev) => ({ ...prev, avatarUrl: '' }))
     setFile(null)
+    setPreview(null)
   }
 
   return (
@@ -83,54 +93,52 @@ const handleSubmit = async (e: React.FormEvent) => {
       <h2 className="text-2xl font-semibold text-gray-800">Account Settings</h2>
 
       {/* Avatar & Upload Section */}
-        <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-6">
         <img
-            src={preview || formData.avatarUrl || '/default-avatar.png'}
-            alt="Avatar preview"
-            className="w-24 h-24 rounded-full object-cover border"
+          src={preview || formData.avatarUrl || '/default-avatar.png'}
+          alt="Avatar preview"
+          className="w-24 h-24 rounded-full object-cover border"
         />
         <input
-            type="file"
-            id="avatar-file"
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => {
+          type="file"
+          id="avatar-file"
+          className="hidden"
+          accept="image/*"
+          onChange={(e) => {
             const selected = e.target.files?.[0]
             if (selected) {
-                setFile(selected)
-                setPreview(URL.createObjectURL(selected))
+              setFile(selected)
+              setPreview(URL.createObjectURL(selected))
             }
-            }}
+          }}
         />
         <label htmlFor="avatar-file">
-            <span className="bg-blue-800 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-blue-700">
+          <span className="bg-blue-800 text-white px-4 py-2 rounded-md text-sm cursor-pointer hover:bg-blue-700">
             Select File
-            </span>
+          </span>
         </label>
 
         {file && (
-            <AvatarUploader
+          <AvatarUploader
             userEmail={formData.email}
             file={file}
             onSuccess={(url) => {
-                setFormData((prev) => ({ ...prev, avatarUrl: url }))
-                setPreview(null)
-                setFile(null)
+              setFormData((prev) => ({ ...prev, avatarUrl: url }))
+              setPreview(null)
+              setFile(null)
             }}
             onError={(msg) => alert(msg)}
-            />
+          />
         )}
 
         <button
-            type="button"
-            onClick={handleDeleteAvatar}
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md text-sm hover:bg-gray-400"
+          type="button"
+          onClick={handleDeleteAvatar}
+          className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md text-sm hover:bg-gray-400"
         >
-            Delete avatar
+          Delete avatar
         </button>
-        </div>
-
-
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
