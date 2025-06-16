@@ -5,8 +5,12 @@ import java.util.UUID;
 import com.codify.codify_lms.model.Lesson;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LessonDTO {
     private String id;
     private String title;

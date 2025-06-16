@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession, useSupabaseClient } from '@supabase/auth-helpers-react'
+import { useSession } from '@supabase/auth-helpers-react'
 
 import Sidebar from '@/components/Sidebar'
 import DashboardHeader from '../components/DashboardHeader'
@@ -13,7 +13,6 @@ import type { UserProfile } from '@/types'
 export default function SettingsPage() {
   const router = useRouter()
   const session = useSession()
-  const supabase = useSupabaseClient()
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -25,22 +24,28 @@ export default function SettingsPage() {
     }
 
     const fetchProfile = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
+      try {
+        const res = await fetch(`http://localhost:8080/api/v1/users/me`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
 
-      if (error) {
-        console.error('❌ Failed to fetch profile:', error)
-      } else {
+        if (!res.ok) {
+          throw new Error('Failed to fetch profile from backend')
+        }
+
+        const data = await res.json()
         setProfile(data)
+      } catch (err) {
+        console.error('❌ Error fetching profile:', err)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchProfile()
-  }, [session, supabase, router])
+  }, [session, router])
 
   if (!session) return <p className="p-8 text-center">🔐 Redirecting to login...</p>
   if (loading) return <p className="p-8 text-center">🔄 Loading user profile...</p>
@@ -52,7 +57,10 @@ export default function SettingsPage() {
         {profile ? (
           <>
             <ProfileCard data={profile} />
-            <ProfileSettingsForm data={profile} onSave={(updatedProfile) => setProfile(updatedProfile)} />
+            <ProfileSettingsForm
+              data={profile}
+              onSave={(updatedProfile) => setProfile(updatedProfile)}
+            />
           </>
         ) : (
           <p className="text-center text-red-500">🚫 Profile not found.</p>

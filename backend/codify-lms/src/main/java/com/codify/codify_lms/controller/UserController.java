@@ -1,37 +1,41 @@
 package com.codify.codify_lms.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.codify.codify_lms.dto.UserProfileDto;
 import com.codify.codify_lms.service.UserService;
-
-import lombok.RequiredArgsConstructor;
+import com.codify.codify_lms.util.JwtUtils;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final JwtUtils jwtUtils;
 
+    public UserController(UserService userService, JwtUtils jwtUtils) {
+        this.userService = userService;
+        this.jwtUtils = jwtUtils;
+    }
+
+    // GET: Ambil profil user dari token
     @GetMapping("/me")
-    public ResponseEntity<UserProfileDto> getMyProfile(@RequestParam String email) {
-        return ResponseEntity.ok(userService.getUserProfileByEmail(email));
+    public ResponseEntity<UserProfileDto> getCurrentUser(@RequestHeader("Authorization") String token) {
+        System.out.println("➡️ TOKEN MASUK: " + token); // log token
+        UserProfileDto dto = userService.getUserProfileByToken(token);
+        System.out.println("✅ DAPET PROFILE: " + dto);
+        return ResponseEntity.ok(dto);
     }
 
+
+    // PUT: Update profil user dari frontend
     @PutMapping("/me")
-    public ResponseEntity<String> updateMyProfile(@RequestParam String email, @RequestBody UserProfileDto dto) {
-        userService.updateUserProfileByEmail(email, dto);
-        return ResponseEntity.ok("✅ Profile updated!");
+    public ResponseEntity<UserProfileDto> updateCurrentUser(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserProfileDto updatedProfile) {
+
+        String userId = jwtUtils.extractUserId(token);
+        UserProfileDto saved = userService.updateProfile(userId, updatedProfile);
+        return ResponseEntity.ok(saved);
     }
-
-
-    
-
 }

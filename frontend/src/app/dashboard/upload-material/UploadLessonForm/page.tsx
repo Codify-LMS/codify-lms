@@ -135,7 +135,7 @@ const UploadLessonForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-xl bg-white p-6 rounded-lg shadow">
+    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6 max-w-xl bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-bold text-gray-800">Step 3: Upload Lesson</h2>
 
       <div>
