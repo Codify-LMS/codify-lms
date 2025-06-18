@@ -19,4 +19,5 @@ public class Profile {
     private String lastName;
     private String username;
     private String avatarUrl;
+    private String role;
 }

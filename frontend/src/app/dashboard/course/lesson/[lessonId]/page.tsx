@@ -108,12 +108,12 @@ export default function LessonPage() {
       return;
     }
 
-    const payload = {
-      userId: user.id,
-      quizId: lesson.quiz.id,
-      //lessonId: lesson.id,
-      answers,
-    };
+  const payload = {
+    userId: user.id,
+    quizId: lesson.quiz.id,
+    lessonId: lesson.id,
+    answers,
+  };
 
     console.log("🔥 SUBMITTING:", payload);
 

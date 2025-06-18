@@ -1,10 +1,16 @@
 package com.codify.codify_lms.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.codify.codify_lms.dto.UserProfileDto;
 import com.codify.codify_lms.service.UserService;
 import com.codify.codify_lms.util.JwtUtils;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -34,8 +40,9 @@ public class UserController {
             @RequestHeader("Authorization") String token,
             @RequestBody UserProfileDto updatedProfile) {
 
-        String userId = jwtUtils.extractUserId(token);
-        UserProfileDto saved = userService.updateProfile(userId, updatedProfile);
-        return ResponseEntity.ok(saved);
+        //String userId = jwtUtils.extractUserId(token);
+        String email = userService.extractEmailFromToken(token);
+        userService.updateUserProfileByEmail(email, updatedProfile);
+        return ResponseEntity.ok(updatedProfile);
     }
 }

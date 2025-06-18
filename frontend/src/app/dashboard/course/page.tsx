@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../components/DashboardHeader';
-import { useParams } from 'next/navigation';
+//import { useParams } from 'next/navigation';
 
 interface Course {
   id: string;
