@@ -49,7 +49,7 @@ const DashboardPage = () => {
   ];
 
   return (
- //   <RoleGuard allowed="user">
+//    <RoleGuard allowed="user">
     <div className="flex h-screen bg-white">
       <Sidebar>
         <div className="flex flex-col flex-1 overflow-y-auto">

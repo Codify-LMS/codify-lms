@@ -37,8 +37,14 @@ const RoleGuard = ({ allowed, children }: RoleGuardProps) => {
         return;
       }
 
+      // TAMBAHKAN INI UNTUK DEBUG
+      console.log('🔍 Debug Role:');
+      console.log('User role dari database:', profile.role);
+      console.log('Required role:', allowed);
+      console.log('Match?', profile.role === allowed);
+
       if (profile.role !== allowed) {
-        router.replace('/not-authorized'); // Atau redirect ke dashboard default
+        router.replace('/not-authorized');
         return;
       }
 
