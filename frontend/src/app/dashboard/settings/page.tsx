@@ -13,6 +13,9 @@ import type { UserProfile } from '@/types'
 export default function SettingsPage() {
   const router = useRouter()
   const session = useSession()
+  const accessToken = session?.access_token || session?.accessToken 
+  console.log("🧪 Session object:", session)
+
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)

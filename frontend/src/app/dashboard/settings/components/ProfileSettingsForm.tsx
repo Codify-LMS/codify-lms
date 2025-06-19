@@ -14,10 +14,17 @@ export default function ProfileSettingsForm({
   data: UserProfile
   onSave: (profile: UserProfile) => void
 }) {
-  const [formData, setFormData] = useState<UserProfile>(data)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [isUploading, setUploading] = useState(false)
+  const [formData, setFormData] = useState<UserProfile>({
+    firstName: data.first_name ?? '',
+    lastName: data.last_name ?? '',
+    avatarUrl: data.avatar_url ?? '',
+    email: data.email,
+    username: data.username ?? ''
+  })
+
 
   const { refreshUserDetails } = useUser()
 
@@ -56,7 +63,14 @@ export default function ProfileSettingsForm({
       }
     }
 
-    const payload = { ...formData, avatarUrl }
+    const payload = {
+        firstName: formData.first_name,
+        lastName: formData.last_name,
+        avatarUrl,
+      }
+      console.log("➡️ Payload ke backend:", payload)
+
+
 
     try {
       const res = await axios.put('http://localhost:8080/api/v1/users/me', payload, {
@@ -80,6 +94,7 @@ export default function ProfileSettingsForm({
       setFile(null)
       setPreview(null)
     }
+    
   }
 
   const handleDeleteAvatar = () => {

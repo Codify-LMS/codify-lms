@@ -73,8 +73,8 @@ public class CourseController {
             Course _course = courseData.get();
             _course.setTitle(courseDetails.getTitle());
             _course.setDescription(courseDetails.getDescription());
-            _course.setThumbnailUrl(courseDetails.getThumbnailUrl()); // ✅ Ganti dari getImageUrl() ke getThumbnailUrl()
-            _course.setInstructorId(courseDetails.getInstructorId()); // ✅ Ganti dari getAuthor() ke getInstructorId()
+            _course.setThumbnailUrl(courseDetails.getThumbnailUrl()); 
+            _course.setInstructorId(courseDetails.getInstructorId()); 
             return new ResponseEntity<>(courseRepository.save(_course), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(Collections.singletonMap("message", "Course not found with id=" + id), HttpStatus.NOT_FOUND);

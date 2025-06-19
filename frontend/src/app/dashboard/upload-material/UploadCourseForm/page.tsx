@@ -1,9 +1,11 @@
 'use client';
 
+import { useSession } from '@supabase/auth-helpers-react'
 import { useState } from 'react';
 import Button from '@/components/Button';
 import { CourseData, FullUploadData } from '@/types';
 import { FaArrowRight } from 'react-icons/fa';
+import { supabase } from '@/supabaseClient'; // pastikan kamu punya file ini
 
 interface UploadCourseFormProps {
   onNext: () => void;
@@ -20,14 +22,45 @@ const UploadCourseForm = ({
   const [description, setDescription] = useState<string>(formData.course?.description || '');
   const [thumbnailUrl, setThumbnailUrl] = useState<string>(formData.course?.thumbnailUrl || '');
   const [isPublished, setIsPublished] = useState<boolean>(formData.course?.isPublished || false);
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleThumbnailUpload = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `thumbnails/${Date.now()}.${fileExt}`;
+
+    const { error } = await supabase.storage.from('course-thumbnails').upload(filePath, file);
+    if (error) {
+      console.error('❌ Upload failed:', error.message);
+      alert('❌ Gagal upload thumbnail');
+      return null;
+    }
+
+    const { data } = supabase.storage.from('course-thumbnails').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUploading(true);
+
+    let uploadedUrl = thumbnailUrl;
+
+    if (file) {
+      const url = await handleThumbnailUpload(file);
+      if (url) {
+        uploadedUrl = url;
+        setThumbnailUrl(url); // Update state preview juga
+      } else {
+        setIsUploading(false);
+        return;
+      }
+    }
 
     const courseData: CourseData = {
       title,
       description,
-      thumbnailUrl,
+      thumbnailUrl: uploadedUrl,
       isPublished,
     };
 
@@ -36,13 +69,18 @@ const UploadCourseForm = ({
       course: courseData,
     }));
 
+    setIsUploading(false);
     onNext();
   };
+
+  const session = useSession()
+  console.log("🧪 JWT Payload:", JSON.parse(atob(session?.access_token.split('.')[1] ?? '')))
+
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 max-w-xl bg-white p-6 rounded-lg shadow"
+      className="space-y-6 w-full bg-white p-6 rounded-lg shadow"
     >
       <h2 className="text-xl font-bold text-gray-800">Step 1: Upload Course</h2>
 
@@ -69,12 +107,19 @@ const UploadCourseForm = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+        {file || thumbnailUrl ? (
+          <img
+            src={file ? URL.createObjectURL(file) : thumbnailUrl}
+            alt="Preview"
+            className="w-full h-64 object-cover rounded mb-2 border"
+          />
+        ) : null}
         <input
-          type="text"
-          value={thumbnailUrl}
-          onChange={(e) => setThumbnailUrl(e.target.value)}
-          className="w-full border px-4 py-2 rounded-md text-gray-700" 
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          className="block text-sm text-gray-500"
         />
       </div>
 
@@ -88,7 +133,12 @@ const UploadCourseForm = ({
       </div>
 
       <div className="flex justify-end w-full">
-        <Button type="submit">Next: Module <FaArrowRight /></Button>
+        <Button type="submit" disabled={isUploading}>
+          <span className="flex items-center gap-2">
+            {isUploading ? 'Uploading...' : 'Next: Module'} <FaArrowRight />
+          </span>
+        </Button>
+
       </div>
     </form>
   );

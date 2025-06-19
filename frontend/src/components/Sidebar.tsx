@@ -72,14 +72,14 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaHistory,
         label: 'History',
-        active: pathname.startsWith('/history'),
-        href: '/history',
+        active: pathname.startsWith('/dashboard/history'),
+        href: '/dashboard/history',
       },
       {
         icon: FaBookmark,
         label: 'Bookmark',
-        active: pathname.startsWith('/bookmark'),
-        href: '/bookmark',
+        active: pathname.startsWith('/dashboard/bookmark'),
+        href: '/dashboard/bookmark',
       },
       {
         icon: FaComments,
