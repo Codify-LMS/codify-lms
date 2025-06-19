@@ -10,44 +10,39 @@ import Button from "@/components/Button";
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
-     {/* Navbar Section */}
-      <nav className="relative z-10 bg-white px-4 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between relative">
-          
-          {/* Left: Logo */}
-          <div className="flex-shrink-0">
-            <Link href="/">
-              <Image
-                src="/codify-black.svg"
-                alt="Codify Logo"
-                width={100}
-                height={30}
-              />
-            </Link>
-          </div>
+      <nav className="flex items-center justify-between p-4 mx-4 bg-white relative z-10">
+        <div className="flex items-center">
+          <Link href="/">
+            <Image
+              src="/codify-black.svg"
+              alt="Codify Logo"
+              width={100}
+              height={30}
+            />
+          </Link>
+        </div>
 
-          {/* Center: Nav Links */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex space-x-6 text-gray-700">
-            <Link href="" className="font-medium hover:text-gray-900">Home</Link> 
-            <Link href="#about" className="font-medium hover:text-gray-900">About us</Link>
-            <Link href="#courses" className="font-medium hover:text-gray-900">Courses</Link>
-            <Link href="#contact" className="font-medium hover:text-gray-900">Contact us</Link>
-            <Link href="faq" className="font-medium hover:text-gray-900">FAQ&apos;s</Link>
-          </div>
+        <div className="hidden md:flex flex-1 justify-center items-center space-x-6 text-gray-700">
+          <Link href="/" className="font-medium hover:text-gray-900 text-[#5C74DD]">Home</Link>
+          <Link href="/about" className="font-medium hover:text-gray-900">About us</Link>
+          <Link href="/courses" className="font-medium hover:text-gray-900">Courses</Link>
+          <Link href="/contact" className="font-medium hover:text-gray-900">Contact us</Link>
+          <Link href="/faq" className="font-medium hover:text-gray-900">FAQ&apos;s</Link>
+        </div>
 
-          {/* Right: Auth Buttons */}
-          <div className="flex items-center space-x-4">
-            <Link href="/auth/login" className="flex items-center text-gray-700 font-medium hover:text-gray-900"> 
-              <HiOutlineUserCircle size={24} className="mr-1" />
-              Sign in
-            </Link>
-            <Button>
+        <div className="flex items-center space-x-4">
+          <Link href="auth/login" className="flex items-center text-gray-700 font-medium hover:text-gray-900">
+            <HiOutlineUserCircle size={24} className="mr-1" />
+            Sign in
+          </Link>
+          <Link href="auth/register">
+            <Button className="bg-[#28094B] text-white hover:opacity-80">
               Create free account
             </Button>
-          </div>
-          
+          </Link>
         </div>
       </nav>
+
 
       {/* Hero Section */}
       <section
@@ -97,7 +92,7 @@ export default function Home() {
 
            <div className="absolute top-[20%] left-[5%] md:top-1/4 md:left-2/4 bg-white/70 backdrop-blur-md rounded-lg p-3 flex items-center shadow-lg text-black"> {/* Changed bg-white/20 to bg-white/70, text-white to text-black */}
             <Image
-              src="/icon-students.svg" // Pastikan path ikon Anda benar
+              src="/icon-students.svg"
               alt="Students Icon"
               width={24}
               height={24}

@@ -29,16 +29,23 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         text-md
         font-medium
         cursor-pointer
-        hover:text-white
         transition
-        text-neutral-400
-        py-1
+        p-3
+        rounded-xl
+        group
         `,
-        active && 'text-white'
+        'text-[#FFFFFF] hover:bg-white/10',
+        active && 'bg-[#FFFFFF] text-[#5A3D80]'
       )}
     >
-      <Icon size={26} />
-      <p className="truncate w-full">{label}</p>
+      <Icon size={26} className={twMerge(
+        'text-[#FFFFFF]',
+        active && 'text-[#5A3D80]'
+      )} />
+      <p className={twMerge(
+        "truncate w-full",
+        active && 'text-[#5A3D80]'
+      )}>{label}</p>
     </Link>
   );
 };
