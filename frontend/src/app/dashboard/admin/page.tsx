@@ -80,14 +80,14 @@ const DashboardPage = () => {
 
               <section className="space-y-4">
                 <div className="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
-                  <Link href="/dashboard/admin/upload-material">
+                  <Link href="/dashboard/upload-material">
                     <Button className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow flex items-center gap-2">
                       <AiOutlinePlus size={20} />
                       Upload Materi
                     </Button>
                   </Link>
 
-                  <Link href="/dashboard/admin/upload-quiz">
+                  <Link href="/dashboard/upload-quiz">
                     <Button className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow flex items-center gap-2">
                       <AiOutlinePlus size={20} />
                       Upload Kuis

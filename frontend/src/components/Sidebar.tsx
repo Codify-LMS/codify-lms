@@ -2,7 +2,6 @@
 
 import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import { RxDashboard } from 'react-icons/rx';
 import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
@@ -55,8 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaBookOpen,
         label: 'Course',
-        active: pathname.startsWith('/course'),
-        href: '/course',
+        active: pathname.startsWith('/dashboard/course'),
+        href: '/dashboard/course',
       },
       {
         icon: MdAssignment,
@@ -73,14 +72,14 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaHistory,
         label: 'History',
-        active: pathname.startsWith('/history'),
-        href: '/history',
+        active: pathname.startsWith('/dashboard/history'),
+        href: '/dashboard/history',
       },
       {
         icon: FaBookmark,
         label: 'Bookmark',
-        active: pathname.startsWith('/bookmark'),
-        href: '/bookmark',
+        active: pathname.startsWith('/dashboard/bookmark'),
+        href: '/dashboard/bookmark',
       },
       {
         icon: FaComments,
@@ -91,8 +90,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: IoSettings,
         label: 'Settings',
-        active: pathname.startsWith('/settings'),
-        href: '/settings',
+        active: pathname.startsWith('/dashboard/settings'),
+        href: '/dashboard/settings',
       }
     ];
   }, [pathname, role]);

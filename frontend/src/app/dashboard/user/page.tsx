@@ -49,7 +49,11 @@ const DashboardPage = () => {
   ];
 
   return (
+<<<<<<< HEAD
 //    <RoleGuard allowed="user">
+=======
+ //   <RoleGuard allowed="user">
+>>>>>>> 6733848ecac281616399cb1d7a888219b0c2c1bf
     <div className="flex h-screen bg-white">
       <Sidebar>
         <div className="flex flex-col flex-1 overflow-y-auto">
