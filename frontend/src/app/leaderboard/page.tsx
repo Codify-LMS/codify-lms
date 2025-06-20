@@ -1,7 +1,7 @@
 'use client';
 
 import Sidebar from '@/components/Sidebar';
-import DashboardHeader from '@/components/DashboardHeader';
+import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
 import { useEffect } from 'react';
 import LeaderboardTop from '@/components/LeaderboardTop';
@@ -25,7 +25,6 @@ export default function LeaderboardPage() {
       {/* Bagian kanan */}
       <div className="flex flex-col flex-1 h-full overflow-hidden">
         <DashboardHeader />
-
         <main className="flex-1 bg-gray-50 p-6 overflow-y-auto">
           {/* Podium 3 besar */}
           <LeaderboardTop />

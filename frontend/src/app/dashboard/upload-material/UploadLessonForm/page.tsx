@@ -70,40 +70,21 @@ const UploadLessonForm = ({
       const moduleIds: string[] = [];
       for (const mod of formData.modules) {
         const modulePayload = { ...mod, course: { id: coursed } };
-        console.log('Posting module dengan coursed:', coursed);
-        console.log('Module payload:', JSON.stringify(modulePayload, null, 2));
-
         const moduleRes = await fetch('http://localhost:8080/api/modules', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(modulePayload),
         });
 
-        if (!moduleRes.ok) {
-          const errorText = await moduleRes.text();
-          console.error('Gagal posting module:', errorText);
-          throw new Error('Gagal menyimpan module ke backend');
-        }
+        if (!moduleRes.ok) throw new Error('Gagal menyimpan module ke backend');
 
         const moduleData = await moduleRes.json();
         moduleIds.push(moduleData.id);
       }
 
       for (let i = 0; i < formData.lessons.length; i++) {
-        const lesson : LessonData = formData.lessons[i];
+        const lesson: LessonData = formData.lessons[i];
         const moduleId = moduleIds[Math.min(i, moduleIds.length - 1)];
-
-        if (!lesson.title || !lesson.contentType || !lesson.orderInModule) {
-          throw new Error(`Lesson ke-${i + 1} ada field yang kosong`);
-        }
-
-        if (lesson.contentType === 'video' && !lesson.videoUrl) {
-          throw new Error(`Lesson ke-${i + 1} bertipe video tapi URL kosong`);
-        }
-
-        if (lesson.contentType === 'text' && !lesson.content) {
-          throw new Error(`Lesson ke-${i + 1} bertipe teks tapi content kosong`);
-        }
 
         const lessonPayload = {
           title: lesson.title,
@@ -120,11 +101,7 @@ const UploadLessonForm = ({
           body: JSON.stringify([lessonPayload]),
         });
 
-        if (!lessonRes.ok) {
-          const err = await lessonRes.text();
-          console.error('Gagal posting lesson:', err);
-          throw new Error('Gagal membuat lesson');
-        }
+        if (!lessonRes.ok) throw new Error('Gagal membuat lesson');
       }
 
       alert('✅ Upload berhasil!');
@@ -135,7 +112,10 @@ const UploadLessonForm = ({
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6 max-w-xl bg-white p-6 rounded-lg shadow">
+    <form
+      onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}
+      className="space-y-6 w-full bg-white p-6 rounded-lg shadow"
+    >
       <h2 className="text-xl font-bold text-gray-800">Step 3: Upload Lesson</h2>
 
       <div>
@@ -145,7 +125,7 @@ const UploadLessonForm = ({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className='text-gray-700'
+          className="text-gray-700"
         />
       </div>
 
@@ -174,14 +154,14 @@ const UploadLessonForm = ({
 
       {contentType === 'video' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 ">Video URL</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
           <Input
             type="text"
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="https://youtube.com/..."
             required
-            className='text-gray-700'
+            className="text-gray-700"
           />
         </div>
       )}
@@ -193,9 +173,11 @@ const UploadLessonForm = ({
           value={orderInModule}
           onChange={(e) => setOrderInModule(Number(e.target.value))}
           min={1}
-          className='text-gray-700'
+          className="text-gray-700"
         />
       </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <div className="flex items-center justify-between mt-4">
         <Button
