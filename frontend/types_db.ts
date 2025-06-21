@@ -466,7 +466,7 @@ export type Database = {
             foreignKeyName: "user_answers_attempt_id_fkey"
             columns: ["attempt_id"]
             isOneToOne: false
-            referencedRelation: "user_quiz_attemps"
+            referencedRelation: "user_quiz_attempts"
             referencedColumns: ["id"]
           },
           {
@@ -585,7 +585,7 @@ export type Database = {
           },
         ]
       }
-      user_quiz_attemps: {
+      user_quiz_attempts: {
         Row: {
           attempt_number: number | null
           created_at: string
@@ -624,14 +624,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_quiz_attemps_quiz_id_fkey"
+            foreignKeyName: "user_quiz_attempts_quiz_id_fkey"
             columns: ["quiz_id"]
             isOneToOne: false
             referencedRelation: "quizzes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_quiz_attemps_user_id_fkey"
+            foreignKeyName: "user_quiz_attempts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

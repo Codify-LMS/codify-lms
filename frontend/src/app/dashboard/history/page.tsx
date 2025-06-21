@@ -1,34 +1,93 @@
 'use client';
-
-import React from 'react';
-import Sidebar from '@/components/Sidebar'; 
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../components/DashboardHeader';
 
-const historyData = [
-  {
-    courseName: 'HTML Basics',
-    progress: '80% Completed',
-    lastAccessed: '5/5/2025',
-  },
-  {
-    courseName: 'JavaScript Beginner',
-    progress: '100% Completed',
-    lastAccessed: '5/8/2025',
-  },
-  {
-    courseName: 'UI/UX Fundamentals',
-    progress: '60% Completed',
-    lastAccessed: '6/10/2025',
-  },
-];
+interface HistoryItem {
+  courseName: string;
+  progress: string;
+  lastAccessed: string;
+}
 
 export default function HistoryPage() {
+  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>('');
+
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  // Get user ID from localStorage or context/auth
+  useEffect(() => {
+    // Assuming you store userId in localStorage after login
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      setUserId(storedUserId);
+    } else {
+      // Handle case where user is not logged in
+      toast.error('User not found. Please login again.');
+      // Redirect to login page if needed
+      // router.push('/login');
+    }
+  }, []);
+
+  const fetchHistoryData = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/history/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add Supabase auth token if needed
+          // 'Authorization': `Bearer ${supabaseToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (Array.isArray(data)) {
+        setHistoryData(data);
+      } else {
+        toast.error('Failed to fetch learning history.');
+        setHistoryData([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching history:', error);
+      toast.error('Error fetching learning history.');
+      setHistoryData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchHistoryData();
+    }
+  }, [userId]);
+
+  const formatProgress = (progress: string) => {
+    // Backend already returns formatted progress like "80% Completed"
+    return progress;
+  };
+
+  const formatDate = (dateString: string) => {
+    // Backend already returns formatted date like "5/5/2025"
+    return dateString;
+  };
+
   return (
     <Sidebar>
-        <DashboardHeader />
+      <DashboardHeader />
       <div className="p-6 w-full">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Learning History</h1>
-
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-md">
             <thead className="bg-gray-100 text-gray-700">

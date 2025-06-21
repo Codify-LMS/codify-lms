@@ -13,10 +13,14 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "courses", schema = "public")
 @Data
-@Table(name = "courses")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Course {
 
     @Id
