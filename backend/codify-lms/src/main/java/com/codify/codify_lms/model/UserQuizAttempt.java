@@ -1,22 +1,27 @@
 package com.codify.codify_lms.model;
 
 import jakarta.persistence.*;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_quiz_attempts") // sesuai nama tabel Supabase
+@Table(name = "user_quiz_attempts")
 public class UserQuizAttempt {
 
     @Id
+    @GeneratedValue
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "quiz_id")
+    @Column(name = "quiz_id", nullable = false)
     private UUID quizId;
+
+    @Column(name = "lesson_id")
+    private UUID lessonId;
 
     @Column(name = "started_at")
     private OffsetDateTime startedAt;
@@ -25,13 +30,13 @@ public class UserQuizAttempt {
     private OffsetDateTime submittedAt;
 
     @Column(name = "score_obtained")
-    private double scoreObtained;
+    private Double scoreObtained;
 
     @Column(name = "is_passed")
-    private boolean isPassed;
+    private Boolean isPassed;
 
     @Column(name = "attempt_number")
-    private int attemptNumber;
+    private Integer attemptNumber;
 
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
@@ -39,12 +44,10 @@ public class UserQuizAttempt {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    // ==== Constructors ====
-    public UserQuizAttempt() {
-    }
+    // ===== Constructor =====
+    public UserQuizAttempt() {}
 
-    // ==== Getters & Setters ====
-
+    // ===== Getters & Setters =====
     public UUID getId() {
         return id;
     }
@@ -69,6 +72,14 @@ public class UserQuizAttempt {
         this.quizId = quizId;
     }
 
+    public UUID getLessonId() {
+        return lessonId;
+    }
+
+    public void setLessonId(UUID lessonId) {
+        this.lessonId = lessonId;
+    }
+
     public OffsetDateTime getStartedAt() {
         return startedAt;
     }
@@ -85,27 +96,27 @@ public class UserQuizAttempt {
         this.submittedAt = submittedAt;
     }
 
-    public double getScoreObtained() {
+    public Double getScoreObtained() {
         return scoreObtained;
     }
 
-    public void setScoreObtained(double scoreObtained) {
+    public void setScoreObtained(Double scoreObtained) {
         this.scoreObtained = scoreObtained;
     }
 
-    public boolean isPassed() {
+    public Boolean getIsPassed() {
         return isPassed;
     }
 
-    public void setPassed(boolean passed) {
-        isPassed = passed;
+    public void setIsPassed(Boolean isPassed) {
+        this.isPassed = isPassed;
     }
 
-    public int getAttemptNumber() {
+    public Integer getAttemptNumber() {
         return attemptNumber;
     }
 
-    public void setAttemptNumber(int attemptNumber) {
+    public void setAttemptNumber(Integer attemptNumber) {
         this.attemptNumber = attemptNumber;
     }
 

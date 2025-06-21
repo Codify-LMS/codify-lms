@@ -7,6 +7,7 @@ import Input from '@/components/Input';
 import { FiPlus, FiTrash2 } from 'react-icons/fi'; 
 import axios from 'axios'; 
 import { CourseData, ModuleData, LessonData } from '@/types'; 
+import DashboardHeader from '../components/DashboardHeader';
 
 interface QuizQuestion {
   questionText: string;
@@ -242,9 +243,10 @@ const UploadQuizPage = () => {
   return (
     <div className="flex">
     <SidebarAdmin>
-      <main className="flex-1 p-6 bg-gray-50 min-h-screen">
-        <div className="space-y-8 max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-3xl font-extrabold text-center text-gray-900 mb-8">
+      <DashboardHeader />
+      <main className="flex-1 p-6 bg-gray-50 min-h-screen w-full">
+        <div className="space-y-8 w-full bg-white p-8 rounded-lg shadow-xl">
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-8">
             Upload Quiz Baru
           </h2>
 

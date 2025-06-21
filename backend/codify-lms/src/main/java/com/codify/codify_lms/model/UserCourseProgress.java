@@ -1,17 +1,19 @@
 package com.codify.codify_lms.model;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "user_course_progress")
 public class UserCourseProgress {
+
     @Id
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
     private UUID id;
 
     @Column(name = "user_id", nullable = false)
@@ -44,9 +46,16 @@ public class UserCourseProgress {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    // Constructors, getters, and setters
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    // ===== Constructor =====
     public UserCourseProgress() {}
 
+    // ===== Getters and Setters =====
     public UUID getId() {
         return id;
     }
@@ -133,5 +142,21 @@ public class UserCourseProgress {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

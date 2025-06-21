@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
@@ -12,12 +14,18 @@ import Button from '@/components/Button';
 interface Lesson {
   id: string;
   title: string;
-  contentType: string;
+  module: {
+    title: string;
+    course: {
+      title: string;
+    };
+  };
 }
 
 const EditLessonPage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const API_BASE_URL = 'http://localhost:8080/api/v1/lessons';
 
   const fetchLessons = async () => {
@@ -64,12 +72,25 @@ const EditLessonPage = () => {
         <div className="flex flex-col flex-1 overflow-y-auto">
           <DashboardHeader />
           <main className="p-6">
+            {/* Back button */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="text-gray-600 hover:text-indigo-600 flex items-center gap-2"
+              >
+                <FiArrowLeft size={20} />
+                <span>Kembali</span>
+              </button>
+            </div>
+
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold text-gray-800">Edit Lessons</h1>
               <Link href="/dashboard/upload-material/">
                 <Button>Add New Lesson</Button>
               </Link>
             </div>
+
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
               {loading ? (
                 <div className="p-6 text-center text-gray-500">Loading lessons...</div>
@@ -81,7 +102,8 @@ const EditLessonPage = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Module</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -89,7 +111,8 @@ const EditLessonPage = () => {
                       {lessons.map((lesson) => (
                         <tr key={lesson.id}>
                           <td className="px-6 py-4 text-gray-700">{lesson.title}</td>
-                          <td className="px-6 py-4 text-gray-700">{lesson.contentType}</td>
+                          <td className="px-6 py-4 text-gray-700">{lesson.module?.course?.title || '-'}</td>
+                          <td className="px-6 py-4 text-gray-700">{lesson.module?.title || '-'}</td>
                           <td className="px-6 py-4 text-gray-700">
                             <div className="flex gap-4">
                               <Link href={`/dashboard/edit-material/lesson/${lesson.id}`}>

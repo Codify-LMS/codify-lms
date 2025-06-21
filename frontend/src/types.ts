@@ -94,3 +94,26 @@ export interface UserProfile {
   avatar_url?: string
   role?: string
 }
+
+export interface QuizQuestionData {
+  id: string;
+  questionText: string;
+  questionType: 'multiple_choice' | 'essay' | 'short_answer';
+  options: string[]; 
+  correctAnswerIndex?: number; 
+  correctAnswerText?: string; 
+  scoreValue: number;
+  orderInQuiz: number;
+}
+
+export interface QuizSubmissionResponse {
+  message: string;
+  scoreObtained: number;
+  isPassed: boolean;
+  answerResults: {
+    questionId: string; 
+    isCorrect: boolean;
+    correctAnswerText?: string;
+    correctAnswerIndex?: number;
+  }[];
+}

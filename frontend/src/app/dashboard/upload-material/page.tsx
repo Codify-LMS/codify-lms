@@ -9,6 +9,11 @@ import DashboardHeader from '../components/DashboardHeader';
 import { CourseData, ModuleData, LessonData } from '@/types';
 
 const UploadFullCoursePage = () => {
+
+  const handleBack = () => {
+    setStep((prev) => Math.max(prev - 1, 0));
+  };
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<{
     course: CourseData | null;
@@ -46,11 +51,14 @@ const UploadFullCoursePage = () => {
               />
             )}
             {step === 3 && (
+              <div className="w-full mx-auto px-4">
               <UploadLessonForm
-                onBack={goToPrev}
+                onBack={handleBack}
                 formData={formData}
                 setFormData={setFormData}
               />
+            </div>
+
             )}
           </main>
         </div>

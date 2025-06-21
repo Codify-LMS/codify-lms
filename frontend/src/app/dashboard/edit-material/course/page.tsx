@@ -1,15 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import Button from '@/components/Button';
 
-// Definisikan tipe data untuk Course agar lebih aman
 interface Course {
   id: number;
   title: string;
@@ -20,12 +21,10 @@ interface Course {
 const EditCoursePage = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  // URL base untuk API backend kamu
-  // Pastikan port 8080 sesuai dengan port backend Spring Boot kamu
   const API_BASE_URL = 'http://localhost:8080/api/v1/courses';
 
-  // Fungsi untuk mengambil data course dari API backend
   const fetchCourses = async () => {
     setLoading(true);
     try {
@@ -34,11 +33,9 @@ const EditCoursePage = () => {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      // Pastikan data yang diterima adalah array
       if (Array.isArray(data)) {
         setCourses(data);
       } else {
-        // Jika backend mengembalikan error dalam format JSON
         console.error('Received non-array data:', data);
         setCourses([]);
         toast.error(data.message || 'Failed to fetch courses.');
@@ -51,12 +48,10 @@ const EditCoursePage = () => {
     }
   };
 
-  // Panggil fetchCourses saat komponen pertama kali dimuat
   useEffect(() => {
     fetchCourses();
   }, []);
 
-  // Fungsi untuk menghapus course melalui API backend
   const handleDelete = async (courseId: number) => {
     if (window.confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
       try {
@@ -71,20 +66,15 @@ const EditCoursePage = () => {
         }
 
         toast.success(responseData.message || 'Course deleted successfully.');
-        // Refresh daftar course setelah berhasil dihapus
         fetchCourses();
-      } catch (error: unknown) { 
+      } catch (error: unknown) {
         console.error('Error deleting course:', error);
-        
         let errorMessage = 'An unexpected error occurred while deleting.';
-        
-        // Melakukan type check sebelum mengakses properti .message
         if (error instanceof Error) {
-            errorMessage = error.message;
+          errorMessage = error.message;
         }
-        
         toast.error(errorMessage);
-        }
+      }
     }
   };
 
@@ -95,14 +85,21 @@ const EditCoursePage = () => {
           <DashboardHeader />
           <main className="p-6">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800">Edit Courses</h1>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.back()}
+                  className="text-gray-600 hover:text-indigo-600"
+                  title="Kembali"
+                >
+                  <FiArrowLeft size={24} />
+                </button>
+                <h1 className="text-3xl font-bold text-gray-800">Edit Courses</h1>
+              </div>
               <Link href="/dashboard/upload-material/">
-                <Button>
-                  Add New Course
-                </Button>
+                <Button>Add New Course</Button>
               </Link>
             </div>
-            
+
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
               {loading ? (
                 <div className="p-6 text-center text-gray-500">Loading courses...</div>

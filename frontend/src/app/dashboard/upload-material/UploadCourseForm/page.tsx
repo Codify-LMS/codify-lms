@@ -73,8 +73,18 @@ const UploadCourseForm = ({
     onNext();
   };
 
-  const session = useSession()
-  console.log("🧪 JWT Payload:", JSON.parse(atob(session?.access_token.split('.')[1] ?? '')))
+  const session = useSession();
+  if (session?.access_token) {
+    try {
+      const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+      console.log("🧪 JWT Payload:", payload);
+    } catch (err) {
+      console.error("❌ Failed to parse JWT payload", err);
+    }
+  } else {
+    console.warn("⚠️ Session belum tersedia");
+  }
+
 
 
   return (
