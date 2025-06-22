@@ -33,25 +33,12 @@ const DashboardHeader = () => {
     <header className="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
       {/* Left: Greeting */}
       <h1 className="text-xl font-semibold text-gray-800">
-        Hai, {displayName}!
+        Let’s crush it today, {displayName}! 💪
       </h1>
+
 
       {/* Right: Avatar & Logout */}
       <div className="flex items-center space-x-4">
-        {/* Avatar as link to settings */}
-        <div
-          className="cursor-pointer flex items-center space-x-2"
-          onClick={() => router.push('/dashboard/settings')}
-        >
-          <Image
-            src={avatarUrl}
-            alt="User Avatar"
-            width={40}
-            height={40}
-            className="rounded-full object-cover"
-          />
-        </div>
-
         {/* Logout Button */}
         <button
           onClick={handleLogout}

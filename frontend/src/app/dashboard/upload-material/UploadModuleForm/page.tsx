@@ -55,7 +55,7 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
   };
 
   return (
-    <div className="space-y-6 max-w-xl bg-white p-6 rounded-lg shadow">
+    <div className="space-y-6 w-full mx-auto bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-bold text-gray-800">Step 2: Upload Module</h2>
 
       {formData.modules && formData.modules.length > 0 && (
@@ -79,7 +79,7 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Contoh: Pengantar JavaScript"
           required
-          className='text-gray-700'
+          className="text-gray-700"
         />
       </div>
 
@@ -100,7 +100,7 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
           value={orderInCourse}
           onChange={(e) => setOrderInCourse(Number(e.target.value))}
           min={1}
-          className='text-gray-700'
+          className="text-gray-700"
         />
       </div>
 

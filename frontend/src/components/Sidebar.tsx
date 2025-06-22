@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
 import { RxDashboard } from 'react-icons/rx';
 import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
-import { MdAssignment } from 'react-icons/md';
 import { IoSettings } from 'react-icons/io5';
 
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
@@ -42,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   }, [supabase]);
 
   const routes = useMemo(() => {
-    if (!role) return []; // tunggu sampai role tersedia
+    if (!role) return []; 
 
     return [
       {
@@ -56,12 +55,6 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         label: 'Course',
         active: pathname.startsWith('/dashboard/course'),
         href: '/dashboard/course',
-      },
-      {
-        icon: MdAssignment,
-        label: 'Assignment',
-        active: pathname.startsWith('/assignment'),
-        href: '/assignment',
       },
       {
         icon: FaChartLine,

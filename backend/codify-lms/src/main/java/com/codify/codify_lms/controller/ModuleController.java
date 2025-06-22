@@ -61,12 +61,13 @@ public class ModuleController {
         return ResponseEntity.ok(moduleRepository.findAll());
     }
 
-    // @GetMapping("/{id}")
-    // public ResponseEntity<Module> getModuleById(@PathVariable UUID id) {
-    //     return moduleRepository.findById(id)
-    //         .map(module -> new ResponseEntity<>(module, HttpStatus.OK))
-    //         .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    // }
+    @GetMapping("/{id}")
+    public ResponseEntity<Module> getModuleById(@PathVariable UUID id) {
+        return moduleRepository.findById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+
 
 
     @GetMapping("/{id}/full")
