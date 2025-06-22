@@ -54,26 +54,26 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaBookOpen,
         label: 'Upload Material',
-        active: pathname.startsWith('/dashboard/upload-material'),
-        href: '/dashboard/upload-material',
+        active: pathname.startsWith('/upload-material'),
+        href: '/upload-material',
       },
       {
         icon: MdAssignment,
         label: 'Upload Quiz',
-        active: pathname.startsWith('/dashboard/upload-quiz'),
-        href: '/dashboard/upload-quiz',
+        active: pathname.startsWith('/upload-quiz'),
+        href: '/upload-quiz',
       },
       {
         icon: FaEdit,
         label: 'Edit Material',
-        active: pathname.startsWith('/dashboard/edit-material'),
-        href: '/dashboard/edit-material',
+        active: pathname.startsWith('/edit-material'),
+        href: '/edit-material',
       },
       {
         icon: FaEdit,
         label: 'Edit Quiz',
-        active: pathname.startsWith('/dashboard/edit-quiz'),
-        href: '/dashboard/edit-quiz',
+        active: pathname.startsWith('/edit-quiz'),
+        href: '/edit-quiz',
       }
     ];
   }, [pathname, role]);

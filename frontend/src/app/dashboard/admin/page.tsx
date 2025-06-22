@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/hooks/useUser.tsx';
+import { useUser } from '@/hooks/useUser';
 import { AiOutlinePlus } from 'react-icons/ai'
 import Button from '@/components/Button';
 import DashboardHeader from '../components/DashboardHeader';
@@ -80,14 +80,14 @@ const DashboardPage = () => {
 
               <section className="space-y-4">
                 <div className="space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
-                  <Link href="/dashboard/upload-material">
+                  <Link href="/upload-material">
                     <Button className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow flex items-center gap-2">
                       <AiOutlinePlus size={20} />
                       Upload Materi
                     </Button>
                   </Link>
 
-                  <Link href="/dashboard/upload-quiz">
+                  <Link href="/upload-quiz">
                     <Button className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow flex items-center gap-2">
                       <AiOutlinePlus size={20} />
                       Upload Kuis

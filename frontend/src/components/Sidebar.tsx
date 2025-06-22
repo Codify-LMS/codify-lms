@@ -53,8 +53,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaBookOpen,
         label: 'Course',
-        active: pathname.startsWith('/dashboard/course'),
-        href: '/dashboard/course',
+        active: pathname.startsWith('/course'),
+        href: '/course',
       },
       {
         icon: FaChartLine,
@@ -65,26 +65,26 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaHistory,
         label: 'History',
-        active: pathname.startsWith('/dashboard/history'),
-        href: '/dashboard/history',
+        active: pathname.startsWith('/history'),
+        href: '/history',
       },
       {
         icon: FaBookmark,
         label: 'Bookmark',
-        active: pathname.startsWith('/dashboard/bookmark'),
-        href: '/dashboard/bookmark',
+        active: pathname.startsWith('/bookmark'),
+        href: '/bookmark',
       },
       {
         icon: FaComments,
         label: 'Discussion',
-        active: pathname.startsWith('/dashboard/discussion'),
-        href: '/dashboard/discussion',
+        active: pathname.startsWith('/discussion'),
+        href: '/discussion',
       },
       {
         icon: IoSettings,
         label: 'Settings',
-        active: pathname.startsWith('/dashboard/settings'),
-        href: '/dashboard/settings',
+        active: pathname.startsWith('/settings'),
+        href: '/settings',
       }
     ];
   }, [pathname, role]);
