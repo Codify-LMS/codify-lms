@@ -4,8 +4,8 @@ import { useState } from 'react';
 import UploadCourseForm from './UploadCourseForm/page';
 import UploadModuleForm from './UploadModuleForm/page';
 import UploadLessonForm from './UploadLessonForm/page';
-import SidebarAdmin from '../admin/components/SidebarAdmin';
-import DashboardHeader from '../components/DashboardHeader';
+import SidebarAdmin from '../dashboard/admin/components/SidebarAdmin';
+import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { CourseData, ModuleData, LessonData } from '@/types';
 
 const UploadFullCoursePage = () => {

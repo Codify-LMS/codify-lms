@@ -5,7 +5,6 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { RxDashboard } from 'react-icons/rx';
 import { FaBookOpen, FaComments, FaEdit } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
-import { IoSettings } from 'react-icons/io5';
 
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
@@ -42,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   }, [supabase]);
 
   const routes = useMemo(() => {
-    if (!role) return []; 
+    if (!role) return [];
 
     return [
       {
@@ -88,36 +87,44 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen w-full">
-      <div
+      {/* Sidebar */}
+      <aside
         className="
           hidden
           md:flex
           flex-col
-          gap-y-2
           h-full
-          bg-gradient-to-b 
-          from-[#2B2F7F]
-          via-[#5D2E9B]
-          to-[#1D2E5E]
-          w-[250px]
-          p-2
-          flex-shrink-0
-          overflow-y-auto
+          bg-gradient-to-br 
+          from-[#2B2F7F] 
+          via-[#5A34A3] 
+          to-[#1B2C5A]
+          w-[260px]
+          p-4
+          text-white
+          shadow-lg
+          z-50
         "
       >
-        <Box className="bg-transparent p-0 rounded-none h-auto">
+        {/* Logo */}
+        <div className="mb-6">
           <LogoWhite />
-        </Box>
-        <Box className="bg-transparent p-0 rounded-none h-full overflow-y-auto scrollbar-hide">
-          <div className="flex flex-col gap-y-1 px-2 py-1">
-            {routes.map((item) => (
-              <SidebarItem key={item.label} {...item} />
-            ))}
-          </div>
-        </Box>
-      </div>
+        </div>
 
-      <main className="h-full flex-1 overflow-auto bg-[#F1F5F9] scrollbar-hide">
+        {/* Navigation */}
+        <nav className="flex flex-col gap-2 flex-1">
+          {routes.map((item) => (
+            <SidebarItem key={item.label} {...item} />
+          ))}
+        </nav>
+
+        {/* Footer / Version (optional) */}
+        <div className="mt-auto text-xs text-gray-300 text-center pt-4 border-t border-white/20">
+          Admin LMS © 2025
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 bg-[#F9FAFB] overflow-auto">
         {children}
       </main>
     </div>

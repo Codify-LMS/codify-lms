@@ -5,7 +5,6 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { RxDashboard } from 'react-icons/rx';
 import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'react-icons/fa';
 import { IoSettings } from 'react-icons/io5';
-
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
 import Box from './Box';
@@ -41,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   }, [supabase]);
 
   const routes = useMemo(() => {
-    if (!role) return []; 
+    if (!role) return [];
 
     return [
       {
@@ -85,14 +84,13 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         label: 'Settings',
         active: pathname.startsWith('/settings'),
         href: '/settings',
-      }
+      },
     ];
   }, [pathname, role]);
 
-  // Optional loading state (saat role belum tersedia)
   if (role === null) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="flex justify-center items-center h-screen bg-gray-100 text-gray-600">
         Loading sidebar...
       </div>
     );
@@ -100,36 +98,25 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen w-full">
-      <div
-        className="
-          hidden
-          md:flex
-          flex-col
-          gap-y-2
-          h-full
-          bg-gradient-to-b 
-          from-[#2B2F7F]
-          via-[#5D2E9B]
-          to-[#1D2E5E]
-          w-[250px]
-          p-2
-          flex-shrink-0
-          overflow-y-auto
-        "
-      >
-        <Box className="bg-transparent p-0 rounded-none h-auto">
+      {/* Sidebar */}
+      <aside className="hidden md:flex flex-col h-full bg-gradient-to-br from-[#2B2F7F] via-[#5C3DAA] to-[#1E295A] w-64 text-white shadow-lg">
+        <div className="p-6">
           <LogoWhite />
-        </Box>
-        <Box className="bg-transparent p-0 rounded-none h-full overflow-y-auto scrollbar-hide">
-          <div className="flex flex-col gap-y-1 px-2 py-1">
-            {routes.map((item) => (
-              <SidebarItem key={item.label} {...item} />
-            ))}
-          </div>
-        </Box>
-      </div>
+        </div>
 
-      <main className="h-full flex-1 overflow-auto bg-[#F1F5F9] scrollbar-hide">
+        <nav className="flex-1 overflow-y-auto px-4 space-y-2 mt-4">
+          {routes.map((item) => (
+            <SidebarItem key={item.label} {...item} />
+          ))}
+        </nav>
+
+        <div className="text-xs text-gray-300 text-center mt-auto pb-4">
+          LMS by Codify © {new Date().getFullYear()}
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto bg-[#F9FAFB] p-4">
         {children}
       </main>
     </div>

@@ -1,3 +1,4 @@
+// frontend/src/app/dashboard/course/components/SidebarCourse.tsx
 'use client';
 
 import Link from 'next/link';
@@ -56,7 +57,7 @@ export default function SidebarCourse({ courseTitle, modules, className }: Sideb
       "w-72 bg-gradient-to-b from-indigo-900 to-indigo-700 text-white p-4 overflow-y-auto",
       className // ✅ Terapkan className yang diterima
     )}>
-      <Link href="//course">
+      <Link href="/course">
         <button className="text-sm text-indigo-300 hover:text-white mb-4">← Back</button>
       </Link>
 

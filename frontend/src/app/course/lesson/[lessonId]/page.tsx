@@ -34,7 +34,6 @@ export default function LessonPage() {
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
 
-
   const handleAnswerChange = (questionId: string, value: any, isEssay = false) => {
     if (quizSubmitted) return;
     setAnswers(prev =>
@@ -165,7 +164,6 @@ export default function LessonPage() {
   const showFeedback = quizSubmitted && quizResults !== null;
 
   return (
-    
     <div className="flex h-screen w-screen overflow-hidden bg-gray-100">
       <div className="w-72 flex-shrink-0 h-full">
         <SidebarCourse courseTitle={course.title} modules={course.modules ?? []} className="h-full" />
@@ -174,12 +172,32 @@ export default function LessonPage() {
         <DashboardHeader />
         <main className="flex-1 p-6 bg-white overflow-y-auto m-4 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-indigo-700 mb-4">{lesson.title}</h1>
+
+          {lesson.imageUrl && (
+            <img
+              src={lesson.imageUrl}
+              alt="Lesson illustration"
+              className="w-full max-w-3xl mx-auto rounded-lg mb-6"
+            />
+          )}
+
           <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: lesson.content }} />
 
           {lesson.quiz && lesson.quiz.questions && (
             <form className="mt-8 p-6 border rounded-lg bg-gray-50" onSubmit={handleSubmitQuiz}>
-              <h2 className="text-xl font-bold text-indigo-600 mb-4">Quiz: {lesson.quiz.title}</h2>
-              <p className="text-gray-600 mb-4 text-sm">{lesson.quiz.description}</p>
+              <h2 className="text-xl font-bold text-indigo-600 mb-2">Quiz: {lesson.quiz.title}</h2>
+                <p className="text-gray-600 text-sm mb-4">{lesson.quiz.description}</p>
+
+                <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-6 text-sm text-blue-800">
+                  <p className="mb-1">📝 <strong>Quiz Rules:</strong></p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>You are allowed to retake the quiz if your score does not meet the minimum passing grade.</li>
+                    <li>The quiz can be repeated up to <strong>3 times</strong>.</li>
+                    <li>The score that will be recorded is your <strong>highest score</strong> among all attempts.</li>
+                    <li>To pass this quiz, you must score at least <strong>80 out of 100</strong>.</li>
+                  </ul>
+                </div>
+
 
               {lesson.quiz.questions.map((q, index) => {
                 const userAnswer = answers.find(a => a.questionId === q.id);
