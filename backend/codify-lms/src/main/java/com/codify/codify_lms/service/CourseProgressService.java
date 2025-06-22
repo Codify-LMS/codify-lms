@@ -1,16 +1,11 @@
 package com.codify.codify_lms.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.codify.codify_lms.repository.LessonRepository;
-import com.codify.codify_lms.repository.ModuleRepository;
-import com.codify.codify_lms.repository.UserCourseProgressRepository;
-import com.codify.codify_lms.repository.UserLessonsCompletionRepository;
-import com.codify.codify_lms.model.Module;
-import com.codify.codify_lms.model.Lesson;
-import com.codify.codify_lms.model.UserLessonsCompletion;
 import com.codify.codify_lms.model.UserCourseProgress;
+import com.codify.codify_lms.repository.UserCourseProgressRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,56 +16,118 @@ import java.util.UUID;
 @Service
 public class CourseProgressService {
 
-    @Autowired private LessonRepository lessonRepository;
-    @Autowired private ModuleRepository moduleRepository;
-    @Autowired private UserCourseProgressRepository progressRepository;
-    @Autowired private UserLessonsCompletionRepository completionRepository;
+    @Autowired
+    private UserCourseProgressRepository userCourseProgressRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public void markLessonCompleted(UUID userId, UUID lessonId) {
-        // 1. Cek apakah sudah pernah diselesaikan
-        boolean alreadyCompleted = completionRepository.existsByUserIdAndLessonId(userId, lessonId);
-        if (!alreadyCompleted) {
-            UserLessonsCompletion completion = UserLessonsCompletion.builder()
-                .userId(userId)
-                .lesson(Lesson.builder().id(lessonId).build()) 
-                .completedAt(Instant.now())
-                .build();
-            completionRepository.save(completion);
-        }
+        UUID courseId = getCourseIdFromLesson(lessonId);
+        int totalLessons = getTotalLessonsInCourse(courseId);
+        int completedLessons = getCompletedLessonsCount(userId, courseId) + 1; // plus 1 karena baru diselesaikan
 
-        // 2. Hitung progress baru
-        Lesson lesson = lessonRepository.findById(lessonId)
-            .orElseThrow(() -> new RuntimeException("Lesson not found"));
+        BigDecimal progress = calculateProgressPercentage(completedLessons, totalLessons);
+        boolean isCompleted = progress.compareTo(BigDecimal.valueOf(100)) >= 0;
 
-        Module module = lesson.getModule();
-        UUID courseId = module.getCourse().getId();
+        Optional<UserCourseProgress> existingProgressOpt =
+                userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId);
 
-        long totalLessons = lessonRepository.countByModule_Course_Id(courseId);
-        long completedLessons = completionRepository.countByUserIdAndLesson_Module_Course_Id(userId, courseId);
-
-        BigDecimal progress = BigDecimal.valueOf(completedLessons)
-            .divide(BigDecimal.valueOf(totalLessons), 2, RoundingMode.HALF_UP)
-            .multiply(BigDecimal.valueOf(100));
-
-        boolean isCourseCompleted = completedLessons == totalLessons;
-
-        // 3. Update or insert user_course_progress
-        UserCourseProgress progressEntity = progressRepository.findByUserIdAndCourseId(userId, courseId)
-            .orElse(UserCourseProgress.builder()
-                .userId(userId)
-                .courseId(courseId)
-                .startedAt(Instant.now())
-                .build());
+        UserCourseProgress progressEntity = existingProgressOpt.orElseGet(() -> {
+            UserCourseProgress p = new UserCourseProgress();
+            p.setUserId(userId);
+            p.setCourseId(courseId);
+            p.setCreatedAt(Instant.now());
+            return p;
+        });
 
         progressEntity.setCompletedLessonsCount(completedLessons);
-        progressEntity.setProgressPercentage(progress.doubleValue());
-        progressEntity.setCompleted(isCourseCompleted);
+        progressEntity.setProgressPercentage(progress);
         progressEntity.setLastAccessedAt(Instant.now());
+        progressEntity.setUpdatedAt(Instant.now());
 
-        if (isCourseCompleted) {
+        if (isCompleted) {
+            progressEntity.setCompleted(true);
             progressEntity.setCompletedAt(Instant.now());
         }
 
-        progressRepository.save(progressEntity);
+        userCourseProgressRepository.save(progressEntity);
     }
+
+    public void markCourseAsComplete(UUID userId, UUID courseId) {
+        Optional<UserCourseProgress> optionalProgress =
+                userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId);
+
+        UserCourseProgress progress = optionalProgress.orElseGet(() -> {
+            UserCourseProgress newProgress = new UserCourseProgress();
+            newProgress.setUserId(userId);
+            newProgress.setCourseId(courseId);
+            newProgress.setCreatedAt(Instant.now());
+            return newProgress;
+        });
+
+        progress.setCompleted(true);
+        progress.setCompletedAt(Instant.now());
+        progress.setProgressPercentage(BigDecimal.valueOf(100));
+        progress.setUpdatedAt(Instant.now());
+        userCourseProgressRepository.save(progress);
+    }
+
+    /**
+     * Digunakan oleh CourseService untuk ambil progress user terhadap course tertentu.
+     */
+    public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
+        return userCourseProgressRepository
+                .findByUserIdAndCourseId(userId, courseId)
+                .map(p -> p.getProgressPercentage() != null ? p.getProgressPercentage().doubleValue() : 0.0)
+                .orElse(0.0);
+    }
+
+    private UUID getCourseIdFromLesson(UUID lessonId) {
+        String sql = """
+            SELECT c.id FROM lessons l
+            JOIN modules m ON l.module_id = m.id
+            JOIN courses c ON m.course_id = c.id
+            WHERE l.id = ?
+        """;
+        return jdbcTemplate.queryForObject(sql, UUID.class, lessonId);
+    }
+
+    private int getTotalLessonsInCourse(UUID courseId) {
+        String sql = """
+            SELECT COUNT(*) FROM lessons l
+            JOIN modules m ON l.module_id = m.id
+            WHERE m.course_id = ?
+        """;
+        return jdbcTemplate.queryForObject(sql, Integer.class, courseId);
+    }
+
+    private int getCompletedLessonsCount(UUID userId, UUID courseId) {
+        String sql = """
+            SELECT COUNT(*) FROM user_lessons_completion ulc
+            JOIN lessons l ON ulc.lesson_id = l.id
+            JOIN modules m ON l.module_id = m.id
+            WHERE ulc.user_id = ? AND m.course_id = ?
+        """;
+        return jdbcTemplate.queryForObject(sql, Integer.class, userId, courseId);
+    }
+
+    private BigDecimal calculateProgressPercentage(int completed, int total) {
+        if (total == 0) return BigDecimal.ZERO;
+        return BigDecimal.valueOf(completed * 100)
+                .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
+    }
+
+    public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
+    return userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId)
+            .map(progress -> {
+                if (progress.getProgressPercentage() != null) {
+                    return progress.getProgressPercentage().doubleValue();
+                } else {
+                    return 0.0;
+                }
+            })
+            .orElse(0.0);
+}
+
 }

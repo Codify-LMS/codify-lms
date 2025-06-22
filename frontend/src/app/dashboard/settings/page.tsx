@@ -1,3 +1,4 @@
+// frontend/src/app/dashboard/settings/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -13,7 +14,6 @@ import type { UserProfile } from '@/types'
 export default function SettingsPage() {
   const router = useRouter()
   const session = useSession()
-  const accessToken = session?.access_token || session?.accessToken 
   console.log("🧪 Session object:", session)
 
 
@@ -56,7 +56,8 @@ export default function SettingsPage() {
   return (
     <Sidebar>
       <DashboardHeader />
-      <div className="p-8 w-full mx-auto">
+      {/* ✅ PERBAIKAN DI SINI: Ubah padding pada div pembungkus */}
+      <div className="px-8 py-6 w-full"> {/* Ganti 'p-8' menjadi 'px-8 py-6' */}
         {profile ? (
           <>
             <ProfileCard data={profile} />

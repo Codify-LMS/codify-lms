@@ -43,6 +43,7 @@ public class UserQuizAttempt {
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
+    
 
     // ===== Constructor =====
     public UserQuizAttempt() {}

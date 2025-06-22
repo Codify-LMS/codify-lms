@@ -19,10 +19,16 @@ public class LeaderboardRepository {
 
     public List<LeaderboardEntry> findTopLeaderboardEntries(int limit) {
         String sql = """
-            SELECT uqa.user_id, p.full_name, p.avatar_url, SUM(uqa.score_obtained) AS total_score
-            FROM user_quiz_attempts uqa
-            JOIN profiles p ON p.id = uqa.user_id
-            GROUP BY uqa.user_id, p.full_name, p.avatar_url
+            SELECT 
+                p.id AS user_id,
+                p.full_name, 
+                p.avatar_url, 
+                COALESCE(SUM(uqa.score_obtained), 0) AS quiz_score,
+                COALESCE(p.bonus_point, 0) AS bonus_point,
+                (COALESCE(SUM(uqa.score_obtained), 0) + COALESCE(p.bonus_point, 0)) AS total_score
+            FROM profiles p
+            LEFT JOIN user_quiz_attempts uqa ON p.id = uqa.user_id
+            GROUP BY p.id, p.full_name, p.avatar_url, p.bonus_point
             ORDER BY total_score DESC
             LIMIT ?
         """;
@@ -31,7 +37,7 @@ public class LeaderboardRepository {
             UUID userId = UUID.fromString(rs.getString("user_id"));
             String fullName = rs.getString("full_name");
             String avatarUrl = rs.getString("avatar_url");
-            double totalScore = rs.getDouble("total_score"); // ✅ FIXED
+            double totalScore = rs.getDouble("total_score");
 
             return new LeaderboardEntry(userId, fullName, avatarUrl, totalScore);
         };

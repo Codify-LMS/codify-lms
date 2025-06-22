@@ -5,20 +5,25 @@ import com.codify.codify_lms.model.Course;
 import com.codify.codify_lms.model.UserCourseProgress;
 import com.codify.codify_lms.repository.CourseRepository;
 import com.codify.codify_lms.repository.UserCourseProgressRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class HistoryService {
 
     private final UserCourseProgressRepository progressRepository;
     private final CourseRepository courseRepository;
+
+    public HistoryService(UserCourseProgressRepository progressRepository, CourseRepository courseRepository) {
+        this.progressRepository = progressRepository;
+        this.courseRepository = courseRepository;
+    }
 
     public List<LearningHistoryDTO> getLearningHistory(UUID userId) {
         System.out.println("🟡 Fetching history for user: " + userId);
@@ -37,13 +42,16 @@ public class HistoryService {
 
             String courseName = course != null ? course.getTitle() : "Unknown";
 
-            double percentage = progress.getProgressPercentage();
-            String progressStr = percentage != 0.0
-                    ? (int) Math.round(percentage) + "% Completed"
+            BigDecimal percentage = progress.getProgressPercentage();
+            double percentageValue = percentage != null ? percentage.doubleValue() : 0.0;
+
+            String progressStr = percentageValue != 0.0
+                    ? (int) Math.round(percentageValue) + "% Completed"
                     : "Progress not available";
 
+
             String date = progress.getLastAccessedAt() != null
-                    ? progress.getLastAccessedAt().format(formatter)
+                    ? formatter.format(progress.getLastAccessedAt().atZone(ZoneId.systemDefault()).toLocalDate())
                     : "N/A";
 
             return new LearningHistoryDTO(courseName, progressStr, date);

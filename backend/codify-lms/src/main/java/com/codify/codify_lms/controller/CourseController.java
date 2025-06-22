@@ -7,8 +7,12 @@ import com.codify.codify_lms.repository.CourseRepository;
 import com.codify.codify_lms.repository.ModuleRepository;
 import com.codify.codify_lms.repository.LessonRepository;
 import com.codify.codify_lms.repository.QuizRepository;
+import com.codify.codify_lms.service.CourseProgressService;
 import com.codify.codify_lms.dto.ModuleFullDto;
 import com.codify.codify_lms.dto.CourseFullDto;
+import com.codify.codify_lms.dto.CourseWithProgressDTO;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +24,8 @@ import com.codify.codify_lms.model.Module;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID; 
+import java.util.UUID;
+import java.util.stream.Collectors; 
 
 @RestController
 @RequestMapping("/api/v1/courses")
@@ -37,6 +42,47 @@ public class CourseController {
 
     @Autowired
     private QuizRepository quizRepository; 
+
+    @Autowired
+    private CourseProgressService courseProgressService;
+
+    @GetMapping("/all-with-progress")
+    public List<CourseWithProgressDTO> getAllCoursesWithProgress(@RequestParam UUID userId) {
+        List<Course> courses = courseRepository.findAll();
+
+        return courses.stream()
+            .map(course -> {
+                Double progress = courseProgressService.getProgressPercentageByUserAndCourse(userId, course.getId());
+
+                // Hitung jumlah module, lesson, dan quiz
+                List<Module> modules = moduleRepository.findByCourseId(course.getId());
+                int moduleCount = modules.size();
+                int lessonCount = 0;
+                int quizCount = 0;
+
+                for (Module module : modules) {
+                    List<Lesson> lessons = lessonRepository.findByModuleId(module.getId());
+                    lessonCount += lessons.size();
+
+                    for (Lesson lesson : lessons) {
+                        quizCount += quizRepository.findByLessonId(lesson.getId()).isPresent() ? 1 : 0;
+                    }
+                }
+
+                return new CourseWithProgressDTO(
+                    course.getId(),
+                    course.getTitle(),
+                    course.getThumbnailUrl(),
+                    course.isPublished(),
+                    progress,
+                    moduleCount,
+                    lessonCount,
+                    quizCount
+                );
+            })
+            .collect(Collectors.toList());
+    }
+
 
     @PostMapping
     public ResponseEntity<Object> newCourse(@RequestBody Course course) {

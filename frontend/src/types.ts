@@ -85,15 +85,40 @@ export interface LessonWithQuizDto {
 }
 
 export interface UserProfile {
-  id: string
-  email: string
-  full_name?: string
-  first_name?: string
-  last_name?: string
-  username?: string
-  avatar_url?: string
-  role?: string
+  id: string;
+  email: string;
+  full_name?: string;
+  firstName?: string;
+  lastName?: string; 
+  username?: string;
+  avatarUrl?: string; 
+  role?: string;
 }
+
+export interface LeaderboardEntry {
+  userId: string;
+  fullName: string;
+  avatarUrl: string;
+  totalScore: number;
+}
+
+
+export interface BookmarkedCourse {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  isPublished: boolean;
+  progressPercentage?: number; 
+}
+
+
+export interface TopUser {
+  id: number;
+  name: string;
+  score: number;
+  img: string;
+}
+
 
 export interface QuizQuestionData {
   id: string;

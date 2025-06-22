@@ -1,8 +1,10 @@
+// frontend/src/app/dashboard/course/components/SidebarCourse.tsx
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { twMerge } from 'tailwind-merge'; // ✅ PASTIKAN ini sudah diimport
 
 interface Quiz {
   id: string;
@@ -13,7 +15,6 @@ interface Lesson {
   id: string;
   title: string;
   quiz?: Quiz | null;
-  // Tambahkan status jika nanti mau track completed
   isCompleted?: boolean;
 }
 
@@ -24,12 +25,15 @@ interface Module {
   lessons: Lesson[];
 }
 
+// ✅ Interface props SidebarCourse agar bisa menerima className
 interface SidebarProps {
   courseTitle: string;
   modules: Module[];
+  className?: string; // ✅ Tambah baris ini
 }
 
-export default function SidebarCourse({ courseTitle, modules }: SidebarProps) {
+// ✅ Terima className sebagai prop
+export default function SidebarCourse({ courseTitle, modules, className }: SidebarProps) {
   const pathname = usePathname();
   const [openModules, setOpenModules] = useState<string[]>(modules.map((m) => m.id));
 
@@ -48,7 +52,11 @@ export default function SidebarCourse({ courseTitle, modules }: SidebarProps) {
   };
 
   return (
-    <aside className="w-72 bg-gradient-to-b from-indigo-900 to-indigo-700 text-white p-4 overflow-y-auto">
+    // ✅ Gunakan twMerge untuk menggabungkan className
+    <aside className={twMerge(
+      "w-72 bg-gradient-to-b from-indigo-900 to-indigo-700 text-white p-4 overflow-y-auto",
+      className // ✅ Terapkan className yang diterima
+    )}>
       <Link href="/dashboard/course">
         <button className="text-sm text-indigo-300 hover:text-white mb-4">← Back</button>
       </Link>
@@ -63,12 +71,17 @@ export default function SidebarCourse({ courseTitle, modules }: SidebarProps) {
           <div key={mod.id} className="mb-4">
             <button
               onClick={() => toggleModule(mod.id)}
-              className="w-full text-left font-semibold text-sm text-indigo-200 hover:text-white"
+              className="w-full text-left group" // Tambah 'group' untuk efek hover yang lebih baik
             >
-              {mod.title}
-              <span className="ml-2 text-xs text-indigo-300">
-                {materialCount} Materials{quizCount > 0 ? ` · ${quizCount} Quiz` : ''}
-              </span>
+              {/* ✅ PERUBAHAN DI SINI: Pindahkan count ke bawah judul */}
+              <div className="flex flex-col">
+                <span className="font-semibold text-sm text-indigo-200 group-hover:text-white transition-colors duration-200">
+                  {mod.title}
+                </span>
+                <span className="text-xs text-indigo-300 group-hover:text-indigo-100 transition-colors duration-200">
+                  {materialCount} Materials{quizCount > 0 ? ` · ${quizCount} Quiz` : ''}
+                </span>
+              </div>
             </button>
 
             {isOpen && (
