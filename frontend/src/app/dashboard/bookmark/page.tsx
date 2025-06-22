@@ -6,13 +6,7 @@ import DashboardHeader from '../components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-
-interface BookmarkedCourse {
-  id: string;
-  title: string;
-  thumbnailUrl: string;
-  isPublished: boolean;
-}
+import {BookmarkedCourse} from '@/types';
 
 export default function BookmarksPage() {
   const [bookmarkedCourses, setBookmarkedCourses] = useState<BookmarkedCourse[]>([]);
@@ -20,19 +14,16 @@ export default function BookmarksPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!user?.id || isLoading) return;
-
-    const fetchBookmarks = async () => {
-      try {
+    if (user?.id && !isLoading) {
+      const fetchBookmarks = async () => {
         const res = await axios.get(`http://localhost:8080/api/v1/bookmarks/user/${user.id}`);
+        console.log('Bookmarks:', res.data); // ← lihat isi thumbnailUrl-nya
         setBookmarkedCourses(res.data);
-      } catch (err) {
-        console.error('Failed to fetch bookmarks:', err);
-      }
-    };
-
-    fetchBookmarks();
+      };
+      fetchBookmarks();
+    }
   }, [user, isLoading]);
+
 
   return (
     <Sidebar>
@@ -51,9 +42,9 @@ export default function BookmarksPage() {
                 className="cursor-pointer rounded-lg shadow hover:shadow-lg transition overflow-hidden bg-white border"
               >
                 <img
-                  src={course.thumbnailUrl}
+                  src={course.thumbnailUrl || '/default-thumbnail.jpg'}
                   alt={course.title}
-                  className="w-full h-40 object-cover bg-gray-200"
+                  className="w-full h-40 object-cover bg-gray-100"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/default-thumbnail.jpg';
                   }}
@@ -61,6 +52,20 @@ export default function BookmarksPage() {
                 <div className="p-4">
                   <h2 className="text-lg font-semibold text-gray-800 mb-1">{course.title}</h2>
                   <p className="text-sm text-gray-500">Tap to view details</p>
+                  {typeof course.progressPercentage === 'number' && (
+                      <div className="mt-2">
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-indigo-500 transition-all duration-300"
+                            style={{ width: `${course.progressPercentage}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {Math.round(course.progressPercentage)}% completed
+                        </p>
+                      </div>
+                    )}
+
                 </div>
               </div>
             ))}

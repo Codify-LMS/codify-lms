@@ -6,6 +6,7 @@ import { supabase } from '@/supabaseClient'
 import { UserProfile } from '@/types'
 import AvatarUploader from '@/components/AvatarUploader'
 import { useUser } from '@/hooks/useUser'
+import { useSession } from '@supabase/auth-helpers-react' // Import useSession
 
 export default function ProfileSettingsForm({
   data,
@@ -25,6 +26,8 @@ export default function ProfileSettingsForm({
     username: data.username ?? ''
   })
 
+  // Dapatkan sesi pengguna dari Supabase
+  const session = useSession()
 
   const { refreshUserDetails } = useUser()
 
@@ -63,19 +66,21 @@ export default function ProfileSettingsForm({
       }
     }
 
+    // Perbaikan di sini: Pastikan menggunakan formData.firstName dan formData.lastName
     const payload = {
-        firstName: formData.first_name,
-        lastName: formData.last_name,
+        firstName: formData.firstName, // ✅ Menggunakan firstName (camelCase)
+        lastName: formData.lastName,   // ✅ Menggunakan lastName (camelCase)
+        username: formData.username,
         avatarUrl,
       }
       console.log("➡️ Payload ke backend:", payload)
 
-
-
     try {
+      // Perbaikan di sini: Tambahkan Authorization header
       const res = await axios.put('http://localhost:8080/api/v1/users/me', payload, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`, // ✅ Tambahkan ini
         },
       })
 

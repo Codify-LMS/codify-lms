@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @Service
@@ -32,14 +34,14 @@ public class QuizSubmissionService {
     public UserQuizAttempt submitQuiz(QuizSubmissionRequest request) {
         double totalScore = 0;
 
-        // Buat attempt baru
         UserQuizAttempt attempt = UserQuizAttempt.builder()
-                .userId(request.getUserId())
-                .quizId(request.getQuizId())
-                .lessonId(request.getLessonId())
-                .startedAt(Instant.now())
-                .createdAt(Instant.now())
-                .build();
+        .userId(userId)
+        .quizId(quizId)
+        .score(score)
+        .attemptedAt(Instant.now())
+        .isPassed(isPassed)
+        .build();
+
 
         UserQuizAttempt savedAttempt = userQuizAttemptRepository.save(attempt);
 
@@ -74,17 +76,17 @@ public class QuizSubmissionService {
                             : answer.getWrittenAnswer())
                     .isCorrect(isCorrect)
                     .scoreGained(gainedScore)
-                    .submittedAt(Instant.now())
+                    .submittedAt(OffsetDateTime.now(ZoneOffset.UTC))
                     .build();
 
             userAnswerRepository.save(userAnswer);
         }
 
         // Update hasil quiz attempt
-        savedAttempt.setSubmittedAt(Instant.now());
+        savedAttempt.setSubmittedAt(OffsetDateTime.now(ZoneOffset.UTC));
         savedAttempt.setScoreObtained(totalScore);
         savedAttempt.setIsPassed(totalScore >= getPassingScore(request.getQuizId())); // Optional
-        savedAttempt.setUpdatedAt(Instant.now());
+        savedAttempt.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
         return userQuizAttemptRepository.save(savedAttempt);
     }

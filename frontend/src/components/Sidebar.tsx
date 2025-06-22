@@ -77,8 +77,8 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       {
         icon: FaComments,
         label: 'Discussion',
-        active: pathname.startsWith('/discussion'),
-        href: '/discussion',
+        active: pathname.startsWith('/dashboard/discussion'),
+        href: '/dashboard/discussion',
       },
       {
         icon: IoSettings,

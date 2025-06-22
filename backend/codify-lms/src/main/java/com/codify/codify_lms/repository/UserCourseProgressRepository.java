@@ -14,4 +14,6 @@ public interface UserCourseProgressRepository extends JpaRepository<UserCoursePr
     
     // Untuk detail progress dalam 1 course
     Optional<UserCourseProgress> findByUserIdAndCourseId(UUID userId, UUID courseId);
+
+    int countByUserIdAndCompleted(UUID userId, boolean completed);
 }

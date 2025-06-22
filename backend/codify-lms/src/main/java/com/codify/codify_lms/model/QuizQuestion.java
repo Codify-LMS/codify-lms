@@ -1,4 +1,3 @@
-// backend/codify-lms/src/main/java/com/codify/codify_lms/model/QuizQuestion.java
 package com.codify.codify_lms.model;
 
 import java.time.LocalDateTime;
@@ -10,28 +9,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "quiz_questions")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class QuizQuestion {
 
     @Id
@@ -39,39 +20,26 @@ public class QuizQuestion {
     private UUID id;
 
     @JsonIgnore
-    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "quiz_id")
     private Quiz quiz;
 
-
     @Column(columnDefinition = "TEXT", nullable = false)
     private String questionText;
 
-    /**
-     * Tipe soal:
-     * - multiple_choice: dengan pilihan ganda (opsi + correctAnswerIndex)
-     * - essay: tidak pakai options, user isi jawaban panjang
-     * - short_answer: cocok untuk satu kata/frasa (di-match string-nya)
-     */
-    private String questionType; // e.g. "multiple_choice", "essay", "short_answer"
+    private String questionType;
 
-    // Pilihan jawaban (hanya untuk multiple_choice)
     @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "TEXT")
     private List<String> options;
 
-    // Jawaban benar untuk multiple_choice (berdasarkan index di `options`)
     private Integer correctAnswerIndex;
 
-    // Jawaban benar untuk essay atau short_answer
     @Column(columnDefinition = "TEXT")
     private String correctAnswerText;
 
-    // Nilai skor untuk soal ini
     private Integer scoreValue;
 
-    // Urutan soal dalam quiz
     private Integer orderInQuiz;
 
     @CreationTimestamp
@@ -79,4 +47,114 @@ public class QuizQuestion {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // ======= Constructors =======
+
+    public QuizQuestion() {}
+
+    public QuizQuestion(UUID id, Quiz quiz, String questionText, String questionType, List<String> options,
+                        Integer correctAnswerIndex, String correctAnswerText, Integer scoreValue,
+                        Integer orderInQuiz, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.quiz = quiz;
+        this.questionText = questionText;
+        this.questionType = questionType;
+        this.options = options;
+        this.correctAnswerIndex = correctAnswerIndex;
+        this.correctAnswerText = correctAnswerText;
+        this.scoreValue = scoreValue;
+        this.orderInQuiz = orderInQuiz;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    // ======= Getters & Setters =======
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public Quiz getQuiz() {
+        return quiz;
+    }
+
+    public void setQuiz(Quiz quiz) {
+        this.quiz = quiz;
+    }
+
+    public String getQuestionText() {
+        return questionText;
+    }
+
+    public void setQuestionText(String questionText) {
+        this.questionText = questionText;
+    }
+
+    public String getQuestionType() {
+        return questionType;
+    }
+
+    public void setQuestionType(String questionType) {
+        this.questionType = questionType;
+    }
+
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public void setOptions(List<String> options) {
+        this.options = options;
+    }
+
+    public Integer getCorrectAnswerIndex() {
+        return correctAnswerIndex;
+    }
+
+    public void setCorrectAnswerIndex(Integer correctAnswerIndex) {
+        this.correctAnswerIndex = correctAnswerIndex;
+    }
+
+    public String getCorrectAnswerText() {
+        return correctAnswerText;
+    }
+
+    public void setCorrectAnswerText(String correctAnswerText) {
+        this.correctAnswerText = correctAnswerText;
+    }
+
+    public Integer getScoreValue() {
+        return scoreValue;
+    }
+
+    public void setScoreValue(Integer scoreValue) {
+        this.scoreValue = scoreValue;
+    }
+
+    public Integer getOrderInQuiz() {
+        return orderInQuiz;
+    }
+
+    public void setOrderInQuiz(Integer orderInQuiz) {
+        this.orderInQuiz = orderInQuiz;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }
