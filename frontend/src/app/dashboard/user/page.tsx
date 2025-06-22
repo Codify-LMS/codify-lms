@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useUser } from '@/hooks/useUser.tsx';
+import { useUser } from '@/hooks/useUser';
 import Button from '@/components/Button';
 import DashboardHeader from '../components/DashboardHeader';
 import Sidebar from '@/components/Sidebar';
