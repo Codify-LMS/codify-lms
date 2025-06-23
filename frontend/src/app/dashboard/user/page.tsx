@@ -8,16 +8,32 @@ import Button from '@/components/Button';
 import DashboardHeader from '../components/DashboardHeader';
 import Sidebar from '@/components/Sidebar';
 import DashboardCard from '../components/DashboardCard';
-import ProgressBar from '../components/ProgressBar';
 import Image from 'next/image';
-import RoleGuard from '@/components/RoleGuard';
+import Link from 'next/link';
+
+type LeaderboardEntry = {
+  rank: number;
+  name: string;
+  avatarUrl: string;
+  courseCompleted: number;
+  hourSpent: number;
+  totalScore: number;
+};
+
+type DashboardStats = {
+  completeCourse: number;
+  inProgressCourse: number;
+  upcoming: number;
+  leaderboard: LeaderboardEntry[];
+};
 
 const DashboardPage = () => {
   const router = useRouter();
   const supabaseClient = useSupabaseClient();
-  const { user, isLoading, userDetails } = useUser();
+  const { user, isLoading } = useUser();
 
   const [shouldRender, setShouldRender] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -27,6 +43,24 @@ const DashboardPage = () => {
     }
   }, [user, isLoading, router]);
 
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      if (user && user.id) {
+        try {
+          const res = await fetch(`http://localhost:8080/api/v1/dashboard/${user.id}`);
+          const data = await res.json();
+          setDashboardData(data);
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+        }
+      }
+    };
+
+    if (!isLoading && user) {
+      fetchDashboard();
+    }
+  }, [user, isLoading]);
+
   if (!shouldRender) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 text-gray-800">
@@ -35,143 +69,153 @@ const DashboardPage = () => {
     );
   }
 
-  const assignments = [
-    { id: 1, title: 'Web Design', progress: 55, icon: '/icons/web-design.svg', color: 'bg-blue-400' },
-    { id: 2, title: 'Ads Facebook', progress: 75, icon: '/icons/ads-facebook.svg', color: 'bg-pink-500' },
-    { id: 3, title: 'Graphich Desainer', progress: 70, icon: '/icons/graphic-designer.svg', color: 'bg-purple-400' },
-    { id: 4, title: 'Content Creator', progress: 90, icon: '/icons/content-creator.svg', color: 'bg-green-400' },
-  ];
-
-  const leaderboardData = [
-    { rank: 1, name: 'Charlie Rowal', course: 53, hour: 250, point: 13450, avatar: '/avatars/charlie.png' },
-    { rank: 2, name: 'Ariana Agarwal', course: 88, hour: 212, point: 10333, avatar: '/avatars/ariana.png' },
-    { rank: 3, name: 'John Doe', course: 81, hour: 190, point: 9420, avatar: '/avatars/john.png' },
-  ];
-
   return (
-//    <RoleGuard allowed="user">
     <div className="flex h-screen bg-white">
       <Sidebar>
         <div className="flex flex-col flex-1 overflow-y-auto">
           <DashboardHeader />
 
           <main className="p-6 flex-1 overflow-y-auto bg-[#F9FAFB]">
-            <DashboardCard className="mb-6 overflow-hidden relative bg-gradient-to-b from-[#7A4FD6] to-[#2BAEF4] text-white">
-              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between px-8 py-4">
-                <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0">
-                  <h2 className="text-3xl font-bold mb-2">Level Up Your Coding Journey</h2>
-                  <p className="text-lg max-w-lg">
-                    Explore lessons, complete quizzes, and climb the leaderboard — all in one place!
-                    <span className="font-bold text-yellow-300 ml-1">Start learning now and unlock your full potential!</span>
-                  </p>
-                  <Button className="bg-white text-[#28094B] font-semibold mt-4 py-2 px-6 rounded-full hover:bg-gray-100">
-                    Start Learning Now
-                  </Button>
-                </div>
-                <div className="md:w-1/2 flex justify-center items-end relative">
-                  <Image
-                    src="/dashboard-hero-illustration.svg"
-                    alt="Coding Journey"
-                    width={400}
-                    height={400}
-                    priority
-                    className="object-contain"
-                  />
-                  <div className="absolute bottom-5 right-5 bg-white/20 backdrop-blur-sm rounded-md p-2 flex items-center text-white">
-                    <Image src="/icons/plus-courses.svg" alt="Courses" width={20} height={20} className="mr-1" />
-                    10+ Courses <span className="ml-1">from various companies</span>
+            {/* Hero and Statistics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              {/* Hero Section - kiri */}
+              <div className="lg:col-span-2">
+                <DashboardCard className="overflow-hidden relative bg-gradient-to-b from-[#7A4FD6] to-[#2BAEF4] text-white h-full">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between px-8 py-4 h-full">
+                    <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0">
+                      <h2 className="text-3xl font-bold mb-2">Level Up Your Coding Journey</h2>
+                      <p className="text-sm max-w-lg">
+                        Explore lessons, complete quizzes, and climb the leaderboard — all in one place!
+                        <span className="font-bold text-yellow-300 ml-1">
+                          Start learning now and unlock your full potential!
+                        </span>
+                      </p>
+                      <Link href="/courses" className="inline-block">
+                        <Button className="bg-white text-[#28094B] font-semibold mt-4 py-2 px-6 rounded-full hover:bg-gray-100">
+                          Start Learning Now
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="md:w-1/2 flex justify-center items-end relative">
+                      <Image
+                        src="/dashboard-hero-illustration.svg"
+                        alt="Coding Journey"
+                        width={400}
+                        height={400}
+                        priority
+                        className="object-contain"
+                      />
+                      <div className="absolute bottom-5 right-5 bg-white/20 backdrop-blur-sm rounded-md p-2 flex items-center text-white">
+                        <Image src="/course.svg" alt="Courses" width={20} height={20} className="mr-1 text-[5px]" />
+                        10+ Courses <span className="ml-1">from various companies</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </DashboardCard>
               </div>
-            </DashboardCard>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <DashboardCard className="flex flex-col items-center justify-center p-4 bg-white">
-                <span className="text-sm text-gray-500 mb-2">Complete Course</span>
-                <span className="text-4xl font-bold text-gray-900">28</span>
-              </DashboardCard>
-              <DashboardCard className="flex flex-col items-center justify-center p-4 bg-white">
-                <span className="text-sm text-gray-500 mb-2">In Progress Course</span>
-                <span className="text-4xl font-bold text-gray-900">14</span>
-              </DashboardCard>
-              <DashboardCard className="flex flex-col items-center justify-center p-4 bg-white">
-                <span className="text-sm text-gray-500 mb-2">Upcoming</span>
-                <span className="text-4xl font-bold text-gray-900">91</span>
-              </DashboardCard>
+              {/* Statistik - kanan */}
+              <div className="flex flex-col space-y-6">
+                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 text-xl font-bold">
+                    🎯
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-500">Complete Course</span>
+                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.completeCourse ?? 0}</span>
+                  </div>
+                </DashboardCard>
+
+                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-xl font-bold">
+                    🕓
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-500">In Progress Course</span>
+                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.inProgressCourse ?? 0}</span>
+                  </div>
+                </DashboardCard>
+
+                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xl font-bold">
+                    🔜
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-500">Upcoming</span>
+                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.upcoming ?? 0}</span>
+                  </div>
+                </DashboardCard>
+
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <DashboardCard className="col-span-1 bg-white">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">Assignment</h3>
-                  <button className="text-gray-500 hover:text-gray-700">...</button>
-                </div>
-                <div className="space-y-4">
-                  {assignments.map((assignment) => (
-                    <div key={assignment.id} className="flex items-center space-x-4">
-                      <div className="p-3 rounded-md bg-gray-100 flex-shrink-0">
-                        <Image src={assignment.icon} alt={assignment.title} width={24} height={24} />
-                      </div>
-                      <div className="flex-grow">
-                        <h4 className="font-semibold text-gray-900">{assignment.title}</h4>
-                        <ProgressBar progress={assignment.progress} colorClass={assignment.color} className="mt-1" />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{assignment.progress}%</span>
-                    </div>
-                  ))}
-                </div>
-              </DashboardCard>
+            {/* Leaderboard */}
+            <DashboardCard className="bg-white">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Leaderboard</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {dashboardData?.leaderboard?.slice(0, 5).map((entry, index) => {
+                      const rowColor =
+                        entry.rank === 1
+                          ? 'bg-yellow-100'
+                          : entry.rank === 2
+                          ? 'bg-gray-200'
+                          : entry.rank === 3
+                          ? 'bg-orange-100'
+                          : 'bg-white';
 
-              <DashboardCard className="col-span-1 bg-white">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Hours Spent</h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-md">
-                  <p className="text-gray-400">Chart will go here</p>
-                </div>
-              </DashboardCard>
-
-              <DashboardCard className="col-span-full bg-white">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Leader Board</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RANK</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NAME</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">COURSE</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HOUR</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">POINT</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {leaderboardData.map((entry, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                            {entry.rank === 1 && (
-                              <Image src="/icons/first-place.svg" alt="1st" width={16} height={16} className="mr-2" />
-                            )}
-                            {entry.rank}
+                      return (
+                        <tr key={index} className={`${rowColor} text-sm`}>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-800 font-bold">
+                            <div className="flex items-center space-x-2">
+                              {entry.rank === 1 && (
+                                <Image src="/first-place.png" alt="1st" width={20} height={20} />
+                              )}
+                              <span>{entry.rank}</span>
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center">
-                            <Image src={entry.avatar} alt={entry.name} width={32} height={32} className="rounded-full mr-2" />
-                            {entry.name}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-3">
+                              <Image
+                                  src={entry.avatarUrl || '/icons/default-avatar.png'}
+                                  alt={entry.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full object-cover border shadow-sm"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = '/icons/default-avatar.svg';
+                                  }}
+                                />
+                              <span className="text-gray-900 font-medium">{entry.name}</span>
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.course}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.hour}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-green-500 font-semibold">
-                            {entry.point.toLocaleString()}
+                          <td className="px-6 py-4 text-green-700 font-semibold text-base text-center">
+                            {entry.courseCompleted ?? 0}
+                          </td>
+                          <td className="px-6 py-4 text-green-700 font-bold text-base text-center">
+                            {(entry.totalScore ?? 0).toLocaleString()}
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </DashboardCard>
-            </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </DashboardCard>
           </main>
         </div>
       </Sidebar>
     </div>
-//    </RoleGuard>
   );
 };
 

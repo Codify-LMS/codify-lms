@@ -3,23 +3,18 @@ package com.codify.codify_lms.model;
 import java.util.UUID;
 
 public class LeaderboardEntry {
+
     private UUID userId;
     private String fullName;
     private String avatarUrl;
+    private int courseCompleted;
+    private int hourSpent;
+    private double quizScore;
+    private double bonusPoint;
     private double totalScore;
+    private int rank;
 
-    // === Constructor ===
-    public LeaderboardEntry() {
-    }
-
-    public LeaderboardEntry(UUID userId, String fullName, String avatarUrl, double totalScore) {
-        this.userId = userId;
-        this.fullName = fullName;
-        this.avatarUrl = avatarUrl;
-        this.totalScore = totalScore;
-    }
-
-    // === Getters & Setters ===
+    public LeaderboardEntry() {}
 
     public UUID getUserId() {
         return userId;
@@ -45,11 +40,51 @@ public class LeaderboardEntry {
         this.avatarUrl = avatarUrl;
     }
 
+    public int getCourseCompleted() {
+        return courseCompleted;
+    }
+
+    public void setCourseCompleted(int courseCompleted) {
+        this.courseCompleted = courseCompleted;
+    }
+
+    public int getHourSpent() {
+        return hourSpent;
+    }
+
+    public void setHourSpent(int hourSpent) {
+        this.hourSpent = hourSpent;
+    }
+
+    public double getQuizScore() {
+        return quizScore;
+    }
+
+    public void setQuizScore(double quizScore) {
+        this.quizScore = quizScore;
+    }
+
+    public double getBonusPoint() {
+        return bonusPoint;
+    }
+
+    public void setBonusPoint(double bonusPoint) {
+        this.bonusPoint = bonusPoint;
+    }
+
     public double getTotalScore() {
         return totalScore;
     }
 
     public void setTotalScore(double totalScore) {
         this.totalScore = totalScore;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
     }
 }
