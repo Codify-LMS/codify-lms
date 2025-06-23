@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { HiOutlineLogout } from 'react-icons/hi';
 
 const DashboardHeader = () => {
-  const { userDetails } = useUser(); // ✅ diambil dari global context
+  const { userDetails } = useUser(); 
   const supabaseClient = useSupabaseClient();
   const router = useRouter();
 
