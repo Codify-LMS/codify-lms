@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
-
 @Repository
 public class LeaderboardRepository {
 
@@ -33,15 +32,20 @@ public class LeaderboardRepository {
             LIMIT ?
         """;
 
-        RowMapper<LeaderboardEntry> rowMapper = (rs, rowNum) -> {
-            UUID userId = UUID.fromString(rs.getString("user_id"));
-            String fullName = rs.getString("full_name");
-            String avatarUrl = rs.getString("avatar_url");
-            double totalScore = rs.getDouble("total_score");
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            LeaderboardEntry entry = new LeaderboardEntry();
+            entry.setUserId(UUID.fromString(rs.getString("user_id")));
+            entry.setFullName(rs.getString("full_name"));
+            entry.setAvatarUrl(rs.getString("avatar_url"));
+            entry.setQuizScore(rs.getDouble("quiz_score"));
+            entry.setBonusPoint(rs.getDouble("bonus_point"));
+            entry.setTotalScore(rs.getDouble("total_score"));
+            entry.setRank(rowNum + 1);
+            return entry;
+        }, limit);
+    }
 
-            return new LeaderboardEntry(userId, fullName, avatarUrl, totalScore);
-        };
-
-        return jdbcTemplate.query(sql, rowMapper, limit);
+    public List<LeaderboardEntry> getTopLeaderboard() {
+        return findTopLeaderboardEntries(10);
     }
 }
