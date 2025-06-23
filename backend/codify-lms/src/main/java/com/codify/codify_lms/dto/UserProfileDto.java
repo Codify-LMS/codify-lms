@@ -66,4 +66,52 @@ public class UserProfileDto {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
+
+    // ✅ Manual builder
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String id;
+        private String email;
+        private String firstName;
+        private String lastName;
+        private String username;
+        private String avatarUrl;
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Builder firstName(String firstName) {
+            this.firstName = firstName;
+            return this;
+        }
+
+        public Builder lastName(String lastName) {
+            this.lastName = lastName;
+            return this;
+        }
+
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder avatarUrl(String avatarUrl) {
+            this.avatarUrl = avatarUrl;
+            return this;
+        }
+
+        public UserProfileDto build() {
+            return new UserProfileDto(id, email, firstName, lastName, username, avatarUrl);
+        }
+    }
 }
