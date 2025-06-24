@@ -7,17 +7,19 @@ public class LeaderboardEntryDto {
     private int hourSpent;
     private int point;
     private String avatarUrl;
+    private String reward; // 🎖️ Tambahan
 
     public LeaderboardEntryDto() {
     }
 
-    public LeaderboardEntryDto(int rank, String name, int courseCompleted, int hourSpent, int point, String avatarUrl) {
+    public LeaderboardEntryDto(int rank, String name, int courseCompleted, int hourSpent, int point, String avatarUrl, String reward) {
         this.rank = rank;
         this.name = name;
         this.courseCompleted = courseCompleted;
         this.hourSpent = hourSpent;
         this.point = point;
         this.avatarUrl = avatarUrl;
+        this.reward = reward;
     }
 
     public int getRank() {
@@ -66,5 +68,13 @@ public class LeaderboardEntryDto {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public String getReward() {
+        return reward;
+    }
+
+    public void setReward(String reward) {
+        this.reward = reward;
     }
 }

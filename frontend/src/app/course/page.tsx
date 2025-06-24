@@ -7,6 +7,7 @@ import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
 import { Bookmark, BookmarkCheck, Search } from 'lucide-react';
+import CourseCard from '@/components/CourseCard'; // Import komponen baru
 
 interface Course {
   id: string;
@@ -29,6 +30,7 @@ export default function CourseListPage() {
 
   useEffect(() => {
     const fetchCourses = async () => {
+      if (!user?.id) return;
       try {
         const res = await axios.get(`http://localhost:8080/api/v1/courses/all-with-progress?userId=${user.id}`);
         setCourses(res.data);
@@ -111,59 +113,15 @@ export default function CourseListPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => {
-              const isBookmarked = bookmarkedIds.includes(course.id);
-              const progress = Math.round(course.progressPercentage || 0);
-
-              return (
-                <div
-                  key={course.id}
-                  className="relative rounded-lg shadow hover:shadow-lg transition overflow-hidden bg-white border group"
-                >
-                  {/* Bookmark icon */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleBookmark(course.id);
-                    }}
-                    className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition"
-                  >
-                    {isBookmarked ? (
-                      <BookmarkCheck className="text-indigo-600 w-5 h-5" />
-                    ) : (
-                      <Bookmark className="text-gray-400 w-5 h-5" />
-                    )}
-                  </button>
-
-                  <div onClick={() => handleCourseClick(course.id)} className="cursor-pointer">
-                    <img
-                      src={course.thumbnailUrl}
-                      alt={course.title}
-                      className="w-full h-40 object-cover bg-gray-200"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/default-thumbnail.jpg';
-                      }}
-                    />
-                    <div className="p-4 space-y-1">
-                      <h2 className="text-lg font-semibold text-gray-800">{course.title}</h2>
-                      <p className="text-sm text-gray-600 truncate">{course.description}</p>
-                      <p className="text-xs text-gray-500">
-                        {course.moduleCount} modules • {course.lessonCount} lessons • {course.quizCount} quiz
-                      </p>
-
-                      {/* Progress bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div
-                          className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">{progress}% completed</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                isBookmarked={bookmarkedIds.includes(course.id)}
+                onClick={() => handleCourseClick(course.id)}
+                onToggleBookmark={() => toggleBookmark(course.id)}
+              />
+            ))}
           </div>
 
           {filteredCourses.length === 0 && (

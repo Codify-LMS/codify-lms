@@ -1,5 +1,7 @@
 package com.codify.codify_lms.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -38,10 +40,12 @@ public class QuizSubmissionResponse {
         this.scoreObtained = scoreObtained;
     }
 
+    @JsonProperty("isPassed")
     public boolean isPassed() {
         return isPassed;
     }
 
+    @JsonProperty("isPassed")
     public void setPassed(boolean passed) {
         isPassed = passed;
     }
@@ -73,7 +77,6 @@ public class QuizSubmissionResponse {
             this.correctAnswerIndex = correctAnswerIndex;
         }
 
-        // Getters and Setters
         public UUID getQuestionId() {
             return questionId;
         }

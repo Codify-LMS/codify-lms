@@ -176,7 +176,7 @@ export default function AnswerDiscussPage() {
             </button>
             <button
               className="text-sm text-gray-600 block w-full py-2 border rounded-full hover:bg-blue-100 hover:text-blue-700 transition"
-              onClick={() => router.push('/dashboard/discussion')}
+              onClick={() => router.push('/discussion')}
             >
               ← Kembali ke Daftar Diskusi
             </button>

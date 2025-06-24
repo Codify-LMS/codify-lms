@@ -47,11 +47,11 @@ public class DiscussionService {
     public UUID createDiscussion(CreateDiscussionRequest request) {
         Discussion discussion = new Discussion();
         discussion.setId(UUID.randomUUID());
-        discussion.setTitle(request.title);
-        discussion.setContent(request.content);
-        discussion.setUserId(request.userId);
-        discussion.setCourseId(request.courseId);
-        discussion.setModuleId(request.moduleId);
+        discussion.setTitle(request.getTitle());
+        discussion.setContent(request.getContent());
+        discussion.setUserId(request.getUserId());
+        discussion.setCourseId(request.getCourseId());
+        discussion.setModuleId(request.getModuleId());
         discussion.setCreatedAt(ZonedDateTime.now());
 
         Discussion saved = discussionRepository.save(discussion);
@@ -82,14 +82,15 @@ public class DiscussionService {
         DiscussionPost post = new DiscussionPost();
         post.setId(UUID.randomUUID());
         post.setDiscussionId(discussionId);
-        post.setUserId(request.userId);
-        post.setContent(request.content);
-        post.setParentPostId(request.parentPostId); // bisa null
+        post.setUserId(request.getUserId());
+        post.setContent(request.getContent());
+        post.setParentPostId(request.getParentPostId()); // bisa null
         post.setCreatedAt(ZonedDateTime.now());
 
         DiscussionPost saved = discussionPostRepository.save(post);
         return saved.getId();
     }
+
 
     public Discussion getDiscussionById(UUID id) {
         return discussionRepository.findById(id)
