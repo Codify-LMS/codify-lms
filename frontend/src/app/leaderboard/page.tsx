@@ -53,9 +53,14 @@ export default function LeaderboardPage() {
         followers: 0,
         point: entry.totalScore,
         avatar: entry.avatarUrl || '/default-avatar.png',
-        reward: 'N/A',
+        reward: entry.reward ?? 'N/A',
       }))
     : []; // prevent empty rendering logic if less than 4 users
+
+    useEffect(() => {
+      console.log("Leaderboard data from API:", leaderboardData);
+    }, [leaderboardData]);
+
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -108,16 +113,19 @@ export default function LeaderboardPage() {
                   <div className="text-gray-700">{user.point.toLocaleString()}</div>
 
                   <div className="flex justify-start items-center">
-                    {user.reward === 'special' ? (
-                      <div className="bg-gray-900 text-white text-xs px-3 py-1 rounded-full flex items-center">
-                        💎
-                      </div>
-                    ) : (
-                      <span className="text-blue-500 font-semibold text-xs flex items-center gap-1">
-                        {user.reward !== 'N/A' ? `💎 ${user.reward}` : user.reward}
-                      </span>
-                    )}
-                  </div>
+                      {user.reward === 'Gold' && (
+                        <span className="bg-yellow-400 text-white text-xs px-3 py-1 rounded-full">🥇 Gold</span>
+                      )}
+                      {user.reward === 'Silver' && (
+                        <span className="bg-gray-400 text-white text-xs px-3 py-1 rounded-full">🥈 Silver</span>
+                      )}
+                      {user.reward === 'Bronze' && (
+                        <span className="bg-orange-400 text-white text-xs px-3 py-1 rounded-full">🥉 Bronze</span>
+                      )}
+                      {user.reward === 'N/A' && (
+                        <span className="text-gray-500 text-xs">No reward</span>
+                      )}
+                    </div>
                 </div>
               ))
             )}

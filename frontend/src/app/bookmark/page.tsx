@@ -6,7 +6,7 @@ import axios from 'axios';
 import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
-import { Bookmark, BookmarkCheck } from 'lucide-react';
+import CourseCard from '@/components/CourseCard';
 
 interface BookmarkedCourse {
   id: string;
@@ -20,6 +20,7 @@ interface BookmarkedCourse {
   quizCount: number;
 }
 
+
 export default function BookmarksPage() {
   const [bookmarkedCourses, setBookmarkedCourses] = useState<BookmarkedCourse[]>([]);
   const { user, isLoading } = useUser();
@@ -31,11 +32,25 @@ export default function BookmarksPage() {
     const fetchBookmarks = async () => {
       try {
         const res = await axios.get(`http://localhost:8080/api/v1/bookmarks/user/${user.id}`);
-        setBookmarkedCourses(res.data);
+
+        const mappedCourses = res.data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          thumbnailUrl: item.thumbnail_url,
+          isPublished: item.is_published,
+          progressPercentage: item.progress_percentage,
+          moduleCount: item.module_count,
+          lessonCount: item.lesson_count,
+          quizCount: item.quiz_count,
+        }));
+
+        setBookmarkedCourses(mappedCourses);
       } catch (err) {
         console.error('Failed to fetch bookmarks:', err);
       }
     };
+
 
     fetchBookmarks();
   }, [user, isLoading]);
@@ -66,47 +81,16 @@ export default function BookmarksPage() {
           <p className="text-gray-500">Kamu belum bookmark course apapun.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {bookmarkedCourses.map((course) => {
-              const progress = Math.round(course.progressPercentage || 0);
-
-              return (
-                <div
-                  key={course.id}
-                  onClick={() => handleCourseClick(course.id)}
-                  className="cursor-pointer relative rounded-lg shadow hover:shadow-lg transition overflow-hidden bg-white border group"
-                >
-                  {/* Bookmark icon static */}
-                  <div className="absolute top-2 right-2 z-10 bg-white rounded-full p-1 shadow">
-                    <BookmarkCheck className="text-indigo-600 w-5 h-5" />
-                  </div>
-                  <img
-                    src={course.thumbnailUrl || '/default-thumbnail.jpg'}
-                    alt={course.title}
-                    className="w-full h-40 object-cover bg-gray-200"
-                    onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/default-thumbnail.jpg';
-                    }}
-                    />
-
-                  <div className="p-4 space-y-1">
-                    <h2 className="text-lg font-semibold text-gray-800">{course.title}</h2>
-                    <p className="text-sm text-gray-600 truncate">{course.description}</p>
-                    <p className="text-xs text-gray-500">
-                      {course.moduleCount} modules • {course.lessonCount} lessons • {course.quizCount} quiz
-                    </p>
-
-                    {/* Progress bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                      <div
-                        className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{progress}% completed</p>
-                  </div>
-                </div>
-              );
-            })}
+            {bookmarkedCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                isBookmarked={true}
+                showBookmark={false}
+                showProgress={true}
+                onClick={() => handleCourseClick(course.id)}
+              />
+            ))}
           </div>
         )}
       </div>

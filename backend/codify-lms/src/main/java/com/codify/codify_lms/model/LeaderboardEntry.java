@@ -14,6 +14,9 @@ public class LeaderboardEntry {
     private double totalScore;
     private int rank;
 
+    // ✅ Tambahan field reward
+    private String reward;
+
     public LeaderboardEntry() {}
 
     public UUID getUserId() {
@@ -86,5 +89,14 @@ public class LeaderboardEntry {
 
     public void setRank(int rank) {
         this.rank = rank;
+    }
+
+    // ✅ Getter & Setter reward
+    public String getReward() {
+        return reward;
+    }
+
+    public void setReward(String reward) {
+        this.reward = reward;
     }
 }

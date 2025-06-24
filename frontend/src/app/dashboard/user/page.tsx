@@ -10,15 +10,7 @@ import Sidebar from '@/components/Sidebar';
 import DashboardCard from '../components/DashboardCard';
 import Image from 'next/image';
 import Link from 'next/link';
-
-type LeaderboardEntry = {
-  rank: number;
-  name: string;
-  avatarUrl: string;
-  courseCompleted: number;
-  hourSpent: number;
-  totalScore: number;
-};
+import { LeaderboardEntry } from '@/types';
 
 type DashboardStats = {
   completeCourse: number;
@@ -42,6 +34,11 @@ const DashboardPage = () => {
       setShouldRender(true);
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    console.log('🏆 Leaderboard from Dashboard:', dashboardData?.leaderboard);
+  }, [dashboardData]);
+
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -68,6 +65,8 @@ const DashboardPage = () => {
       </div>
     );
   }
+  
+  
 
   return (
     <div className="flex h-screen bg-white">
@@ -107,7 +106,7 @@ const DashboardPage = () => {
                       />
                       <div className="absolute bottom-5 right-5 bg-white/20 backdrop-blur-sm rounded-md p-2 flex items-center text-white">
                         <Image src="/course.svg" alt="Courses" width={20} height={20} className="mr-1 text-[5px]" />
-                        10+ Courses <span className="ml-1">from various companies</span>
+                        ni ganti aja nih ganti
                       </div>
                     </div>
                   </div>
@@ -158,8 +157,8 @@ const DashboardPage = () => {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Reward</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -200,12 +199,32 @@ const DashboardPage = () => {
                               <span className="text-gray-900 font-medium">{entry.name}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-green-700 font-semibold text-base text-center">
-                            {entry.courseCompleted ?? 0}
-                          </td>
                           <td className="px-6 py-4 text-green-700 font-bold text-base text-center">
-                            {(entry.totalScore ?? 0).toLocaleString()}
+                            {(entry.point ?? 0).toLocaleString()}
                           </td>
+                          <td className="px-6 py-4 text-sm font-semibold">
+                            <div className="flex items-center justify-center gap-x-2">
+                              {entry.reward === 'Gold' && (
+                                <span className="flex items-center gap-x-1 bg-yellow-400 text-white px-3 py-1 rounded-full">
+                                  🥇 <span>Gold</span>
+                                </span>
+                              )}
+                              {entry.reward === 'Silver' && (
+                                <span className="flex items-center gap-x-1 bg-gray-400 text-white px-3 py-1 rounded-full">
+                                  🥈 <span>Silver</span>
+                                </span>
+                              )}
+                              {entry.reward === 'Bronze' && (
+                                <span className="flex items-center gap-x-1 bg-orange-400 text-white px-3 py-1 rounded-full">
+                                  🥉 <span>Bronze</span>
+                                </span>
+                              )}
+                              {(!entry.reward || entry.reward === 'N/A') && (
+                                <span className="text-gray-500">No reward</span>
+                              )}
+                            </div>
+                          </td>
+
                         </tr>
                       );
                     })}

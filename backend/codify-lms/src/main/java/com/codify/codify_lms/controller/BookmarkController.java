@@ -78,13 +78,44 @@ public class BookmarkController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Map<String, Object>>> getUserBookmarkedCourses(@PathVariable UUID userId) {
         List<Map<String, Object>> bookmarks = jdbcTemplate.queryForList("""
-            SELECT c.id, c.title, c.thumbnail_url, c.is_published
+            SELECT 
+                c.id,
+                c.title,
+                c.description,
+                c.thumbnail_url,
+                c.is_published,
+                COALESCE(ucp.progress_percentage, 0) AS progress_percentage,
+                (
+                    SELECT COUNT(*) 
+                    FROM modules m 
+                    WHERE m.course_id = c.id
+                ) AS module_count,
+                (
+                    SELECT COUNT(*) 
+                    FROM lessons l 
+                    WHERE l.module_id IN (
+                        SELECT id FROM modules WHERE course_id = c.id
+                    )
+                ) AS lesson_count,
+                (
+                    SELECT COUNT(*) 
+                    FROM quizzes q 
+                    WHERE q.lesson_id IN (
+                        SELECT id FROM lessons WHERE module_id IN (
+                            SELECT id FROM modules WHERE course_id = c.id
+                        )
+                    )
+                ) AS quiz_count
             FROM user_bookmarks ub
             JOIN courses c ON ub.course_id = c.id
+            LEFT JOIN user_course_progress ucp ON ucp.course_id = c.id AND ucp.user_id = ?
             WHERE ub.user_id = ?
-        """, userId);
-        
+        """, userId, userId);
+
         return ResponseEntity.ok(bookmarks);
     }
+
+
+
     
 }

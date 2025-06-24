@@ -96,10 +96,15 @@ export interface UserProfile {
 }
 
 export interface LeaderboardEntry {
-  userId: string;
+  rank: number;
   fullName: string;
   avatarUrl: string;
+  courseCompleted: number;
+  hourSpent: number;
+  quizScore: number;
+  bonusPoint: number;
   totalScore: number;
+  reward: string; 
 }
 
 

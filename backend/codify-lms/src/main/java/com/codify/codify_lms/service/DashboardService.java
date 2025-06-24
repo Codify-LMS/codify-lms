@@ -32,16 +32,32 @@ public class DashboardService {
 
         List<AssignmentDto> assignments = userProgressRepository.getAssignments(userId);
 
-        // Konversi dari LeaderboardEntry → LeaderboardEntryDto
+        // Ambil data mentah dari repository
         List<LeaderboardEntry> leaderboardRaw = leaderboardRepository.getTopLeaderboard();
+
+        // Hitung reward berdasarkan urutan (rank)
         List<LeaderboardEntryDto> leaderboard = leaderboardRaw.stream().map(entry -> {
             LeaderboardEntryDto dtoEntry = new LeaderboardEntryDto();
-            dtoEntry.setRank(entry.getRank());
+            int rank = entry.getRank(); // asumsi rank sudah diset dari query
+
+            dtoEntry.setRank(rank);
             dtoEntry.setName(entry.getFullName());
             dtoEntry.setAvatarUrl(entry.getAvatarUrl());
             dtoEntry.setCourseCompleted(entry.getCourseCompleted());
             dtoEntry.setHourSpent(entry.getHourSpent());
             dtoEntry.setPoint((int) entry.getTotalScore());
+
+            // 🏅 Tambahkan reward berdasarkan peringkat
+            if (rank == 1) {
+                dtoEntry.setReward("Gold");
+            } else if (rank == 2) {
+                dtoEntry.setReward("Silver");
+            } else if (rank <= 10) {
+                dtoEntry.setReward("Bronze");
+            } else {
+                dtoEntry.setReward("N/A");
+            }
+
             return dtoEntry;
         }).collect(Collectors.toList());
 
@@ -53,4 +69,5 @@ public class DashboardService {
 
         return dto;
     }
+
 }

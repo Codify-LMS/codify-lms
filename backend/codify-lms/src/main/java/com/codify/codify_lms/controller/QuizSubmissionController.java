@@ -85,7 +85,27 @@ public class QuizSubmissionController {
                     q.getId(), isCorrect, q.getCorrectAnswerText(), q.getCorrectAnswerIndex()));
         }
 
-        boolean isPassed = totalScore >= 70;
+        Quiz quiz = quizRepository.findById(request.getQuizId()).orElse(null);
+        int totalPossibleScore = questionRepository.findByQuizId(quiz.getId())
+            .stream()
+            .mapToInt(QuizQuestion::getScoreValue)
+            .sum();
+
+        double percentageScore = (totalPossibleScore > 0) ? (totalScore * 100.0 / totalPossibleScore) : 0;
+        System.out.println("Total Score: " + totalScore);
+        System.out.println("Total Possible Score: " + totalPossibleScore);
+        System.out.println("Percentage Score: " + percentageScore);
+        System.out.println("Pass Score: " + quiz.getPassScore());
+        
+        boolean isPassed = Math.round(percentageScore) >= Math.round(quiz.getPassScore());
+        System.out.println("Total Score: " + totalScore);
+        System.out.println("Total Possible Score: " + totalPossibleScore);
+        System.out.println("Percentage Score: " + percentageScore);
+        System.out.println("Pass Score: " + quiz.getPassScore());
+        System.out.println("Is Passed: " + isPassed);
+
+
+
         jdbcTemplate.update(
                 "UPDATE user_quiz_attempts SET score_obtained = ?, is_passed = ? WHERE id = ?",
                 totalScore, isPassed, attemptId
@@ -138,10 +158,10 @@ public class QuizSubmissionController {
                 isCompleted
         );
 
-        Quiz quiz = quizRepository.findById(request.getQuizId()).orElse(null);
         if (quiz != null && quiz.getLesson() != null) {
             courseProgressService.markLessonCompleted(request.getUserId(), quiz.getLesson().getId());
         }
+
 
         return ResponseEntity.ok(
                 new QuizSubmissionResponse("Quiz submitted and progress updated", totalScore, isPassed, answerResults)

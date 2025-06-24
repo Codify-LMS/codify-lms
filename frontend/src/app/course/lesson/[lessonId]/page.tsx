@@ -131,6 +131,7 @@ export default function LessonPage() {
       const data = res.data;
       setScore(data.scoreObtained);
       setIsPassed(data.isPassed);
+      console.log('🎯 Response isPassed:', data.isPassed);
       setQuizResults(data.answerResults);
       console.log("📦 Quiz results:", data.answerResults);
       setQuizSubmitted(true);
