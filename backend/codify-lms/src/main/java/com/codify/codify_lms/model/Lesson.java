@@ -7,7 +7,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
+@Builder
 @Entity
 @Table(name = "lessons")
 public class Lesson {
@@ -55,6 +57,7 @@ public class Lesson {
     public void generateId() {
         if (id == null) id = UUID.randomUUID();
     }
+    
 
     // ======== Getter & Setter =========
 

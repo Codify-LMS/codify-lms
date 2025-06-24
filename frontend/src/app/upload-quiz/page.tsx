@@ -4,15 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import SidebarAdmin from '../dashboard/admin/components/SidebarAdmin';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import { FiPlus, FiTrash2 } from 'react-icons/fi'; 
-import axios from 'axios'; 
-import { CourseData, ModuleData, LessonData } from '@/types'; 
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import axios from 'axios';
+import { CourseData, ModuleData, LessonData } from '@/types';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+
 
 interface QuizQuestion {
   questionText: string;
   options: string[];
-  correctAnswerIndex?: number; 
+  correctAnswerIndex?: number;
   questionType: 'multiple_choice' | 'essay' | 'short_answer';
   correctAnswerText?: string;
   scoreValue?: number;
@@ -30,17 +32,17 @@ const UploadQuizPage = () => {
     moduleId: null as string | null,
   });
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([
-    {
-      questionText: '',
-      options: ['', '', '', ''],
-      correctAnswerIndex: 0,
-      questionType: 'multiple_choice',
-      correctAnswerText: '',
-      scoreValue: 10,
-      orderInQuiz: 1,
-    },
-  ]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([{
+    questionText: '',
+    options: ['', '', '', ''],
+    correctAnswerIndex: 0,
+    questionType: 'multiple_choice',
+    correctAnswerText: '',
+    scoreValue: 10,
+    orderInQuiz: 1,
+  }]);
+
+  const [expandedIndex, setExpandedIndex] = useState<number>(0);
 
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [modules, setModules] = useState<ModuleData[]>([]);
@@ -59,7 +61,7 @@ const UploadQuizPage = () => {
       setLoading(true);
       const response = await axios.get<CourseData[]>(`${API_BASE_URL}/v1/courses/all`);
       setCourses(response.data);
-    } catch (err) {
+    } catch {
       setError('Gagal mengambil daftar course.');
     } finally {
       setLoading(false);
@@ -72,7 +74,7 @@ const UploadQuizPage = () => {
       const response = await axios.get<ModuleData[]>(`${API_BASE_URL}/modules`);
       const filtered = response.data.filter(mod => mod.course?.id === courseId);
       setModules(filtered);
-    } catch (err) {
+    } catch {
       setError('Gagal mengambil daftar module.');
     } finally {
       setLoading(false);
@@ -84,9 +86,8 @@ const UploadQuizPage = () => {
       setLoading(true);
       const response = await axios.get<LessonData[]>(`${API_BASE_URL}/v1/lessons`);
       const filtered = response.data.filter(lesson => lesson.module?.id === moduleId);
-      console.log("Filtered lessons:", filtered);
       setLessons(filtered);
-    } catch (err) {
+    } catch {
       setError('Gagal mengambil daftar lesson.');
     } finally {
       setLoading(false);
@@ -153,10 +154,12 @@ const UploadQuizPage = () => {
         orderInQuiz: prev.length + 1,
       },
     ]);
+    setExpandedIndex(questions.length); // expand pertanyaan baru
   };
 
   const handleRemoveQuestion = (index: number) => {
     setQuestions(prev => prev.filter((_, i) => i !== index));
+    if (expandedIndex === index) setExpandedIndex(-1);
   };
 
   const handleQuestionChange = (
@@ -217,8 +220,6 @@ const UploadQuizPage = () => {
         moduleId: selectedModuleId,
         questions,
       };
-      console.log("Payload yang dikirim:", payload);
-
 
       const quizRes = await axios.post(`${API_BASE_URL}/quiz`, payload);
 
@@ -229,28 +230,28 @@ const UploadQuizPage = () => {
         setSelectedCourseId(null);
         setSelectedModuleId(null);
         setSelectedLessonId(null);
+        setExpandedIndex(0);
       } else {
         throw new Error(`Gagal membuat quiz: ${quizRes.statusText}`);
       }
-    } catch (err) {
+    } catch {
       setError('❌ Terjadi kesalahan saat mengirim data.');
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="flex">
-    <SidebarAdmin>
-      <DashboardHeader />
-      <main className="flex-1 p-6 bg-gray-50 min-h-screen w-full">
-        <div className="space-y-8 w-full bg-white p-8 rounded-lg shadow-xl">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-8">
-            Upload Quiz Baru
-          </h2>
+      <SidebarAdmin>
+        <DashboardHeader />
+        <main className="flex-1 p-6 bg-gray-50 min-h-screen w-full">
+          <div className="space-y-8 w-full bg-white p-8 rounded-lg shadow-xl">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-8">
+              Upload Quiz Baru
+            </h2>
 
-          {/* Bagian Detail Quiz */}
+             {/* Bagian Detail Quiz */}
           <section className="space-y-4 border-b pb-6 mb-6">
             <h3 className="text-xl font-semibold text-gray-800">1. Detail Quiz</h3>
             <div>
@@ -378,146 +379,158 @@ const UploadQuizPage = () => {
             )}
           </section>
 
-          {/* Pertanyaan Quiz */}
-          <section className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-800 flex items-center justify-between">
-              3. Pertanyaan Quiz
-              <Button
-                type="button"
-                onClick={handleAddQuestion}
-                className="bg-green-500 hover:bg-green-600 text-white flex items-center py-2 px-4 rounded-md"
-              >
-                <FiPlus className="mr-2" /> Tambah Pertanyaan
-              </Button>
-            </h3>
-
-            {questions.map((q, qIndex) => (
-              <div
-                key={qIndex}
-                className="bg-blue-50 border border-blue-300 p-6 rounded-lg space-y-4 shadow-sm relative"
-              >
-                <button
+            <section className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-800 flex items-center justify-between">
+                3. Pertanyaan Quiz
+                <Button
                   type="button"
-                  onClick={() => handleRemoveQuestion(qIndex)}
-                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                  onClick={handleAddQuestion}
+                  className="bg-green-500 hover:bg-green-600 text-white flex items-center py-2 px-4 rounded-md"
                 >
-                  <FiTrash2 />
-                </button>
+                  <FiPlus className="mr-2" /> Tambah Pertanyaan
+                </Button>
+              </h3>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pertanyaan</label>
-                  <Input
-                    value={q.questionText}
-                    onChange={e => handleQuestionChange(qIndex, 'questionText', e.target.value)}
-                    className="text-gray-700"
-                    placeholder="Masukkan teks pertanyaan di sini..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Tipe Pertanyaan</label>
-                  <select
-                    value={q.questionType}
-                    onChange={e =>
-                      handleQuestionChange(qIndex, 'questionType', e.target.value as QuizQuestion['questionType'])
-                    }
-                    className="w-full p-2 border rounded text-gray-700"
+              {questions.map((q, qIndex) => (
+                <div key={qIndex} className="border border-blue-300 rounded-md shadow bg-blue-50">
+                  <div
+                    className="flex items-center justify-between p-4 cursor-pointer"
+                    onClick={() => setExpandedIndex(expandedIndex === qIndex ? -1 : qIndex)}
                   >
-                    <option value="multiple_choice">Pilihan Ganda</option>
-                    <option value="essay">Esai</option>
-                    <option value="short_answer">Jawaban Singkat</option>
-                  </select>
-                </div>
+                    <span className="font-semibold text-gray-800">
+                      Pertanyaan {qIndex + 1}
+                    </span>
+                    <span className="text-gray-600 text-xl">
+                      {expandedIndex === qIndex ? <FiChevronUp /> : <FiChevronDown />}
+                    </span>
+                  </div>
 
-                {q.questionType === 'multiple_choice' && (
-                  <>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Opsi {oIndex + 1}
-                        </label>
+                  {expandedIndex === qIndex && (
+                    <div className="space-y-4 p-6 border-t">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQuestion(qIndex)}
+                        className="text-red-500 hover:text-red-700 float-right"
+                      >
+                        <FiTrash2 />
+                      </button>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Pertanyaan</label>
                         <Input
-                          value={opt}
-                          onChange={e => handleOptionChange(qIndex, oIndex, e.target.value)}
+                          value={q.questionText}
+                          onChange={e => handleQuestionChange(qIndex, 'questionText', e.target.value)}
                           className="text-gray-700"
+                          placeholder="Masukkan teks pertanyaan..."
                         />
                       </div>
-                    ))}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Jawaban Benar (Index 0-3)
-                      </label>
-                      <Input
-                        type="number"
-                        value={q.correctAnswerIndex}
-                        onChange={e =>
-                          handleQuestionChange(qIndex, 'correctAnswerIndex', Number(e.target.value))
-                        }
-                        className="text-gray-700"
-                      />
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Tipe Pertanyaan</label>
+                        <select
+                          value={q.questionType}
+                          onChange={e =>
+                            handleQuestionChange(qIndex, 'questionType', e.target.value as QuizQuestion['questionType'])
+                          }
+                          className="w-full p-2 border rounded text-gray-700"
+                        >
+                          <option value="multiple_choice">Pilihan Ganda</option>
+                          <option value="essay">Esai</option>
+                          <option value="short_answer">Jawaban Singkat</option>
+                        </select>
+                      </div>
+
+                      {q.questionType === 'multiple_choice' && (
+                        <>
+                          {q.options.map((opt, oIndex) => (
+                            <div key={oIndex}>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Opsi {oIndex + 1}
+                              </label>
+                              <Input
+                                value={opt}
+                                onChange={e => handleOptionChange(qIndex, oIndex, e.target.value)}
+                                className="text-gray-700"
+                              />
+                            </div>
+                          ))}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Jawaban Benar (Index 0-3)
+                            </label>
+                            <Input
+                              type="number"
+                              value={q.correctAnswerIndex}
+                              onChange={e =>
+                                handleQuestionChange(qIndex, 'correctAnswerIndex', Number(e.target.value))
+                              }
+                              className="text-gray-700"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {(q.questionType === 'essay' || q.questionType === 'short_answer') && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Jawaban Benar (Teks)
+                          </label>
+                          <Input
+                            value={q.correctAnswerText}
+                            onChange={e =>
+                              handleQuestionChange(qIndex, 'correctAnswerText', e.target.value)
+                            }
+                            className="text-gray-700"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Skor Soal</label>
+                          <Input
+                            type="number"
+                            value={q.scoreValue ?? ''}
+                            onChange={e =>
+                              handleQuestionChange(qIndex, 'scoreValue', Number(e.target.value))
+                            }
+                            className="text-gray-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Urutan Soal</label>
+                          <Input
+                            type="number"
+                            value={q.orderInQuiz ?? ''}
+                            onChange={e =>
+                              handleQuestionChange(qIndex, 'orderInQuiz', Number(e.target.value))
+                            }
+                            className="text-gray-700"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </>
-                )}
-
-                {(q.questionType === 'essay' || q.questionType === 'short_answer') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Jawaban Benar (Teks)
-                    </label>
-                    <Input
-                      value={q.correctAnswerText}
-                      onChange={e =>
-                        handleQuestionChange(qIndex, 'correctAnswerText', e.target.value)
-                      }
-                      className="text-gray-700"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Skor Soal</label>
-                    <Input
-                      type="number"
-                      value={q.scoreValue ?? ''}
-                      onChange={e =>
-                        handleQuestionChange(qIndex, 'scoreValue', Number(e.target.value))
-                      }
-                      className="text-gray-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Urutan Soal</label>
-                    <Input
-                      type="number"
-                      value={q.orderInQuiz ?? ''}
-                      onChange={e =>
-                        handleQuestionChange(qIndex, 'orderInQuiz', Number(e.target.value))
-                      }
-                      className="text-gray-700"
-                    />
-                  </div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </section>
+              ))}
+            </section>
 
-          {error && <p className="text-red-500 text-center text-sm mt-4">{error}</p>}
+            {error && <p className="text-red-500 text-center text-sm mt-4">{error}</p>}
 
-          <div className="flex justify-end mt-8">
-            <Button
-              type="button"
-              onClick={handleSubmitQuiz}
-              disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-md text-lg font-semibold"
-            >
-              {loading ? 'Mengirim...' : 'Upload Quiz'}
-            </Button>
+            <div className="flex justify-end mt-8">
+              <Button
+                type="button"
+                onClick={handleSubmitQuiz}
+                disabled={loading}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-md text-lg font-semibold"
+              >
+                {loading ? 'Mengirim...' : 'Upload Quiz'}
+              </Button>
+            </div>
           </div>
-        </div>
-      </main>
-    </SidebarAdmin>
-  </div>
+        </main>
+      </SidebarAdmin>
+    </div>
   );
 };
 
