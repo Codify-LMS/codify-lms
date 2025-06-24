@@ -6,12 +6,24 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.*;
 
+@Builder
 @Entity
 @Table(name = "quizzes")
 public class Quiz {
@@ -65,6 +77,84 @@ public class Quiz {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.questions = questions != null ? questions : new ArrayList<>();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    // ======= Builder Pattern =======
+    public static class Builder {
+        private UUID id;
+        private String title;
+        private String description;
+        private String type;
+        private Integer maxAttempts;
+        private Integer passScore;
+        private Lesson lesson;
+        private Module module;
+        private Instant createdAt;
+        private Instant updatedAt;
+        private List<QuizQuestion> questions = new ArrayList<>();
+
+        public Builder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder type(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder maxAttempts(Integer maxAttempts) {
+            this.maxAttempts = maxAttempts;
+            return this;
+        }
+
+        public Builder passScore(Integer passScore) {
+            this.passScore = passScore;
+            return this;
+        }
+
+        public Builder lesson(Lesson lesson) {
+            this.lesson = lesson;
+            return this;
+        }
+
+        public Builder module(Module module) {
+            this.module = module;
+            return this;
+        }
+
+        public Builder createdAt(Instant createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder updatedAt(Instant updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public Builder questions(List<QuizQuestion> questions) {
+            this.questions = questions != null ? questions : new ArrayList<>();
+            return this;
+        }
+
+        public Quiz build() {
+            return new Quiz(id, title, description, type, maxAttempts, passScore, lesson, module, createdAt, updatedAt, questions);
+        }
     }
 
     // ======= Getters & Setters =======

@@ -185,17 +185,18 @@ const DashboardPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-3">
-                              <Image
-                                  src={entry.avatarUrl || '/icons/default-avatar.png'}
+                              <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                                <Image
+                                  src={entry.avatarUrl || '/default-avatar.png'}
                                   alt={entry.name}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-full object-cover border shadow-sm"
+                                  fill
+                                  className="object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
-                                    target.src = '/icons/default-avatar.svg';
+                                    target.src = '/default-avatar.png';
                                   }}
                                 />
+                              </div>
                               <span className="text-gray-900 font-medium">{entry.name}</span>
                             </div>
                           </td>

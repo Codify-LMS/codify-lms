@@ -1,12 +1,13 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link'; // Keep Link for navigation, if any, or remove if not used
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
-import { useUser } from '@/hooks/useUser'; // Import useUser hook
+import { useUser } from '@/hooks/useUser';
 
 interface HistoryItem {
+  lessonId: string;
   courseName: string;
   progress: string;
   lastAccessed: string;
@@ -15,7 +16,8 @@ interface HistoryItem {
 export default function HistoryPage() {
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, isLoading: isUserLoading } = useUser(); // Get user and loading state from context
+  const { user, isLoading: isUserLoading } = useUser();
+  const router = useRouter();
 
   const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -26,8 +28,6 @@ export default function HistoryPage() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // If your backend requires JWT for history, pass it here
-          // 'Authorization': `Bearer ${user.jwtToken}`,
         },
       });
 
@@ -36,16 +36,17 @@ export default function HistoryPage() {
       }
 
       const data = await response.json();
-      
+      console.log('✅ History Data:', data); // Debugging log
+
       if (Array.isArray(data)) {
         setHistoryData(data);
       } else {
-        toast.error('Failed to fetch learning history: Invalid data format.');
+        toast.error('Invalid data format from server.');
         setHistoryData([]);
       }
     } catch (error: any) {
       console.error('Error fetching history:', error);
-      toast.error('Error fetching learning history.');
+      toast.error('Failed to fetch learning history.');
       setHistoryData([]);
     } finally {
       setLoading(false);
@@ -53,22 +54,23 @@ export default function HistoryPage() {
   };
 
   useEffect(() => {
-    // Only fetch data if user is loaded and available
     if (!isUserLoading && user?.id) {
       fetchHistoryData(user.id);
     } else if (!isUserLoading && !user) {
-      // Handle case where user is not logged in or not available
-      toast.error('User not found. Please login to view history.');
-      // Optionally redirect to login page if user must be logged in to see this page
-      // router.push('/auth/login');
-      setLoading(false); // Stop loading if no user
+      toast.error('User not found. Please login.');
+      setLoading(false);
     }
-  }, [user, isUserLoading]); // Depend on user and its loading state
+  }, [user, isUserLoading]);
 
-  // No need for formatProgress or formatDate as backend already formats it
-  // const formatProgress = (progress: string) => { /* ... */ };
-  // const formatDate = (dateString: string) => { /* ... */ };
-  
+  const handleRowClick = (lessonId: string) => {
+    if (!lessonId) {
+      toast.error('Lesson ID tidak ditemukan.');
+      return;
+    }
+
+    console.log('➡ Navigating to lesson:', lessonId);
+    router.push(`/course/lesson/${lessonId}`);
+  };
 
   return (
     <Sidebar>
@@ -77,9 +79,13 @@ export default function HistoryPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Learning History</h1>
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-6 text-center text-gray-500">Loading learning history...</div>
+            <div className="p-6 text-center text-gray-500">
+              Loading learning history...
+            </div>
           ) : historyData.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No learning history found. Start a course to see your progress here!</div>
+            <div className="p-6 text-center text-gray-500">
+              No learning history found. Start a course to see your progress here!
+            </div>
           ) : (
             <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-md">
               <thead className="bg-gray-100 text-gray-700">
@@ -91,8 +97,14 @@ export default function HistoryPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {historyData.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium text-gray-900">{item.courseName}</td>
+                  <tr
+                    key={index}
+                    onClick={() => handleRowClick(item.lessonId)}
+                    className="hover:bg-gray-100 cursor-pointer transition"
+                  >
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {item.courseName}
+                    </td>
                     <td className="px-6 py-4 text-gray-700">{item.progress}</td>
                     <td className="px-6 py-4 text-gray-700">{item.lastAccessed}</td>
                   </tr>

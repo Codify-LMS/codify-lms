@@ -33,6 +33,9 @@ export default function LessonPage() {
   const [showModal, setShowModal] = useState(false);
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
+  const [userAttempts, setUserAttempts] = useState<number>(0);
+  const [maxAttempts, setMaxAttempts] = useState<number>(3); // default fallback
+
 
   const handleAnswerChange = (questionId: string, value: any, isEssay = false) => {
     if (quizSubmitted) return;
@@ -78,6 +81,26 @@ export default function LessonPage() {
     }
   }, [lesson?.quiz]);
 
+  useEffect(() => {
+  const fetchUserAttempts = async () => {
+    if (!user?.id || !lesson?.quiz?.id) return;
+    try {
+      const res = await axios.get(`http://localhost:8080/api/v1/quiz-submissions/attempts`, {
+        params: {
+          userId: user.id,
+          quizId: lesson.quiz.id,
+        },
+      });
+      setUserAttempts(res.data.attemptCount);
+      setMaxAttempts(lesson.quiz.maxAttempts);
+    } catch (err) {
+      console.error('❌ Failed to fetch attempts', err);
+    }
+  };
+  if (lesson?.quiz?.id && user?.id) fetchUserAttempts();
+}, [lesson?.quiz?.id, user?.id]);
+
+
   const getFlattenedLessons = () => {
     const modules = course?.modules ?? [];
     const flattened: { lesson: LessonData; moduleId: string }[] = [];
@@ -109,6 +132,7 @@ export default function LessonPage() {
       setScore(data.scoreObtained);
       setIsPassed(data.isPassed);
       setQuizResults(data.answerResults);
+      console.log("📦 Quiz results:", data.answerResults);
       setQuizSubmitted(true);
       toast.success("Quiz submitted successfully!");
     } catch (err) {
@@ -200,53 +224,85 @@ export default function LessonPage() {
 
 
               {lesson.quiz.questions.map((q, index) => {
-                const userAnswer = answers.find(a => a.questionId === q.id);
-                const result = getQuestionResult(q.id);
-                const isCorrect = result?.isCorrect === true;
+                  const userAnswer = answers.find(a => a.questionId === q.id);
+                  const result = getQuestionResult(q.id);
+                  const isCorrect = result?.correct === true;
 
-                const inputBorderClass = showFeedback ? isCorrect ? 'border-green-500' : 'border-red-500' : 'border-gray-300';
-                const inputTextClass = showFeedback ? isCorrect ? 'text-green-700' : 'text-red-700' : 'text-gray-700';
+                  const inputBorderClass = showFeedback
+                    ? isCorrect
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                    : 'border-gray-300';
 
-                return (
-                  <div key={q.id} className="mb-6 text-gray-800">
-                    <p className="font-semibold mb-2">{index + 1}. {q.questionText}</p>
-                    {q.questionType === 'multiple_choice' ? (
-                      <div className="space-y-1">
-                        {q.options.map((opt, idx) => {
-                          const isSelected = userAnswer?.selectedAnswerIndex === idx;
-                          let optionClass = 'block p-2 rounded';
-                          if (showFeedback) {
-                            if (result?.correctAnswerIndex === idx) {
-                              optionClass += ' bg-green-100 text-green-800 font-medium';
-                            } else if (isSelected && !isCorrect) {
-                              optionClass += ' bg-red-100 text-red-800 font-medium';
-                            } else if (isSelected && isCorrect) {
-                              optionClass += ' bg-green-100 text-green-800 font-medium';
+                  const inputTextClass = showFeedback
+                    ? isCorrect
+                      ? 'text-green-700'
+                      : 'text-red-700'
+                    : 'text-gray-700';
+
+                  return (
+                    <div key={q.id} className="mb-6 text-gray-800">
+                      <p className="font-semibold mb-2">
+                        {index + 1}. {q.questionText}
+                      </p>
+
+                      {q.questionType === 'multiple_choice' ? (
+                        <div className="space-y-1">
+                          {q.options.map((opt, idx) => {
+                            const isSelected = userAnswer?.selectedAnswerIndex === idx;
+                            let optionClass = 'block p-2 rounded';
+                            if (showFeedback) {
+                              if (isSelected && isCorrect) {
+                                optionClass += ' bg-green-100 text-green-800 font-medium';
+                              } else if (isSelected && !isCorrect) {
+                                optionClass += ' bg-red-100 text-red-800 font-medium';
+                              }
+                            } else if (isSelected) {
+                              optionClass += ' bg-blue-100 text-blue-800';
                             }
-                          } else if (isSelected) {
-                            optionClass += ' bg-blue-100 text-blue-800';
-                          }
-                          return (
-                            <label key={idx} className={optionClass}>
-                              <input type="radio" name={`question-${q.id}`} value={idx} checked={isSelected} onChange={() => handleAnswerChange(q.id, idx)} className="mr-2" disabled={quizSubmitted} />
-                              {String.fromCharCode(97 + idx)}. {opt}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <>
-                        <textarea className={`w-full p-2 border rounded ${inputBorderClass} ${inputTextClass} text-left`} rows={3} value={userAnswer?.writtenAnswer || ''} onChange={(e) => handleAnswerChange(q.id, e.target.value, true)} disabled={quizSubmitted} />
-                        {showFeedback && result?.correctAnswerText && (
-                          <p className={`text-sm mt-1 ${isCorrect ? 'text-green-600' : 'text-red-600'} text-left`}>
-                            Jawaban Benar: <span className="font-semibold">{result.correctAnswerText}</span>
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+                            return (
+                              <label key={idx} className={optionClass}>
+                                <input
+                                  type="radio"
+                                  name={`question-${q.id}`}
+                                  value={idx}
+                                  checked={isSelected}
+                                  onChange={() => handleAnswerChange(q.id, idx)}
+                                  className="mr-2"
+                                  disabled={quizSubmitted}
+                                />
+                                {String.fromCharCode(97 + idx)}. {opt}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <>
+                          <textarea
+                            className={`w-full p-2 border rounded ${inputBorderClass} ${inputTextClass} text-left`}
+                            rows={3}
+                            value={userAnswer?.writtenAnswer || ''}
+                            onChange={(e) => handleAnswerChange(q.id, e.target.value, true)}
+                            disabled={quizSubmitted}
+                          />
+                          {/* {showFeedback && result?.correctAnswerText && (
+                            <p
+                              className={`text-sm mt-1 ${
+                                isCorrect ? 'text-green-600' : 'text-red-600'
+                              } text-left`}
+                            >
+                              Jawaban Benar:{' '}
+                              <span className="font-semibold">
+                                {result.correctAnswerText}
+                              </span>
+                            </p>
+                          )} */}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+
 
               <Button type="submit" className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700" disabled={!user?.id || quizSubmitted}>
                 {quizSubmitted ? 'Quiz Submitted' : 'Submit Quiz'}
@@ -264,6 +320,34 @@ export default function LessonPage() {
               )}
             </form>
           )}
+
+          {quizSubmitted && !isPassed && (
+            <div className="mt-6 text-center">
+              {userAttempts < maxAttempts ? (
+                <Button
+                  onClick={() => {
+                    setQuizSubmitted(false);
+                    setScore(null);
+                    setIsPassed(null);
+                    setQuizResults(null);
+                    setAnswers(lesson.quiz.questions.map(q => ({
+                      questionId: q.id,
+                      selectedAnswerIndex: null,
+                      writtenAnswer: '',
+                    })));
+                  }}
+                  className="bg-yellow-500 text-white px-6 py-2 rounded hover:bg-yellow-600"
+                >
+                  Coba Lagi
+                </Button>
+              ) : (
+                <p className="text-red-600 font-medium">
+                  Kamu sudah tidak memiliki kesempatan mengulang quiz ini.
+                </p>
+              )}
+            </div>
+          )}
+
 
           <div className="flex justify-between mt-10">
             <Button type="button" disabled={!previousLesson} className={`px-6 py-2 rounded ${previousLesson ? 'bg-gray-300 text-gray-800 hover:bg-gray-400' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`} onClick={() => previousLesson && router.push(`/course/lesson/${previousLesson.lesson.id}`)}>
@@ -292,7 +376,6 @@ export default function LessonPage() {
                       }),
                     });
 
-                    // Delay sedikit biar animasi modal kebaca (opsional)
                     setTimeout(() => {
                       router.push(`/course/lesson/${nextLesson.lesson.id}`);
                     }, 300);
@@ -317,7 +400,7 @@ export default function LessonPage() {
           )}
 
           {showModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="fixed inset-0 bg-gradient-to-br from-indigo-300 via-purple-300 to-pink-300 bg-opacity-50 flex justify-center items-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                 <h3 className="text-xl font-bold mb-2 text-gray-800">Selesaikan Course</h3>
                 <p className="mb-4 text-gray-600">Apakah kamu yakin ingin menyelesaikan course ini?</p>
@@ -325,7 +408,7 @@ export default function LessonPage() {
                   <Button onClick={() => setShowModal(false)} className="bg-gray-300 text-gray-700 hover:bg-gray-400">
                     Batal
                   </Button>
-                  <Button onClick={handleCompleteCourse} className="bg-green-600 text-white hover:bg-green-700">
+                  <Button onClick={handleCompleteCourse} className="text-white ">
                     Selesaikan
                   </Button>
                 </div>
@@ -334,12 +417,12 @@ export default function LessonPage() {
           )}
 
           {showCompleteAnimation && (
-            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-gradient-to-br from-indigo-300 via-purple-300 to-pink-300 bg-opacity-60 flex items-center justify-center z-50">
               <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-lg">
                 <Lottie animationData={celebrateAnimation} loop={false} className="w-48 h-48 mx-auto" />
                 <h2 className="text-2xl font-bold text-green-700 mt-4">Selamat! 🎉</h2>
                 <p className="text-gray-700 mt-2">Kamu telah menyelesaikan course ini. Terus semangat belajar dan raih impianmu!</p>
-                <Button onClick={() => router.push('/course')} className="mt-6 bg-green-600 text-white hover:bg-green-700">
+                <Button onClick={() => router.push('/course')} className="mt-6 text-white ">
                   Kembali ke Course
                 </Button>
               </div>
