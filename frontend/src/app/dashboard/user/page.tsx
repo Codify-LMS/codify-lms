@@ -89,7 +89,7 @@ const DashboardPage = () => {
                           Start learning now and unlock your full potential!
                         </span>
                       </p>
-                      <Link href="/courses" className="inline-block">
+                      <Link href="/course" className="inline-block">
                         <Button className="bg-white text-[#28094B] font-semibold mt-4 py-2 px-6 rounded-full hover:bg-gray-100">
                           Start Learning Now
                         </Button>

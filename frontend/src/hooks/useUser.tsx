@@ -48,7 +48,7 @@ export const MyUserContextProvider = ({ children }: MyUserContextProviderProps) 
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -65,12 +65,41 @@ export const MyUserContextProvider = ({ children }: MyUserContextProviderProps) 
 
   // Effect to run when user or loading state changes
   useEffect(() => {
-    if (user && !isLoadingData && !userDetails) {
-      getUserDetails();
-    } else if (!user && !isLoadingSession && userDetails) {
+  const fetchProfileOnce = async () => {
+    if (!user || userDetails || isLoadingSession || isLoadingData) return;
+
+    setIsLoadingData(true);
+    try {
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle(); // ✅ avoids throwing error on 0 results
+
+      if (error && status !== 406) {
+        throw error;
+      }
+
+      if (data) {
+        setUserDetails(data as UserDetails);
+        setRole((data as UserDetails).role || 'user');
+      } else {
+        console.warn('User profile not found.');
+        setUserDetails(null);
+        setRole(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
       setUserDetails(null);
+      setRole(null);
+    } finally {
+      setIsLoadingData(false);
     }
-  }, [user, isLoadingSession, isLoadingData, userDetails]);
+  };
+
+  fetchProfileOnce();
+}, [user, userDetails, isLoadingSession]);
+
 
   // Provider value
   const value: UserContextType = {
@@ -102,7 +131,7 @@ export const useUser = () => {
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!error) {
       setUserDetails(data);
