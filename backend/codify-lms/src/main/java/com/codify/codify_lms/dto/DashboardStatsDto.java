@@ -8,17 +8,20 @@ public class DashboardStatsDto {
     private int upcoming;
     private List<AssignmentDto> assignments;
     private List<LeaderboardEntryDto> leaderboard;
+    private String username;
 
     public DashboardStatsDto() {
     }
 
     public DashboardStatsDto(int completeCourse, int inProgressCourse, int upcoming,
-                             List<AssignmentDto> assignments, List<LeaderboardEntryDto> leaderboard) {
+                             List<AssignmentDto> assignments, List<LeaderboardEntryDto> leaderboard,
+                             String username) {
         this.completeCourse = completeCourse;
         this.inProgressCourse = inProgressCourse;
         this.upcoming = upcoming;
         this.assignments = assignments;
         this.leaderboard = leaderboard;
+        this.username = username;
     }
 
     public int getCompleteCourse() {
@@ -60,4 +63,14 @@ public class DashboardStatsDto {
     public void setLeaderboard(List<LeaderboardEntryDto> leaderboard) {
         this.leaderboard = leaderboard;
     }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
 }

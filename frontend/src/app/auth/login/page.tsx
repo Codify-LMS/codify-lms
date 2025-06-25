@@ -17,10 +17,16 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasTriedFetchingProfile, setHasTriedFetchingProfile] = useState(false);
 
   const supabaseClient = useSupabaseClient();
   const router = useRouter();
+  // const { user } = useUser();
+
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push('/dashboard/user');
+  //   }
+  // }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,50 +38,31 @@ const LoginPage = () => {
       password,
     });
 
-    if (signInError) {
+        if (signInError) {
       setError(signInError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
+    } else {
       const {
-          data: { session },
-        } = await supabaseClient.auth.getSession();
+        data: { user },
+      } = await supabaseClient.auth.getUser();
 
-        const user = session?.user;
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
 
-
-      if (!user) {
-        setError('User not found after login.');
-        setIsLoading(false);
+      if (profileError) {
+        setError('Failed to get user profile');
         return;
       }
 
-      if (!hasTriedFetchingProfile) {
-        const { data: profile, error: profileError } = await supabaseClient
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        setHasTriedFetchingProfile(true);
-
-        if (profileError) {
-          setError('Failed to get user profile. Please contact support.');
-          setIsLoading(false);
-          return;
-        }
-
-        if (profile?.role === 'admin') {
-          router.push('/dashboard/admin');
-        } else {
-          router.push('/dashboard/user');
-        }
+      if (profile?.role === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard/user');
       }
-    } catch (err: any) {
-      setError('Unexpected error occurred.');
     }
+
 
     setIsLoading(false);
   };
@@ -115,7 +102,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter E-mail Address"
                 required
-                className="w-full text-gray-500 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
               />
             </div>
 
@@ -130,7 +117,7 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Password"
                 required
-                className="w-full text-gray-500 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
               />
             </div>
 
@@ -172,7 +159,7 @@ const LoginPage = () => {
             <h2 className="text-3xl font-bold mb-2">Start your journey now</h2>
             <p className="mb-6 text-sm">If you don't have an account yet, join us and start your journey.</p>
             <Link href="/auth/register">
-              <button className="bg-white text-[#1E1E60] border-2 border-[#1E1E60] font-medium px-6 py-2 rounded-md hover:bg-[#f0f0f0] transition duration-200">
+               <button className="bg-white text-[#1E1E60] border-2 border-[#1E1E60] font-medium px-6 py-2 rounded-md hover:bg-[#f0f0f0] transition duration-200">
                 Register now
               </button>
             </Link>

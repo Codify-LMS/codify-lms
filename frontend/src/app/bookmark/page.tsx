@@ -26,34 +26,51 @@ export default function BookmarksPage() {
   const { user, isLoading } = useUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!user?.id || isLoading) return;
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
 
-    const fetchBookmarks = async () => {
-      try {
-        const res = await axios.get(`http://localhost:8080/api/v1/bookmarks/user/${user.id}`);
-
-        const mappedCourses = res.data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          thumbnailUrl: item.thumbnail_url,
-          isPublished: item.is_published,
-          progressPercentage: item.progress_percentage,
-          moduleCount: item.module_count,
-          lessonCount: item.lesson_count,
-          quizCount: item.quiz_count,
-        }));
-
-        setBookmarkedCourses(mappedCourses);
-      } catch (err) {
-        console.error('Failed to fetch bookmarks:', err);
-      }
-    };
+  const toggleBookmark = async (courseId: string) => {
+    if (!user?.id) return;
+    try {
+      await axios.delete(`http://localhost:8080/api/v1/bookmarks`, {
+        params: { userId: user.id, courseId },
+      });
+      setBookmarkedCourses((prev) => prev.filter((course) => course.id !== courseId));
+      setBookmarkedIds((prev) => prev.filter((id) => id !== courseId));
+    } catch (err) {
+      console.error('Failed to unbookmark course:', err);
+    }
+  };
 
 
-    fetchBookmarks();
-  }, [user, isLoading]);
+ useEffect(() => {
+  if (!user?.id || isLoading) return;
+
+  const fetchBookmarks = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8080/api/v1/bookmarks/user/${user.id}`);
+
+      const mappedCourses = res.data.map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        thumbnailUrl: item.thumbnail_url,
+        isPublished: item.is_published,
+        progressPercentage: item.progress_percentage,
+        moduleCount: item.module_count,
+        lessonCount: item.lesson_count,
+        quizCount: item.quiz_count,
+      }));
+
+      setBookmarkedCourses(mappedCourses);
+      setBookmarkedIds(mappedCourses.map((item: any) => item.id)); // <-- Tambahkan ini
+    } catch (err) {
+      console.error('Failed to fetch bookmarks:', err);
+    }
+  };
+
+  fetchBookmarks();
+}, [user, isLoading]);
+
 
   const handleCourseClick = async (courseId: string) => {
     try {
@@ -83,13 +100,15 @@ export default function BookmarksPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {bookmarkedCourses.map((course) => (
               <CourseCard
-                key={course.id}
-                course={course}
-                isBookmarked={true}
-                showBookmark={false}
-                showProgress={true}
-                onClick={() => handleCourseClick(course.id)}
-              />
+                  key={course.id}
+                  course={course}
+                  isBookmarked={bookmarkedIds.includes(course.id)}
+                  showBookmark={true}
+                  showProgress={true}
+                  onClick={() => handleCourseClick(course.id)}
+                  onToggleBookmark={() => toggleBookmark(course.id)}
+                />
+
             ))}
           </div>
         )}

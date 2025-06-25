@@ -17,6 +17,7 @@ type DashboardStats = {
   inProgressCourse: number;
   upcoming: number;
   leaderboard: LeaderboardEntry[];
+  username?: string; 
 };
 
 const DashboardPage = () => {
@@ -30,7 +31,7 @@ const DashboardPage = () => {
   useEffect(() => {
     if (!isLoading && !user) {
       router.replace('/auth/login');
-    } else if (!isLoading && user) {
+     } else if (!isLoading && user) {
       setShouldRender(true);
     }
   }, [user, isLoading, router]);
@@ -44,11 +45,16 @@ const DashboardPage = () => {
     const fetchDashboard = async () => {
       if (user && user.id) {
         try {
+          // Asumsi backend berjalan di port 8080 dan endpointnya adalah /api/v1/dashboard/{userId}
           const res = await fetch(`http://localhost:8080/api/v1/dashboard/${user.id}`);
+          if (!res.ok) {
+            throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
+          }
           const data = await res.json();
           setDashboardData(data);
         } catch (error) {
           console.error('Error fetching dashboard data:', error);
+          // Tambahkan penanganan error di UI jika diperlukan
         }
       }
     };
@@ -65,8 +71,7 @@ const DashboardPage = () => {
       </div>
     );
   }
-  
-  
+
 
   return (
     <div className="flex h-screen bg-white">
@@ -79,72 +84,77 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               {/* Hero Section - kiri */}
               <div className="lg:col-span-2">
-                <DashboardCard className="overflow-hidden relative bg-gradient-to-b from-[#7A4FD6] to-[#2BAEF4] text-white h-full">
-                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between px-8 py-4 h-full">
-                    <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0">
-                      <h2 className="text-3xl font-bold mb-2">Level Up Your Coding Journey</h2>
-                      <p className="text-sm max-w-lg">
-                        Explore lessons, complete quizzes, and climb the leaderboard — all in one place!
-                        <span className="font-bold text-yellow-300 ml-1">
-                          Start learning now and unlock your full potential!
-                        </span>
-                      </p>
-                      <Link href="/course" className="inline-block">
-                        <Button className="bg-white text-[#28094B] font-semibold mt-4 py-2 px-6 rounded-full hover:bg-gray-100">
+                <DashboardCard className="overflow-hidden relative bg-gradient-to-br from-[#6C63FF] to-[#A3D5FF] text-white h-full">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between px-8 py-6 h-full">
+                    <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0 pr-0 md:pr-4">
+                      <h2 className="text-3xl lg:text-3xl font-bold mb-2 text-gray-900">
+                          Welcome back, {dashboardData?.username ?? user?.user_metadata?.user_name ?? 'there'}👋
+                        </h2>
+                        <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                          Let’s crush it today. 🚀<br />
+                          Dive into new lessons, track your progress, and top the leaderboard!
+                        </p>
+
+                      <Link href="/course" className="inline-block mt-4 group">
+                        <Button className="bg-white text-[#1E3A8A] font-semibold py-2.5 px-7 rounded-full shadow-md hover:bg-gray-100 transform hover:scale-105 transition duration-300">
                           Start Learning Now
                         </Button>
                       </Link>
                     </div>
-                    <div className="md:w-1/2 flex justify-center items-end relative">
+                    <div className="md:w-1/2 flex justify-center items-end relative py-4 md:py-0">
                       <Image
                         src="/dashboard-hero-illustration.svg"
                         alt="Coding Journey"
-                        width={400}
-                        height={400}
+                        width={380}
+                        height={380}
                         priority
-                        className="object-contain"
+                        className="object-contain drop-shadow-xl"
                       />
-                      <div className="absolute bottom-5 right-5 bg-white/20 backdrop-blur-sm rounded-md p-2 flex items-center text-white">
-                        <Image src="/course.svg" alt="Courses" width={20} height={20} className="mr-1 text-[5px]" />
-                        ni ganti aja nih ganti
+                      <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 bg-white/70 backdrop-blur-sm rounded-xl p-3 flex items-center text-gray-800 shadow-md transform transition duration-300 hover:scale-105">
+                        <Image src="/course.svg" alt="Courses" width={24} height={24} className="mr-2" />
+                        <span className="font-bold text-lg">{dashboardData?.inProgressCourse ?? 0}</span>
+                        <span className="ml-1 text-sm whitespace-nowrap">Active Courses</span>
                       </div>
                     </div>
                   </div>
                 </DashboardCard>
               </div>
 
+
               {/* Statistik - kanan */}
               <div className="flex flex-col space-y-6">
-                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 text-xl font-bold">
-                    🎯
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Complete Course</span>
-                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.completeCourse ?? 0}</span>
-                  </div>
-                </DashboardCard>
+                  {/* Complete Course Card */}
+                  <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4 transition-transform hover:scale-[1.02] duration-200">
+                      <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#E0E7FF] text-[#5C74DD] text-xl font-bold">
+                          🎯
+                      </div>
+                      <div className="flex flex-col">
+                          <span className="text-sm text-gray-600">Complete Course</span>
+                          <span className="text-2xl font-bold text-gray-900">{dashboardData?.completeCourse ?? 0}</span>
+                      </div>
+                  </DashboardCard>
 
-                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-xl font-bold">
-                    🕓
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">In Progress Course</span>
-                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.inProgressCourse ?? 0}</span>
-                  </div>
-                </DashboardCard>
+                  {/* In Progress Course Card */}
+                  <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4 transition-transform hover:scale-[1.02] duration-200">
+                      <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#FFE0B2] text-[#FF7043] text-xl font-bold">
+                          🕓
+                      </div>
+                      <div className="flex flex-col">
+                          <span className="text-sm text-gray-600">In Progress Course</span>
+                          <span className="text-2xl font-bold text-gray-900">{dashboardData?.inProgressCourse ?? 0}</span>
+                      </div>
+                  </DashboardCard>
 
-                <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4">
-                  <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xl font-bold">
-                    🔜
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Upcoming</span>
-                    <span className="text-2xl font-bold text-gray-900">{dashboardData?.upcoming ?? 0}</span>
-                  </div>
-                </DashboardCard>
-
+                  {/* Upcoming Course Card */}
+                  <DashboardCard className="p-5 bg-white rounded-xl shadow-md border flex items-center space-x-4 transition-transform hover:scale-[1.02] duration-200">
+                      <div className="w-12 h-12 flex items-center justify-center rounded-full bg-[#D1C4E9] text-[#9B51E0] text-xl font-bold">
+                          🔜
+                      </div>
+                      <div className="flex flex-col">
+                          <span className="text-sm text-gray-600">Upcoming</span>
+                          <span className="text-2xl font-bold text-gray-900">{dashboardData?.upcoming ?? 0}</span>
+                      </div>
+                  </DashboardCard>
               </div>
             </div>
 
@@ -161,19 +171,19 @@ const DashboardPage = () => {
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Reward</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white">
+                  <tbody className="bg-white divide-y divide-gray-100">
                     {dashboardData?.leaderboard?.slice(0, 5).map((entry, index) => {
                       const rowColor =
                         entry.rank === 1
-                          ? 'bg-yellow-100'
+                          ? 'bg-[#FDFCE6]'
                           : entry.rank === 2
-                          ? 'bg-gray-200'
+                          ? 'bg-[#F0F4FF]'
                           : entry.rank === 3
-                          ? 'bg-orange-100'
+                          ? 'bg-[#FFF0E6]'
                           : 'bg-white';
 
                       return (
-                        <tr key={index} className={`${rowColor} text-sm`}>
+                        <tr key={index} className={`${rowColor} text-sm hover:bg-gray-50 transition duration-150`}>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-800 font-bold">
                             <div className="flex items-center space-x-2">
                               {entry.rank === 1 && (
@@ -205,22 +215,22 @@ const DashboardPage = () => {
                           <td className="px-6 py-4 text-sm font-semibold">
                             <div className="flex items-center justify-center gap-x-2">
                               {entry.reward === 'Gold' && (
-                                <span className="flex items-center gap-x-1 bg-yellow-400 text-white px-3 py-1 rounded-full">
+                                <span className="flex items-center gap-x-1 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs">
                                   🥇 <span>Gold</span>
                                 </span>
                               )}
                               {entry.reward === 'Silver' && (
-                                <span className="flex items-center gap-x-1 bg-gray-400 text-white px-3 py-1 rounded-full">
+                                <span className="flex items-center gap-x-1 bg-gray-500 text-white px-3 py-1 rounded-full text-xs">
                                   🥈 <span>Silver</span>
                                 </span>
                               )}
                               {entry.reward === 'Bronze' && (
-                                <span className="flex items-center gap-x-1 bg-orange-400 text-white px-3 py-1 rounded-full">
+                                <span className="flex items-center gap-x-1 bg-amber-600 text-white px-3 py-1 rounded-full text-xs">
                                   🥉 <span>Bronze</span>
                                 </span>
                               )}
                               {(!entry.reward || entry.reward === 'N/A') && (
-                                <span className="text-gray-500">No reward</span>
+                                <span className="text-gray-500 text-xs">No reward</span>
                               )}
                             </div>
                           </td>
