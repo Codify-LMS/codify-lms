@@ -87,7 +87,7 @@ const DashboardPage = () => {
                 <DashboardCard className="overflow-hidden relative bg-gradient-to-br from-[#6C63FF] to-[#A3D5FF] text-white h-full">
                   <div className="relative z-10 flex flex-col md:flex-row items-center justify-between px-8 py-6 h-full">
                     <div className="md:w-1/2 text-center md:text-left mb-6 md:mb-0 pr-0 md:pr-4">
-                      <h2 className="text-3xl lg:text-3xl font-bold mb-2 text-gray-900">
+                      <h2 className="text-3xl lg:text-3xl font-bold mb-2 text-white">
                           Welcome back, {dashboardData?.username ?? user?.user_metadata?.user_name ?? 'there'}👋
                         </h2>
                         <p className="text-sm md:text-base text-gray-600 leading-relaxed">

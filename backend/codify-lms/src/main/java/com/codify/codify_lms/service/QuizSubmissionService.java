@@ -84,11 +84,12 @@ public class QuizSubmissionService {
             answerResults.add(new QuizSubmissionResponse.AnswerResult(
                 question.getId(),
                 isCorrect,
+                !"multiple_choice".equalsIgnoreCase(question.getQuestionType()) ? question.getCorrectAnswerText() : null,
                 "multiple_choice".equalsIgnoreCase(question.getQuestionType()) && question.getCorrectAnswerIndex() != null
-                    ? String.valueOf(question.getCorrectAnswerIndex())
-                    : null,
-                !"multiple_choice".equalsIgnoreCase(question.getQuestionType()) ? question.getCorrectAnswerText() : null
+                    ? question.getCorrectAnswerIndex()
+                    : null
             ));
+
 
         }
 

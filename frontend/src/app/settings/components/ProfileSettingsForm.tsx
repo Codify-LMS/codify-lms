@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react' // ✅ Import useEffect
 import axios from 'axios'
 import { supabase } from '@/supabaseClient'
 import { UserProfile } from '@/types'
 import AvatarUploader from '@/components/AvatarUploader'
 import { useUser } from '@/hooks/useUser'
-import { useSession } from '@supabase/auth-helpers-react' // Import useSession
+import { useSession } from '@supabase/auth-helpers-react'
 
 export default function ProfileSettingsForm({
-  data,
+  data, // Ini adalah userDetails terbaru dari useUser context
   onSave,
 }: {
   data: UserProfile
@@ -19,16 +19,25 @@ export default function ProfileSettingsForm({
   const [preview, setPreview] = useState<string | null>(null)
   const [isUploading, setUploading] = useState(false)
   const [formData, setFormData] = useState<UserProfile>({
-    firstName: data.first_name ?? '',
-    lastName: data.last_name ?? '',
-    avatarUrl: data.avatar_url ?? '',
+    firstName: data.firstName ?? '',
+    lastName: data.lastName ?? '',
+    avatarUrl: data.avatarUrl ?? '',
     email: data.email,
     username: data.username ?? ''
   })
 
-  // Dapatkan sesi pengguna dari Supabase
-  const session = useSession()
+  // ✅ Tambahkan useEffect ini untuk menyinkronkan formData dengan prop 'data'
+  useEffect(() => {
+    setFormData({
+      firstName: data.firstName ?? '',
+      lastName: data.lastName ?? '',
+      avatarUrl: data.avatarUrl ?? '',
+      email: data.email,
+      username: data.username ?? ''
+    });
+  }, [data]); // Dependensi adalah prop 'data'
 
+  const session = useSession()
   const { refreshUserDetails } = useUser()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +54,7 @@ export default function ProfileSettingsForm({
     const { error } = await supabase.storage.from('avatars').upload(filePath, file)
     if (error) {
       console.error('Upload failed:', error.message)
+      alert('❌ Gagal upload thumbnail')
       return null
     }
 
@@ -58,7 +68,6 @@ export default function ProfileSettingsForm({
 
     let avatarUrl = formData.avatarUrl
 
-    // Jika ada file baru, upload dulu ke Supabase
     if (file) {
       const uploadedUrl = await handleAvatarUpload()
       if (uploadedUrl) {
@@ -66,27 +75,27 @@ export default function ProfileSettingsForm({
       }
     }
 
-    // Perbaikan di sini: Pastikan menggunakan formData.firstName dan formData.lastName
     const payload = {
-        firstName: formData.firstName, // ✅ Menggunakan firstName (camelCase)
-        lastName: formData.lastName,   // ✅ Menggunakan lastName (camelCase)
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         username: formData.username,
         avatarUrl,
       }
       console.log("➡️ Payload ke backend:", payload)
 
     try {
-      // Perbaikan di sini: Tambahkan Authorization header
       const res = await axios.put('http://localhost:8080/api/v1/users/me', payload, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`, // ✅ Tambahkan ini
+          'Authorization': `Bearer ${session?.access_token}`,
         },
       })
 
       if (res.status === 200) {
         onSave(res.data)
-        await refreshUserDetails()
+        // refreshUserDetails() akan memicu perubahan pada prop 'data',
+        // dan useEffect di atas akan menangkap perubahan itu dan memperbarui formData.
+        await refreshUserDetails() 
         alert('✅ Profile updated successfully!')
       } else {
         throw new Error('Unexpected response from server')
@@ -99,7 +108,7 @@ export default function ProfileSettingsForm({
       setFile(null)
       setPreview(null)
     }
-    
+
   }
 
   const handleDeleteAvatar = () => {

@@ -100,7 +100,7 @@ export default function DiscussionPage() {
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <div className="flex items-center gap-3">
                         <img
-                          src={item.avatarUrl || '/default-avatar.svg'}
+                          src={item.avatarUrl || '/default-avatar.png'}
                           alt="avatar"
                           className="w-8 h-8 rounded-full object-cover"
                         />
