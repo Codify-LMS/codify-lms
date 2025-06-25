@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { useSessionContext } from '@supabase/auth-helpers-react'
 
 export type UserProfile = {
   fullName: string
@@ -19,13 +20,33 @@ export default function useUserProfile() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-  axios.get('http://localhost:8080/api/v1/users/me')
-    .then(res => setData(res.data))
-    .catch(err => setError(err))
-    .finally(() => setLoading(false))
-    }, [])
+  const { session } = useSessionContext()
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.access_token) {
+        setError(new Error('No access token found'))
+        setLoading(false)
+        return
+      }
+
+      try {
+        const res = await axios.get('http://localhost:8080/api/v1/users/me', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        })
+
+        setData(res.data)
+      } catch (err: any) {
+        setError(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [session?.access_token])
 
   return { data, loading, error }
 }

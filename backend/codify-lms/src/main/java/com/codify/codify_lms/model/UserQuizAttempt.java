@@ -4,7 +4,15 @@ import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "user_quiz_attempts")
 public class UserQuizAttempt {
@@ -45,9 +53,6 @@ public class UserQuizAttempt {
     private OffsetDateTime updatedAt;
     
     
-
-    // ===== Constructor =====
-    public UserQuizAttempt() {}
 
     // ===== Getters & Setters =====
     public UUID getId() {

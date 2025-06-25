@@ -41,6 +41,19 @@ export default function PublicProfilePage() {
     }
   }, [username]);
 
+  const getRewardBadge = (points: number) => {
+    if (points >= 1000) {
+      return { label: '🏆 Master', color: 'bg-purple-100 text-purple-700' };
+    } else if (points >= 500) {
+      return { label: '🥇 Gold', color: 'bg-yellow-100 text-yellow-700' };
+    } else if (points >= 300) {
+      return { label: '🥈 Silver', color: 'bg-gray-100 text-gray-700' };
+    } else if (points >= 100) {
+      return { label: '🥉 Bronze', color: 'bg-amber-100 text-amber-700' };
+    }
+    return null;
+  };
+
   if (notFound) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -57,6 +70,8 @@ export default function PublicProfilePage() {
     );
   }
 
+  const reward = getRewardBadge(achievements.points);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-100 to-blue-100 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
@@ -72,7 +87,7 @@ export default function PublicProfilePage() {
           </div>
           <div className="absolute bottom-[-32px]">
             <img
-              src={profile.avatarUrl || '/default-avatar.svg'}
+              src={profile.avatarUrl || '/default-avatar.png'}
               alt={profile.username}
               className="w-20 h-20 rounded-full border-4 border-white object-cover shadow"
             />
@@ -84,6 +99,16 @@ export default function PublicProfilePage() {
           <p className="text-sm text-gray-400 -mt-2">@{profile.username}</p>
           <h2 className="text-2xl font-extrabold text-gray-800 mt-1">{profile.firstName} {profile.lastName}</h2>
           <p className="text-sm text-gray-500">{profile.email}</p>
+
+          {/* Reward Badge */}
+          {reward && (
+            <div
+              className={`mt-3 inline-block px-3 py-1 text-xs font-semibold rounded-full shadow ${reward.color}`}
+              title={`Earned by reaching ${achievements.points} points!`}
+            >
+              {reward.label}
+            </div>
+          )}
 
           {/* Achievements */}
           <h3 className="text-sm font-semibold text-gray-700 mt-5 mb-3">Achievements</h3>

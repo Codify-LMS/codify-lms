@@ -47,7 +47,7 @@ const RegisterPage = () => {
       setError(signUpError.message);
     } else {
       alert('Registration successful! Please check your email to confirm your account.');
-      router.push('/login');
+      router.push('/auth/login');
     }
 
     setIsLoading(false);
@@ -72,110 +72,95 @@ const RegisterPage = () => {
   };
 
   return (
-  <div className="relative w-full min-h-screen overflow-x-hidden bg-gradient-to-br from-[#DDD3F4] to-[#CAEAFC] p-4 md:p-8">
-    <div className="flex flex-col md:flex-row items-center justify-center max-w-7xl mx-auto gap-6">
-      
-      {/* Box register */}
-      <Box className="relative z-10 rounded-2xl shadow-lg px-6 py-8 md:px-10 md:py-10 w-full max-w-full md:max-w-[600px] overflow-hidden">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Sign Up</h2>
-
-        <form onSubmit={handleRegister} className="w-full">
-          <div className="mb-6">
-            <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-              E-mail Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter E-mail Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-gray-800"
-              required
-            />
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#DDD3F4] to-[#CAEAFC] px-4">
+      <div className="flex w-full max-w-5xl rounded-3xl overflow-hidden shadow-xl bg-white">
+        {/* Banner */}
+        <div className="hidden md:flex w-1/2 bg-cover bg-center relative" style={{ backgroundImage: "url('/thumbnail.jpg')" }}>
+          <div className="absolute inset-0 bg-[#1e1e60]/40 flex flex-col items-center justify-center text-white text-center px-6">
+            <h2 className="text-3xl font-bold mb-2">Hello Codifriends</h2>
+            <p className="mb-6 text-sm">If you already have an account, login here and have fun.</p>
+            <Link href="/auth/login">
+              <button className="bg-white text-[#1E1E60] border-2 border-[#1E1E60] font-medium px-6 py-2 rounded-md hover:bg-[#f0f0f0] transition duration-200">
+                Sign-in
+              </button>
+            </Link>
           </div>
+        </div>
 
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
-              Create Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Create Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-gray-800"
-              required
-            />
+        {/* Register Section */}
+        <div className="w-full md:w-1/2 p-8 md:p-10">
+          <h2 className="text-3xl font-bold text-[#1E1E60] mb-6 text-center">Sign Up</h2>
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-[#1E1E60] mb-1">
+                E-Mail
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter E-mail Address"
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-[#1E1E60] mb-1">
+                Create Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter Password"
+                required
+                className="w-full text-gray-500 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-[#1E1E60] mb-1">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Enter Password"
+                required
+                className="w-full text-gray-500 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-sm"
+              />
+            </div>
+
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+            <Button type="submit" disabled={isLoading} className="w-full py-2 rounded-md text-white bg-[#1E1E60] hover:bg-[#1A1A4D] transition duration-200">
+              {isLoading ? 'Signing Up...' : 'Sign Up'}
+            </Button>
+          </form>
+
+          <div className="my-4 border-t border-gray-300 text-center relative">
+            <span className="absolute left-1/2 transform -translate-x-1/2 -top-2.5 px-2 bg-white text-sm text-gray-500">
+              Or sign up with
+            </span>
           </div>
-
-          <div className="mb-6">
-            <label htmlFor="confirmPassword" className="block text-gray-700 font-medium mb-2">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#5C74DD] text-gray-800"
-              required
-            />
-          </div>
-
-          {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
 
           <Button
-            type="submit"
+            onClick={handleGoogleSignUp}
             disabled={isLoading}
-            className="w-full rounded-full"
+            className="w-full py-2 rounded-md flex items-center justify-center gap-3 border-2 border-gray-400 bg-white hover:bg-gray-200 text-gray-800 font-medium transition duration-200"
           >
-            {isLoading ? 'Signing Up...' : 'Sign Up'}
+            <FcGoogle size={20} />
+            {isLoading ? 'Signing Up...' : 'Sign up with Google'}
           </Button>
-        </form>
-
-        <div className="relative my-6 w-full">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
-          </div>
         </div>
-
-        <Button
-          onClick={handleGoogleSignUp}
-          disabled={isLoading}
-          className="w-full rounded-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-100 text-gray-800 font-medium"
-        >
-          <FcGoogle size={20} />
-          {isLoading ? 'Signing Up...' : 'Sign up with Google'}
-        </Button>
-
-        <div className="text-center mt-6 text-gray-700">
-          Already have an account?{' '}
-          <Link href="/auth/login" className="text-[#5C74DD] hover:underline font-bold">
-            Sign In
-          </Link>
-        </div>
-      </Box>
-
-      {/* Image */}
-      <div className="hidden md:flex relative z-10 max-w-[50%] justify-center items-center p-4 overflow-hidden">
-        <Image
-          src="/login-img.svg"
-          alt="Coding Illustration"
-          width={350}
-          height={350}
-          className="object-contain max-w-full h-auto"
-        />
       </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default RegisterPage;

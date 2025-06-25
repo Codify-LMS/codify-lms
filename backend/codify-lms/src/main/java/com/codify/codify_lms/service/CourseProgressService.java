@@ -2,7 +2,6 @@ package com.codify.codify_lms.service;
 
 import com.codify.codify_lms.model.UserCourseProgress;
 import com.codify.codify_lms.repository.UserCourseProgressRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,7 @@ public class CourseProgressService {
     public void markLessonCompleted(UUID userId, UUID lessonId) {
         UUID courseId = getCourseIdFromLesson(lessonId);
         int totalLessons = getTotalLessonsInCourse(courseId);
-        int completedLessons = getCompletedLessonsCount(userId, courseId) + 1; // plus 1 karena baru diselesaikan
+        int completedLessons = getCompletedLessonsCount(userId, courseId) + 1; // karena baru saja diselesaikan
 
         BigDecimal progress = calculateProgressPercentage(completedLessons, totalLessons);
         boolean isCompleted = progress.compareTo(BigDecimal.valueOf(100)) >= 0;
@@ -70,16 +69,18 @@ public class CourseProgressService {
         progress.setCompletedAt(Instant.now());
         progress.setProgressPercentage(BigDecimal.valueOf(100));
         progress.setUpdatedAt(Instant.now());
+
         userCourseProgressRepository.save(progress);
     }
 
     /**
-     * Digunakan oleh CourseService untuk ambil progress user terhadap course tertentu.
+     * Ambil progress course user dalam bentuk persen (0.0 - 100.0).
      */
     public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
-        return userCourseProgressRepository
-                .findByUserIdAndCourseId(userId, courseId)
-                .map(p -> p.getProgressPercentage() != null ? p.getProgressPercentage().doubleValue() : 0.0)
+        return userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId)
+                .map(p -> p.getProgressPercentage() != null
+                        ? p.getProgressPercentage().doubleValue()
+                        : 0.0)
                 .orElse(0.0);
     }
 
@@ -117,17 +118,4 @@ public class CourseProgressService {
         return BigDecimal.valueOf(completed * 100)
                 .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
     }
-
-    public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
-    return userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId)
-            .map(progress -> {
-                if (progress.getProgressPercentage() != null) {
-                    return progress.getProgressPercentage().doubleValue();
-                } else {
-                    return 0.0;
-                }
-            })
-            .orElse(0.0);
-}
-
 }

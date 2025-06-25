@@ -89,4 +89,10 @@ public class Profile {
     public void setRole(String role) {
         this.role = role;
     }
+
+    public String getFullName() {
+        return (firstName != null ? firstName : "") + 
+            (lastName != null ? " " + lastName : "");
+    }
+
 }

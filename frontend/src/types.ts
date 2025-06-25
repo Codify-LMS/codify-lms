@@ -105,6 +105,7 @@ export interface LeaderboardEntry {
   bonusPoint: number;
   totalScore: number;
   reward: string; 
+  username: string;
 }
 
 

@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         setRole(profile.role);

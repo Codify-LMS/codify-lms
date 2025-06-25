@@ -7,6 +7,8 @@ import com.codify.codify_lms.model.LeaderboardEntry;
 import com.codify.codify_lms.repository.LeaderboardRepository;
 import com.codify.codify_lms.repository.UserProgressRepository;
 import org.springframework.stereotype.Service;
+import com.codify.codify_lms.repository.ProfileRepository;
+import com.codify.codify_lms.model.Profile;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,11 +19,18 @@ public class DashboardService {
 
     private final UserProgressRepository userProgressRepository;
     private final LeaderboardRepository leaderboardRepository;
+    private final ProfileRepository profileRepository;
 
-    public DashboardService(UserProgressRepository userProgressRepository, LeaderboardRepository leaderboardRepository) {
+
+    public DashboardService(UserProgressRepository userProgressRepository,
+                            LeaderboardRepository leaderboardRepository,
+                            ProfileRepository profileRepository) {
         this.userProgressRepository = userProgressRepository;
         this.leaderboardRepository = leaderboardRepository;
+        this.profileRepository = profileRepository;
     }
+
+
 
     public DashboardStatsDto getDashboardStats(UUID userId) {
         DashboardStatsDto dto = new DashboardStatsDto();
@@ -29,38 +38,35 @@ public class DashboardService {
         int complete = userProgressRepository.countCompletedCourses(userId);
         int inProgress = userProgressRepository.countInProgressCourses(userId);
         int upcoming = userProgressRepository.countUpcomingCourses(userId);
-
         List<AssignmentDto> assignments = userProgressRepository.getAssignments(userId);
 
-        // Ambil data mentah dari repository
-        List<LeaderboardEntry> leaderboardRaw = leaderboardRepository.getTopLeaderboard();
+        List<LeaderboardEntryDto> leaderboard = leaderboardRepository.getTopLeaderboard()
+            .stream().map(entry -> {
+                LeaderboardEntryDto dtoEntry = new LeaderboardEntryDto();
+                int rank = entry.getRank();
+                dtoEntry.setRank(rank);
+                dtoEntry.setName(entry.getFullName());
+                dtoEntry.setAvatarUrl(entry.getAvatarUrl());
+                dtoEntry.setCourseCompleted(entry.getCourseCompleted());
+                dtoEntry.setHourSpent(entry.getHourSpent());
+                dtoEntry.setPoint((int) entry.getTotalScore());
 
-        // Hitung reward berdasarkan urutan (rank)
-        List<LeaderboardEntryDto> leaderboard = leaderboardRaw.stream().map(entry -> {
-            LeaderboardEntryDto dtoEntry = new LeaderboardEntryDto();
-            int rank = entry.getRank(); // asumsi rank sudah diset dari query
+                if (rank == 1) dtoEntry.setReward("Gold");
+                else if (rank == 2) dtoEntry.setReward("Silver");
+                else if (rank <= 10) dtoEntry.setReward("Bronze");
+                else dtoEntry.setReward("N/A");
 
-            dtoEntry.setRank(rank);
-            dtoEntry.setName(entry.getFullName());
-            dtoEntry.setAvatarUrl(entry.getAvatarUrl());
-            dtoEntry.setCourseCompleted(entry.getCourseCompleted());
-            dtoEntry.setHourSpent(entry.getHourSpent());
-            dtoEntry.setPoint((int) entry.getTotalScore());
+                return dtoEntry;
+            }).collect(Collectors.toList());
 
-            // 🏅 Tambahkan reward berdasarkan peringkat
-            if (rank == 1) {
-                dtoEntry.setReward("Gold");
-            } else if (rank == 2) {
-                dtoEntry.setReward("Silver");
-            } else if (rank <= 10) {
-                dtoEntry.setReward("Bronze");
-            } else {
-                dtoEntry.setReward("N/A");
-            }
+        // ⬇ Ambil nama dari PROFILE
+        System.out.println("👤 Mencari profile userId: " + userId);
+        Profile profile = profileRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Profile not found"));
+        System.out.println("✅ Dapat username: " + profile.getUsername());
 
-            return dtoEntry;
-        }).collect(Collectors.toList());
 
+        dto.setUsername(profile.getUsername());
         dto.setCompleteCourse(complete);
         dto.setInProgressCourse(inProgress);
         dto.setUpcoming(upcoming);
@@ -69,5 +75,7 @@ public class DashboardService {
 
         return dto;
     }
+
+
 
 }

@@ -30,7 +30,7 @@ const RoleGuard = ({ allowed, children }: RoleGuardProps) => {
         .from('profiles')
         .select('role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error || !profile) {
         router.replace('/auth/login');
