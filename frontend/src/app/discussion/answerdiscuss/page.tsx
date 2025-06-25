@@ -119,7 +119,7 @@ export default function AnswerDiscussPage() {
                   <div className="flex justify-between items-start text-sm text-gray-500 mb-2">
                     <div className="flex items-center gap-3">
                       <img
-                        src={item.avatarUrl || '/default-avatar.svg'}
+                        src={item.avatarUrl || '/default-avatar.png'}
                         className="w-9 h-9 rounded-full object-cover"
                         alt="avatar"
                       />

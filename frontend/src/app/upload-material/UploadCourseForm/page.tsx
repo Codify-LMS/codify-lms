@@ -118,6 +118,7 @@ const UploadCourseForm = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+
         {file || thumbnailUrl ? (
           <img
             src={file ? URL.createObjectURL(file) : thumbnailUrl}
@@ -125,13 +126,24 @@ const UploadCourseForm = ({
             className="w-full h-64 object-cover rounded mb-2 border"
           />
         ) : null}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-          className="block text-sm text-gray-500"
-        />
+
+        <div className="relative inline-block">
+          <input
+            type="file"
+            accept="image/*"
+            id="thumbnailUpload"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
+          />
+          <label
+            htmlFor="thumbnailUpload"
+            className="inline-block bg-purple-300 text-black px-4 py-2 rounded-full cursor-pointer hover:bg-purple-500 transition"
+          >
+            Choose an image
+          </label>
+        </div>
       </div>
+
 
       <div className="flex items-center gap-2">
         <input

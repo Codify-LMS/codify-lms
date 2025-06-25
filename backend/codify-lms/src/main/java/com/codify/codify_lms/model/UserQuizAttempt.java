@@ -1,9 +1,12 @@
 package com.codify.codify_lms.model;
 
-import jakarta.persistence.*;
-
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -51,95 +54,76 @@ public class UserQuizAttempt {
 
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
-    
-    
 
-    // ===== Getters & Setters =====
-    public UUID getId() {
-        return id;
+    // ==== Builder manual ====
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+    public static class Builder {
+        private final UserQuizAttempt instance;
 
-    public UUID getUserId() {
-        return userId;
-    }
+        public Builder() {
+            instance = new UserQuizAttempt();
+        }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
+        public Builder id(UUID id) {
+            instance.setId(id);
+            return this;
+        }
 
-    public UUID getQuizId() {
-        return quizId;
-    }
+        public Builder userId(UUID userId) {
+            instance.setUserId(userId);
+            return this;
+        }
 
-    public void setQuizId(UUID quizId) {
-        this.quizId = quizId;
-    }
+        public Builder quizId(UUID quizId) {
+            instance.setQuizId(quizId);
+            return this;
+        }
 
-    public UUID getLessonId() {
-        return lessonId;
-    }
+        public Builder lessonId(UUID lessonId) {
+            instance.setLessonId(lessonId);
+            return this;
+        }
 
-    public void setLessonId(UUID lessonId) {
-        this.lessonId = lessonId;
-    }
+        public Builder startedAt(OffsetDateTime startedAt) {
+            instance.setStartedAt(startedAt);
+            return this;
+        }
 
-    public OffsetDateTime getStartedAt() {
-        return startedAt;
-    }
+        public Builder submittedAt(OffsetDateTime submittedAt) {
+            instance.setSubmittedAt(submittedAt);
+            return this;
+        }
 
-    public void setStartedAt(OffsetDateTime startedAt) {
-        this.startedAt = startedAt;
-    }
+        public Builder scoreObtained(Double scoreObtained) {
+            instance.setScoreObtained(scoreObtained);
+            return this;
+        }
 
-    public OffsetDateTime getSubmittedAt() {
-        return submittedAt;
-    }
+        public Builder isPassed(Boolean isPassed) {
+            instance.setIsPassed(isPassed);
+            return this;
+        }
 
-    public void setSubmittedAt(OffsetDateTime submittedAt) {
-        this.submittedAt = submittedAt;
-    }
+        public Builder attemptNumber(Integer attemptNumber) {
+            instance.setAttemptNumber(attemptNumber);
+            return this;
+        }
 
-    public Double getScoreObtained() {
-        return scoreObtained;
-    }
+        public Builder createdAt(OffsetDateTime createdAt) {
+            instance.setCreatedAt(createdAt);
+            return this;
+        }
 
-    public void setScoreObtained(Double scoreObtained) {
-        this.scoreObtained = scoreObtained;
-    }
+        public Builder updatedAt(OffsetDateTime updatedAt) {
+            instance.setUpdatedAt(updatedAt);
+            return this;
+        }
 
-    public Boolean getIsPassed() {
-        return isPassed;
-    }
-
-    public void setIsPassed(Boolean isPassed) {
-        this.isPassed = isPassed;
-    }
-
-    public Integer getAttemptNumber() {
-        return attemptNumber;
-    }
-
-    public void setAttemptNumber(Integer attemptNumber) {
-        this.attemptNumber = attemptNumber;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+        public UserQuizAttempt build() {
+            return instance;
+        }
     }
 }
