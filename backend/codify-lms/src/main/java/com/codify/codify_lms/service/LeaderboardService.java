@@ -1,12 +1,12 @@
 package com.codify.codify_lms.service;
 
-import com.codify.codify_lms.model.LeaderboardEntry;
-import com.codify.codify_lms.repository.LeaderboardRepository;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.codify.codify_lms.model.LeaderboardEntry;
+import com.codify.codify_lms.repository.LeaderboardRepository;
 
 @Service
 public class LeaderboardService {
@@ -28,11 +28,11 @@ public class LeaderboardService {
             double score = entry.getTotalScore();
 
             // ✅ Logic untuk menentukan reward
-            if (score >= 1000) {
+            if (score >= 2000) {
                 entry.setReward("Gold");
-            } else if (score >= 500) {
+            } else if (score >= 1000) {
                 entry.setReward("Silver");
-            } else if (score >= 100) {
+            } else if (score >= 500) {
                 entry.setReward("Bronze");
             } else {
                 entry.setReward("N/A");

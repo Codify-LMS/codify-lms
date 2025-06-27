@@ -1,27 +1,32 @@
 export interface CourseData {
-  id?: string;
+  id?: string; // Penting: bisa null/undefined jika course baru
   title: string;
   description: string;
   thumbnailUrl: string;
   isPublished: boolean;
-  modules: ModuleData[];
+  modules?: ModuleData[]; // Opsional, karena mungkin belum ada modul saat membuat course
 }
 
 export interface ModuleData {
-  id?: string;
+  id?: string; // Penting: bisa null/undefined jika module baru
   title: string;
   description: string;
   orderInCourse: number;
+  course?: { // Ini untuk relasi ke Course
+    id: string;
+    title?: string; // Bisa ditambahkan jika ingin menampilkan nama course di dropdown module
+  };
+  lessons?: LessonData[]; // Opsional, mungkin belum ada lesson
 }
 
 export interface LessonData {
   id?: string;
   title: string;
-  content: string;          
-  contentType: 'video' | 'text';  
-  videoUrl?: string;     
-  orderInModule: number;   
-  moduleId: string;
+  content: string;
+  contentType: 'video' | 'text';
+  videoUrl?: string;
+  orderInModule: number;
+  moduleId: string; // Ini akan menjadi ID modul (bisa ID sementara atau ID dari DB)
   quiz?: QuizData;
 }
 

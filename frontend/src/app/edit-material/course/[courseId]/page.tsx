@@ -7,26 +7,29 @@ import toast from 'react-hot-toast';
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
-import Input from '@/components/Input';
+import Input from '@/components/Input'; // Import komponen Input
 import Button from '@/components/Button';
 
 interface Course {
-  id: number;
+  id: string; // Ubah ke string karena UUID
   title: string;
-  author: string;
+  // author: string; // Properti ini sepertinya tidak ada di backend Course model, ganti dengan instructorId
   description: string;
   thumbnailUrl: string;
+  instructorId?: string; // Tambahkan ini sesuai backend model
 }
 
 const EditCourseFormPage = () => {
   const router = useRouter();
   const params = useParams();
-  const courseId = params.courseId;
+  const courseId = params.courseId as string; // Pastikan ini string
 
   const [course, setCourse] = useState<Partial<Course>>({
     title: '',
-    author: '',
-    description: ''
+    // author: '', // Hapus atau sesuaikan jika Anda ingin menampilkan/mengedit nama instructor
+    description: '',
+    thumbnailUrl: '',
+    instructorId: '', // Inisialisasi instructorId
   });
 
   const [loading, setLoading] = useState(true);
@@ -42,9 +45,9 @@ const EditCourseFormPage = () => {
         const response = await fetch(`${API_BASE_URL}/${courseId}`);
         if (!response.ok) throw new Error('Course not found');
         const data: Course = await response.json();
-        setCourse(data);
+        setCourse(data); // Set data course dari backend
       } catch (error) {
-        toast.error('Failed to fetch course data.');
+        toast.error('Gagal mengambil data course.');
         console.error(error);
       } finally {
         setLoading(false);
@@ -72,14 +75,14 @@ const EditCourseFormPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update course.');
+        throw new Error(errorData.message || 'Gagal memperbarui course.');
       }
 
-      toast.success('Course updated successfully!');
-      router.push('/edit-material/course');
+      toast.success('Course berhasil diperbarui!');
+      router.push('/edit-material/course'); // Kembali ke daftar course
     } catch (error: unknown) {
       console.error('Update error:', error);
-      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan tidak terduga.');
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +91,7 @@ const EditCourseFormPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-600">
-        Loading course data...
+        Memuat data course...
       </div>
     );
   }
@@ -118,7 +121,7 @@ const EditCourseFormPage = () => {
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                     Judul Course
                   </label>
-                  <Input
+                  <Input // Menggunakan komponen Input
                     id="title"
                     name="title"
                     value={course.title || ''}
@@ -128,7 +131,10 @@ const EditCourseFormPage = () => {
                   />
                 </div>
 
-                <div>
+                {/* Bagian author dihapus/disesuaikan karena Course model menggunakan instructorId UUID */}
+                {/* Jika Anda ingin mengedit nama instructor, itu perlu penanganan lebih lanjut
+                   melalui Profile atau Instructor Management. */}
+                {/* <div>
                   <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-1">
                     Nama Instructor
                   </label>
@@ -140,13 +146,48 @@ const EditCourseFormPage = () => {
                     className="text-gray-700"
                     required
                   />
+                </div> */}
+                 <div>
+                  <label htmlFor="instructorId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Instructor ID (UUID)
+                  </label>
+                  <Input // Menggunakan komponen Input
+                    id="instructorId"
+                    name="instructorId"
+                    value={course.instructorId || ''}
+                    onChange={handleChange}
+                    placeholder="Masukkan UUID Instructor"
+                    className="text-gray-700"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    URL Thumbnail
+                  </label>
+                  <Input // Menggunakan komponen Input
+                    id="thumbnailUrl"
+                    name="thumbnailUrl"
+                    type="url"
+                    value={course.thumbnailUrl || ''}
+                    onChange={handleChange}
+                    placeholder="Contoh: https://example.com/thumbnail.jpg"
+                    className="text-gray-700"
+                  />
+                  {course.thumbnailUrl && (
+                    <img
+                      src={course.thumbnailUrl}
+                      alt="Thumbnail Preview"
+                      className="mt-2 w-full max-h-48 object-cover rounded-md border border-gray-200"
+                    />
+                  )}
                 </div>
 
                 <div>
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                     Deskripsi
                   </label>
-                  <textarea
+                  <textarea // Tetap menggunakan textarea, Input tidak mendukung rows prop secara langsung
                     id="description"
                     name="description"
                     rows={4}

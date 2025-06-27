@@ -7,14 +7,15 @@ import toast from 'react-hot-toast';
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
-import Input from '@/components/Input';
+import Input from '@/components/Input'; // Import komponen Input
 import Button from '@/components/Button';
 
 interface Module {
   id: string;
   title: string;
   description: string;
-  order: number;
+  orderInCourse: number; // Gunakan orderInCourse sesuai backend
+  course?: { id: string; title: string }; // Tambahkan ini untuk menampilkan nama course
 }
 
 const EditModuleFormPage = () => {
@@ -23,7 +24,8 @@ const EditModuleFormPage = () => {
   const [module, setModule] = useState<Partial<Module>>({
     title: '',
     description: '',
-    order: 1,
+    orderInCourse: 1, // Sesuaikan dengan properti orderInCourse
+    course: undefined, // Inisialisasi course
   });
 
   const [loading, setLoading] = useState(true);
@@ -37,18 +39,19 @@ const EditModuleFormPage = () => {
     const fetchModuleData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/${moduleId}`);
+        // Ambil data modul lengkap termasuk info course
+        const response = await fetch(`${API_BASE_URL}/${moduleId}/full`);
         if (!response.ok) throw new Error('Module not found');
         const data: Module = await response.json();
-        // pastikan order dikonversi ke number
         setModule({
           id: data.id,
           title: data.title,
           description: data.description,
-          order: Number(data.order),
+          orderInCourse: Number(data.orderInCourse), // Pastikan dikonversi ke number
+          course: data.course ? { id: data.course.id, title: data.course.title } : undefined, // Simpan info course
         });
       } catch (error) {
-        toast.error('Failed to fetch module data.');
+        toast.error('Gagal mengambil data modul.');
         console.error(error);
       } finally {
         setLoading(false);
@@ -63,7 +66,7 @@ const EditModuleFormPage = () => {
 
     setModule((prev) => ({
       ...prev,
-      [name]: name === 'order' ? Number(value) : value,
+      [name]: name === 'orderInCourse' ? Number(value) : value, // Sesuaikan dengan orderInCourse
     }));
   };
 
@@ -75,19 +78,25 @@ const EditModuleFormPage = () => {
       const response = await fetch(`${API_BASE_URL}/${moduleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(module),
+        // Hanya kirim field yang bisa diupdate (title, description, orderInCourse)
+        // Jangan kirim course objek, karena itu relasi ManyToOne, kecuali ada kebutuhan khusus
+        body: JSON.stringify({
+            title: module.title,
+            description: module.description,
+            orderInCourse: module.orderInCourse,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update module.');
+        throw new Error(errorData.message || 'Gagal memperbarui modul.');
       }
 
-      toast.success('Module updated successfully!');
-      router.push('/edit-material/module');
+      toast.success('Module berhasil diperbarui!');
+      router.push('/edit-material/module'); // Kembali ke daftar modul
     } catch (error: unknown) {
       console.error('Update error:', error);
-      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan tidak terduga.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +105,7 @@ const EditModuleFormPage = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-600">
-        Loading form...
+        Memuat formulir...
       </div>
     );
   }
@@ -121,12 +130,18 @@ const EditModuleFormPage = () => {
                 </h1>
               </div>
 
+              {module.course && (
+                <p className="text-sm text-gray-700 mb-6">
+                  Modul ini merupakan bagian dari Course: <span className="font-semibold">{module.course.title}</span>
+                </p>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6 w-full">
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                     Judul Modul
                   </label>
-                  <Input
+                  <Input // Menggunakan komponen Input
                     id="title"
                     name="title"
                     value={module.title || ''}
@@ -140,7 +155,7 @@ const EditModuleFormPage = () => {
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                     Deskripsi
                   </label>
-                  <textarea
+                  <textarea // Tetap gunakan textarea karena Input tidak mendukung rows prop
                     id="description"
                     name="description"
                     rows={4}
@@ -151,21 +166,21 @@ const EditModuleFormPage = () => {
                   />
                 </div>
 
-                {/* <div>
-                  <label htmlFor="order" className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label htmlFor="orderInCourse" className="block text-sm font-medium text-gray-700 mb-1">
                     Urutan dalam Course
                   </label>
-                  <Input
-                    id="order"
-                    name="order"
+                  <Input // Menggunakan komponen Input
+                    id="orderInCourse"
+                    name="orderInCourse"
                     type="number"
-                    value={module.order?.toString() || '1'}
+                    value={module.orderInCourse?.toString() || '1'} // Ubah ke string untuk input type="number"
                     onChange={handleChange}
                     className="text-gray-700"
                     min={1}
                     required
                   />
-                </div> */}
+                </div>
 
                 <div className="flex justify-end gap-4 pt-4">
                   <Button

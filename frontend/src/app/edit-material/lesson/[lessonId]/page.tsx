@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
-import Input from '@/components/Input';
+import Input from '@/components/Input'; // Import komponen Input
 import Button from '@/components/Button';
 import toast from 'react-hot-toast';
 import { FiArrowLeft } from 'react-icons/fi';
@@ -18,6 +18,13 @@ const EditLessonPage = () => {
     contentType: 'text',
     videoUrl: '',
     orderInModule: 1,
+    // Tambahkan properti course dan module untuk tampilan kontekstual
+    module: {
+      title: '',
+      course: {
+        title: '',
+      },
+    },
   });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,6 +32,7 @@ const EditLessonPage = () => {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
+        // Ambil data lesson lengkap dengan informasi quiz, module, dan course
         const res = await fetch(`http://localhost:8080/api/v1/lessons/${lessonId}`);
         const data = await res.json();
         setLesson(data);
@@ -52,7 +60,15 @@ const EditLessonPage = () => {
       const res = await fetch(`http://localhost:8080/api/v1/lessons/${lessonId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(lesson),
+        // Hanya kirim field yang bisa diupdate
+        body: JSON.stringify({
+            title: lesson.title,
+            content: lesson.content,
+            contentType: lesson.contentType,
+            videoUrl: lesson.videoUrl,
+            orderInModule: lesson.orderInModule,
+            // module id tidak perlu dikirim ulang jika tidak berubah
+        }),
       });
       if (!res.ok) throw new Error('Gagal update lesson');
       toast.success('Lesson berhasil diperbarui');
@@ -66,7 +82,7 @@ const EditLessonPage = () => {
 
   if (loading) return (
     <div className="flex items-center justify-center h-screen text-gray-500">
-      Loading...
+      Memuat...
     </div>
   );
 
@@ -92,20 +108,29 @@ const EditLessonPage = () => {
               Edit Lesson: <span className="text-indigo-600">{lesson.title}</span>
             </h1>
 
+            {/* Informasi Course dan Module */}
+            {(lesson.module?.title || lesson.module?.course?.title) && (
+              <div className="text-sm text-gray-700 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p>
+                  **Course:** <span className="font-semibold">{lesson.module.course?.title || '-'}</span>
+                </p>
+                <p>
+                  **Module:** <span className="font-semibold">{lesson.module.title || '-'}</span>
+                </p>
+              </div>
+            )}
+
+
             <div className="w-full bg-white p-8 rounded-lg shadow-md">
               <form onSubmit={handleSubmit} className="space-y-6 w-full">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
-                  <Input name="title" value={lesson.title} onChange={handleChange} className="text-gray-700" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Konten</label>
-                  <textarea
-                    name="content"
-                    value={lesson.content}
+                  <Input // Menggunakan komponen Input
+                    name="title"
+                    value={lesson.title}
                     onChange={handleChange}
-                    className="w-full border px-4 py-2 rounded text-gray-700"
-                    rows={4}
+                    className="text-gray-700"
+                    required
                   />
                 </div>
                 <div>
@@ -114,33 +139,61 @@ const EditLessonPage = () => {
                     name="contentType"
                     value={lesson.contentType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded text-gray-700"
+                    className="w-full px-4 py-2 border rounded text-gray-700" // Sesuaikan styling agar mirip Input
+                    required
                   >
                     <option value="text">Teks</option>
                     <option value="video">Video</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (jika ada)</label>
-                  <Input name="videoUrl" value={lesson.videoUrl} onChange={handleChange} className="text-gray-700" />
-                </div>
+
+                {/* Konten atau URL Video sesuai tipe konten */}
+                {lesson.contentType === 'text' && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Konten Teks</label>
+                        <textarea
+                            name="content"
+                            value={lesson.content}
+                            onChange={handleChange}
+                            className="w-full border px-4 py-2 rounded text-gray-700"
+                            rows={8} // Lebih banyak baris untuk konten teks
+                            required
+                        />
+                    </div>
+                )}
+                {lesson.contentType === 'video' && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">URL Video</label>
+                        <Input // Menggunakan komponen Input
+                            name="videoUrl"
+                            type="url"
+                            value={lesson.videoUrl || ''}
+                            onChange={handleChange}
+                            placeholder="Contoh: https://www.youtube.com/watch?v=..."
+                            className="text-gray-700"
+                            required
+                        />
+                    </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Urutan Dalam Modul</label>
-                  <Input
+                  <Input // Menggunakan komponen Input
                     name="orderInModule"
                     type="number"
                     value={lesson.orderInModule}
                     onChange={handleChange}
                     className="text-gray-700"
                     min={1}
+                    required
                   />
                 </div>
                 <div className="flex justify-end gap-4 pt-4">
                   <Button type="button" onClick={() => router.back()} className="bg-gray-200 text-gray-700">
-                    Cancel
+                    Batal
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Saving...' : 'Simpan Perubahan'}
+                    {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </Button>
                 </div>
               </form>
