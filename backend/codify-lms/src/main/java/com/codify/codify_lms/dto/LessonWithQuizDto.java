@@ -1,40 +1,48 @@
 package com.codify.codify_lms.dto;
 
+import java.util.List;
 import java.util.UUID;
+import com.codify.codify_lms.model.ContentBlock; // Import ContentBlock
 import com.codify.codify_lms.model.Lesson;
 import com.codify.codify_lms.model.Quiz;
+import java.util.ArrayList; // Import ArrayList
 
 public class LessonWithQuizDto {
     private UUID id;
     private String title;
-    private String content;
+    private List<ContentBlock> contentBlocks; // Ganti dengan List<ContentBlock>
     private Integer orderInModule;
     private UUID moduleId;
-    private String contentType;
-    private String videoUrl;
     private Quiz quiz;
 
-    public LessonWithQuizDto() {}
+    // Hapus properti-properti lama ini:
+    // private String content;
+    // private String contentType;
+    // private String videoUrl;
+    // private String imageUrl;
 
-    public LessonWithQuizDto(UUID id, String title, String content, Integer orderInModule, UUID moduleId, String contentType, String videoUrl, Quiz quiz) {
+
+    public LessonWithQuizDto() {
+        this.contentBlocks = new ArrayList<>(); // Inisialisasi list di konstruktor default
+    }
+
+    // Sesuaikan konstruktor sesuai dengan ContentBlock
+    public LessonWithQuizDto(UUID id, String title, List<ContentBlock> contentBlocks, Integer orderInModule, UUID moduleId, Quiz quiz) {
         this.id = id;
         this.title = title;
-        this.content = content;
+        this.contentBlocks = contentBlocks != null ? contentBlocks : new ArrayList<>(); // Pastikan tidak null
         this.orderInModule = orderInModule;
         this.moduleId = moduleId;
-        this.contentType = contentType;
-        this.videoUrl = videoUrl;
         this.quiz = quiz;
     }
 
+    // Sesuaikan konstruktor dari Lesson entity
     public LessonWithQuizDto(Lesson lesson, Quiz quiz) {
         this.id = lesson.getId();
         this.title = lesson.getTitle();
-        this.content = lesson.getContent();
+        this.contentBlocks = lesson.getContentBlocks(); // Ambil contentBlocks dari Lesson entity
         this.orderInModule = lesson.getOrderInModule();
         this.moduleId = lesson.getModule().getId();
-        this.contentType = lesson.getContentType();
-        this.videoUrl = lesson.getVideoUrl();
         this.quiz = quiz;
     }
 
@@ -56,12 +64,12 @@ public class LessonWithQuizDto {
         this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public List<ContentBlock> getContentBlocks() { // Getter baru
+        return contentBlocks;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setContentBlocks(List<ContentBlock> contentBlocks) { // Setter baru
+        this.contentBlocks = contentBlocks;
     }
 
     public Integer getOrderInModule() {
@@ -78,22 +86,6 @@ public class LessonWithQuizDto {
 
     public void setModuleId(UUID moduleId) {
         this.moduleId = moduleId;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
     }
 
     public Quiz getQuiz() {

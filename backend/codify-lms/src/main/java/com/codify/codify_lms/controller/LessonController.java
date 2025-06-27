@@ -66,11 +66,15 @@ public class LessonController {
                     lesson.generateId(); // Buat ID baru untuk lesson jika belum ada
                 }
                 lesson.setTitle(dto.getTitle());
-                lesson.setContent(dto.getContent());
-                lesson.setContentType(dto.getContentType());
+                lesson.setContentBlocks(dto.getContentBlocks()); // Gunakan contentBlocks
                 lesson.setOrderInModule(dto.getOrderInModule());
-                lesson.setVideoUrl(dto.getVideoUrl());
-                
+
+                // Hapus baris-baris lama ini:
+                // lesson.setContent(dto.getContent());
+                // lesson.setContentType(dto.getContentType());
+                // lesson.setVideoUrl(dto.getVideoUrl());
+                // lesson.setImageUrl(dto.getImageUrl());
+
                 // 4. Sambungkan lesson ke module induknya (objek Module, bukan hanya ID)
                 lesson.setModule(module);
 
@@ -81,7 +85,6 @@ public class LessonController {
             List<Lesson> savedLessons = lessonRepository.saveAll(lessonsToSave);
             return new ResponseEntity<>(savedLessons, HttpStatus.CREATED);
         } catch (Exception e) {
-            // Ini akan mencetak error lengkap di konsol backend untuk debugging
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -99,11 +102,15 @@ public class LessonController {
                 LessonWithQuizDto dto = new LessonWithQuizDto();
                 dto.setId(lesson.getId());
                 dto.setTitle(lesson.getTitle());
-                dto.setContent(lesson.getContent());
-                dto.setContentType(lesson.getContentType());
-                dto.setVideoUrl(lesson.getVideoUrl());
+                dto.setContentBlocks(lesson.getContentBlocks()); // Ambil contentBlocks
                 dto.setOrderInModule(lesson.getOrderInModule());
                 dto.setModuleId(lesson.getModule().getId());
+
+                // Hapus baris-baris lama ini:
+                // dto.setContent(lesson.getContent());
+                // dto.setContentType(lesson.getContentType());
+                // dto.setVideoUrl(lesson.getVideoUrl());
+                // dto.setImageUrl(lesson.getImageUrl());
 
                 Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);
                 dto.setQuiz(quiz);
@@ -114,15 +121,20 @@ public class LessonController {
     }
 
 
-
-
     @PutMapping("/{id}")
     public ResponseEntity<Lesson> updateLesson(@PathVariable UUID id, @RequestBody Lesson updatedLesson) {
         return lessonRepository.findById(id)
             .map(lesson -> {
                 lesson.setTitle(updatedLesson.getTitle());
-                lesson.setContent(updatedLesson.getContent());
+                lesson.setContentBlocks(updatedLesson.getContentBlocks()); // Perbarui contentBlocks
                 lesson.setOrderInModule(updatedLesson.getOrderInModule());
+                
+                // Hapus baris-baris lama ini:
+                // lesson.setContent(updatedLesson.getContent());
+                // lesson.setContentType(updatedLesson.getContentType());
+                // lesson.setVideoUrl(updatedLesson.getVideoUrl());
+                // lesson.setImageUrl(updatedLesson.getImageUrl());
+
                 lesson.setUpdatedAt(Instant.now());
                 Lesson saved = lessonRepository.save(lesson);
                 return ResponseEntity.ok(saved);
@@ -139,7 +151,4 @@ public class LessonController {
         lessonRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
-
-
 }

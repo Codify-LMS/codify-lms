@@ -1,33 +1,46 @@
+// frontend/src/types.ts
+
+// --- Definisi Baru: ContentBlock ---
+export interface ContentBlock {
+  type: 'text' | 'image' | 'video'; // Tipe blok konten
+  value: string; // Nilai konten (teks, URL gambar, atau URL video)
+  order: number; // Urutan blok di dalam lesson
+}
+
 export interface CourseData {
-  id?: string; // Penting: bisa null/undefined jika course baru
+  id?: string;
   title: string;
   description: string;
   thumbnailUrl: string;
   isPublished: boolean;
-  modules?: ModuleData[]; // Opsional, karena mungkin belum ada modul saat membuat course
+  modules?: ModuleData[];
 }
 
 export interface ModuleData {
-  id?: string; // Penting: bisa null/undefined jika module baru
+  id?: string;
   title: string;
   description: string;
   orderInCourse: number;
-  course?: { // Ini untuk relasi ke Course
+  course?: {
     id: string;
-    title?: string; // Bisa ditambahkan jika ingin menampilkan nama course di dropdown module
+    title?: string;
   };
-  lessons?: LessonData[]; // Opsional, mungkin belum ada lesson
+  lessons?: LessonData[];
 }
 
 export interface LessonData {
   id?: string;
   title: string;
-  content: string;
-  contentType: 'video' | 'text';
-  videoUrl?: string;
+  contentBlocks: ContentBlock[]; // Ganti properti content lama dengan list ContentBlock
   orderInModule: number;
-  moduleId: string; // Ini akan menjadi ID modul (bisa ID sementara atau ID dari DB)
+  moduleId: string;
   quiz?: QuizData;
+
+  // Hapus properti-properti lama ini:
+  // content: string;
+  // contentType: 'video' | 'text' | 'image';
+  // videoUrl?: string;
+  // imageUrl?: string;
 }
 
 export interface QuizData {
@@ -65,7 +78,7 @@ export interface ModuleWithCourse {
 export interface FullUploadData {
   course: CourseData | null;
   modules: ModuleData[];
-  lessons: LessonData[];
+  lessons: LessonData[]; // Ini akan menyimpan LessonData dengan contentBlocks
   quiz?: QuizData;
 }
 
@@ -81,12 +94,16 @@ export interface ModuleWithLessons {
 export interface LessonWithQuizDto {
   id: string;
   title: string;
-  content: string;
-  contentType: 'video' | 'text';
-  videoUrl?: string;
+  contentBlocks: ContentBlock[]; // Ganti dengan List ContentBlock
   orderInModule: number;
   moduleId: string;
   quiz?: QuizData;
+
+  // Hapus properti-properti lama ini:
+  // content: string;
+  // contentType: 'video' | 'text' | 'image';
+  // videoUrl?: string;
+  // imageUrl?: string;
 }
 
 export interface UserProfile {
@@ -94,9 +111,9 @@ export interface UserProfile {
   email: string;
   full_name?: string;
   firstName?: string;
-  lastName?: string; 
+  lastName?: string;
   username?: string;
-  avatarUrl?: string; 
+  avatarUrl?: string;
   role?: string;
 }
 
@@ -109,7 +126,7 @@ export interface LeaderboardEntry {
   quizScore: number;
   bonusPoint: number;
   totalScore: number;
-  reward: string; 
+  reward: string;
   username: string;
 }
 
@@ -119,7 +136,7 @@ export interface BookmarkedCourse {
   title: string;
   thumbnailUrl: string;
   isPublished: boolean;
-  progressPercentage?: number; 
+  progressPercentage?: number;
 }
 
 
@@ -135,9 +152,9 @@ export interface QuizQuestionData {
   id: string;
   questionText: string;
   questionType: 'multiple_choice' | 'essay' | 'short_answer';
-  options: string[]; 
-  correctAnswerIndex?: number; 
-  correctAnswerText?: string; 
+  options: string[];
+  correctAnswerIndex?: number;
+  correctAnswerText?: string;
   scoreValue: number;
   orderInQuiz: number;
 }
@@ -147,10 +164,9 @@ export interface QuizSubmissionResponse {
   scoreObtained: number;
   isPassed: boolean;
   answerResults: {
-    questionId: string; 
+    questionId: string;
     isCorrect: boolean;
     correctAnswerText?: string;
     correctAnswerIndex?: number;
   }[];
 }
-

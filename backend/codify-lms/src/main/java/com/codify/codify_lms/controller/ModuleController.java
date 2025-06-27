@@ -69,22 +69,27 @@ public class ModuleController {
     }
 
 
+
     @GetMapping("/{id}/full")
     public ResponseEntity<ModuleFullDto> getModuleWithLessons(@PathVariable UUID id) {
         return moduleRepository.findById(id)
             .map(module -> {
-                // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
                 List<LessonWithQuizDto> lessonDtos = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId())
                     .stream()
                     .map(lesson -> {
                         LessonWithQuizDto dto = new LessonWithQuizDto();
                         dto.setId(lesson.getId());
                         dto.setTitle(lesson.getTitle());
-                        dto.setContent(lesson.getContent());
-                        dto.setContentType(lesson.getContentType());
+                        dto.setContentBlocks(lesson.getContentBlocks()); // <<-- PERUBAHAN DI SINI
                         dto.setOrderInModule(lesson.getOrderInModule());
-                        dto.setVideoUrl(lesson.getVideoUrl());
                         dto.setModuleId(lesson.getModule().getId());
+
+                        // Hapus baris-baris yang mengacu ke properti lama
+                        // dto.setContent(lesson.getContent());
+                        // dto.setContentType(lesson.getContentType());
+                        // dto.setVideoUrl(lesson.getVideoUrl());
+                        // dto.setImageUrl(lesson.getImageUrl());
+
 
                         // cari quiz kalau ada
                         Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);

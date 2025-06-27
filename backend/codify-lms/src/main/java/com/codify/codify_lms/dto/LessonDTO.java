@@ -1,40 +1,48 @@
 package com.codify.codify_lms.dto;
 
+import java.util.List;
 import java.util.UUID;
+import com.codify.codify_lms.model.ContentBlock; // Import ContentBlock
 import com.codify.codify_lms.model.Lesson;
+import java.util.ArrayList; // Import ArrayList
 
 public class LessonDTO {
     private String id;
     private String title;
-    private String content;
-    private String contentType;
+    private List<ContentBlock> contentBlocks; // Ganti dengan List<ContentBlock>
     private int orderInModule;
-    private String videoUrl;
     private String moduleId;
 
-    public LessonDTO() {}
+    // Hapus properti-properti lama ini:
+    // private String content;
+    // private String contentType;
+    // private String videoUrl;
+    // private String imageUrl;
 
-    public LessonDTO(String id, String title, String content, String contentType, int orderInModule, String videoUrl, String moduleId) {
+    public LessonDTO() {
+        this.contentBlocks = new ArrayList<>(); // Inisialisasi list di konstruktor default
+    }
+
+    // Sesuaikan konstruktor sesuai dengan ContentBlock
+    public LessonDTO(String id, String title, List<ContentBlock> contentBlocks, int orderInModule, String moduleId) {
         this.id = id;
         this.title = title;
-        this.content = content;
-        this.contentType = contentType;
+        this.contentBlocks = contentBlocks != null ? contentBlocks : new ArrayList<>(); // Pastikan tidak null
         this.orderInModule = orderInModule;
-        this.videoUrl = videoUrl;
         this.moduleId = moduleId;
     }
 
+    // Sesuaikan konstruktor dari Lesson entity
     public LessonDTO(Lesson lesson) {
         this.id = lesson.getId().toString();
         this.title = lesson.getTitle();
-        this.content = lesson.getContent();
-        this.contentType = lesson.getContentType();
+        this.contentBlocks = lesson.getContentBlocks(); // Ambil contentBlocks dari Lesson entity
         this.orderInModule = lesson.getOrderInModule();
-        this.videoUrl = lesson.getVideoUrl();
         this.moduleId = lesson.getModule().getId().toString();
     }
 
     // Getters and Setters
+
     public String getId() {
         return id;
     }
@@ -51,20 +59,12 @@ public class LessonDTO {
         this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public List<ContentBlock> getContentBlocks() { // Getter baru
+        return contentBlocks;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    public void setContentBlocks(List<ContentBlock> contentBlocks) { // Setter baru
+        this.contentBlocks = contentBlocks;
     }
 
     public int getOrderInModule() {
@@ -73,14 +73,6 @@ public class LessonDTO {
 
     public void setOrderInModule(int orderInModule) {
         this.orderInModule = orderInModule;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
     }
 
     public String getModuleId() {

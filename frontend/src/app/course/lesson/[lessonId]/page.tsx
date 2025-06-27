@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
-import { LessonData, ModuleData, CourseData, QuizSubmissionResponse } from '@/types';
+import { LessonData, ModuleData, CourseData, QuizSubmissionResponse, ContentBlock } from '@/types'; // Import ContentBlock
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@/hooks/useUser';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
@@ -17,7 +17,23 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function LessonPage() {
+// Fungsi bantu untuk mendapatkan URL embed YouTube yang benar
+const getYouTubeEmbedUrl = (url: string) => {
+  if (!url) return '';
+  // Convert typical YouTube watch URLs to embed URLs
+  // Asumsi URL lokal adalah placeholder dari tugas sebelumnya
+  if (url.includes('youtube.com/watch?v=')) {
+    return url.replace('watch?v=', 'embed/') + "?modestbranding=1&rel=0";
+  }
+  if (url.includes('youtu.be/')) {
+    return url.replace('youtu.be/', 'youtube.com/embed/') + "?modestbranding=1&rel=0";
+  }
+  // If it's already an embed URL or another video platform, return as is
+  return url;
+};
+
+
+function LessonPage() {
   const { lessonId } = useParams() as { lessonId: string };
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonData | null>(null);
@@ -53,7 +69,7 @@ export default function LessonPage() {
       if (isLoadingUser || !user) return;
       try {
         const lessonRes = await axios.get(`http://localhost:8080/api/v1/lessons/${lessonId}`);
-        const lessonData: LessonData = lessonRes.data;
+        const lessonData: LessonData = lessonRes.data; // lessonData sekarang memiliki contentBlocks
         setLesson(lessonData);
 
         const moduleRes = await axios.get(`http://localhost:8080/api/modules/${lessonData.moduleId}/full`);
@@ -67,6 +83,7 @@ export default function LessonPage() {
         const courseData: CourseData = courseRes.data;
         setCourse(courseData);
       } catch (error) {
+        toast.error("❌ Error fetching lesson data.");
         console.error("❌ Error fetching data:", error);
       } finally {
         setLoadingContent(false);
@@ -179,7 +196,9 @@ export default function LessonPage() {
     );
   }
 
-  if (!lesson || !course || !user) return <div className="p-6 text-red-600">Data not found</div>;
+  // lesson.contentBlocks mungkin null jika belum ada konten. Pastikan inisialisasi defaultnya list kosong.
+  if (!lesson || !course || !user || !lesson.contentBlocks) return <div className="p-6 text-red-600">Data not found or incomplete.</div>;
+
 
   const flattenedLessons = getFlattenedLessons();
   const currentIndex = flattenedLessons.findIndex(entry => entry.lesson.id === lesson.id);
@@ -198,17 +217,38 @@ export default function LessonPage() {
         <main className="flex-1 p-6 bg-white overflow-y-auto m-4 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-indigo-700 mb-4">{lesson.title}</h1>
 
-          {lesson.imageUrl && (
-            <img
-              src={lesson.imageUrl}
-              alt="Lesson illustration"
-              className="w-full max-w-3xl mx-auto rounded-lg mb-6"
-            />
-          )}
-          <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
-            {lesson.content}
-          </pre>
+          {/* Render semua blok konten berdasarkan urutan */}
+          {lesson.contentBlocks.sort((a, b) => a.order - b.order).map((block, index) => (
+            <div key={index} className="mb-6"> {/* Tambahkan margin bawah untuk setiap blok */}
+              {block.type === 'text' && (
+                <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
+                  {block.value}
+                </pre>
+              )}
 
+              {block.type === 'video' && block.value && (
+                <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingTop: '56.25%' /* 16:9 Aspect Ratio */ }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={getYouTubeEmbedUrl(block.value)} // Gunakan block.value sebagai URL video
+                    title="Video Player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  ></iframe>
+                </div>
+              )}
+
+              {block.type === 'image' && block.value && (
+                <img
+                  src={block.value} // Gunakan block.value sebagai URL gambar
+                  alt={`Lesson Image ${block.order}`}
+                  className="w-full h-auto max-h-[500px] object-contain rounded-lg"
+                />
+              )}
+            </div>
+          ))}
 
 
           {lesson.quiz && lesson.quiz.questions && (
@@ -289,18 +329,6 @@ export default function LessonPage() {
                             onChange={(e) => handleAnswerChange(q.id, e.target.value, true)}
                             disabled={quizSubmitted}
                           />
-                          {/* {showFeedback && result?.correctAnswerText && (
-                            <p
-                              className={`text-sm mt-1 ${
-                                isCorrect ? 'text-green-600' : 'text-red-600'
-                              } text-left`}
-                            >
-                              Jawaban Benar:{' '}
-                              <span className="font-semibold">
-                                {result.correctAnswerText}
-                              </span>
-                            </p>
-                          )} */}
                         </>
                       )}
                     </div>
@@ -368,7 +396,7 @@ export default function LessonPage() {
               onClick={async () => {
                   if (!user?.id || !lesson?.id || !nextLesson) return;
 
-                  setIsTransitionLoading(true); // ← Munculkan modal
+                  setIsTransitionLoading(true);
 
                   try {
                     await fetch('http://localhost:8080/api/v1/progress/complete-lesson', {
@@ -437,3 +465,5 @@ export default function LessonPage() {
     </div>
   );
 }
+
+export default LessonPage;
