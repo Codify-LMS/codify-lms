@@ -97,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen w-full [scrollbar-width:none] [-ms-overflow-style:none]">
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col h-full bg-gradient-to-br from-[#2B2F7F] via-[#5C3DAA] to-[#1E295A] w-64 text-white shadow-lg">
         <div className="p-6">
