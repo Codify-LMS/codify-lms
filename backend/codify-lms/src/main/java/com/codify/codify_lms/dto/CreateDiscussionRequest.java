@@ -5,6 +5,7 @@ import java.util.UUID;
 public class CreateDiscussionRequest {
     private String title;
     private String content;
+    private String imageUrl; // <<-- PASTIKAN BARIS INI ADA
     private UUID userId;
     private UUID courseId;
     private UUID moduleId;
@@ -14,9 +15,11 @@ public class CreateDiscussionRequest {
     }
 
     // All-args constructor
-    public CreateDiscussionRequest(String title, String content, UUID userId, UUID courseId, UUID moduleId) {
+    // <<-- PASTIKAN imageUrl JUGA ADA DI KONSTRUKTOR INI
+    public CreateDiscussionRequest(String title, String content, String imageUrl, UUID userId, UUID courseId, UUID moduleId) {
         this.title = title;
         this.content = content;
+        this.imageUrl = imageUrl; // <<-- DAN BARIS INI
         this.userId = userId;
         this.courseId = courseId;
         this.moduleId = moduleId;
@@ -37,6 +40,14 @@ public class CreateDiscussionRequest {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImageUrl() { // <<-- PASTIKAN GETTER INI ADA
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) { // <<-- PASTIKAN SETTER INI ADA
+        this.imageUrl = imageUrl;
     }
 
     public UUID getUserId() {

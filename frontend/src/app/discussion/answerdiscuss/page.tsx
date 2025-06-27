@@ -5,6 +5,7 @@ import DashboardHeader from '../../dashboard/components/DashboardHeader';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useUser } from '@/hooks/useUser';
+import { supabase } from '@/supabaseClient';
 
 export default function AnswerDiscussPage() {
   const router = useRouter();
@@ -15,14 +16,36 @@ export default function AnswerDiscussPage() {
   const [answers, setAnswers] = useState<any[]>([]);
   const [answerText, setAnswerText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [discussion, setDiscussion] = useState<any>(null);
+  const [discussion, setDiscussion] = useState<any>(null); // Discussion awal
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Fungsi untuk upload gambar ke Supabase Storage
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `discussion-images/${Date.now()}.${fileExt}`;
+
+    const { error: uploadErr } = await supabase.storage.from('lms-assets').upload(filePath, file);
+    if (uploadErr) {
+      console.error('❌ Upload gambar gagal:', uploadErr.message);
+      setUploadError('Gagal mengunggah gambar: ' + uploadErr.message);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('lms-assets').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
 
   useEffect(() => {
     if (!discussionId) return;
 
     const fetchDiscussion = async () => {
       try {
+        // endpoint /api/discussions/{id} sudah mengembalikan DiscussionResponse
+        // yang sekarang punya imageUrl
         const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}`);
         const data = await res.json();
         setDiscussion(data);
@@ -39,6 +62,8 @@ export default function AnswerDiscussPage() {
 
     const fetchAnswers = async () => {
       try {
+        // endpoint /api/discussions/{id}/answers sudah mengembalikan AnswerResponse
+        // yang sekarang punya imageUrl
         const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`);
         const data = await res.json();
         setAnswers(data);
@@ -51,21 +76,39 @@ export default function AnswerDiscussPage() {
   }, [discussionId]);
 
   const handleSendAnswer = async () => {
-    if (!answerText.trim()) return alert('Isi jawaban dulu ya!');
+    setUploadError(null);
+    if (!answerText.trim() && !imageFile) {
+      alert('Isi jawaban atau unggah gambar terlebih dahulu!');
+      return;
+    }
 
     setIsSubmitting(true);
+    let finalImageUrl = null;
+
     try {
+      if (imageFile) {
+        finalImageUrl = await handleImageUpload(imageFile);
+        if (!finalImageUrl) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: answerText,
+          imageUrl: finalImageUrl, // Kirim imageUrl final
           userId: user?.id,
         }),
       });
 
       setAnswerText('');
+      setImageFile(null);
+      setImagePreview(null);
 
+      // Refresh answers
       const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`);
       const data = await res.json();
       setAnswers(data);
@@ -73,8 +116,10 @@ export default function AnswerDiscussPage() {
       setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Gagal kirim jawaban:', err);
+      setUploadError('❌ Gagal mengirim jawaban: ' + err.message);
+      alert('Gagal mengirim jawaban.');
     } finally {
       setIsSubmitting(false);
     }
@@ -92,12 +137,16 @@ export default function AnswerDiscussPage() {
         <main className="flex-1 bg-gray-50 px-6 py-6 overflow-y-auto">
           <h1 className="text-2xl font-bold text-blue-700 mb-6 text-left">💬 Discussion Thread</h1>
 
-          {/* Discussion Detail */}
+          {/* Discussion Detail (Pertanyaan Awal) */}
           <div className="bg-white p-5 rounded-xl mb-6 shadow-sm border border-blue-100">
             {discussion ? (
               <>
                 <div className="text-lg font-semibold text-gray-800">{discussion.title}</div>
                 <p className="text-sm text-gray-700 mt-2">{discussion.content}</p>
+                {/* Tampilkan gambar untuk pertanyaan awal diskusi jika ada */}
+                {discussion.imageUrl && (
+                    <img src={discussion.imageUrl} alt="Discussion Question Image" className="mt-4 w-full max-h-64 object-contain rounded border" />
+                )}
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                   <span>👤 @{discussion.username}</span>
                   <span>🗓 {new Date(discussion.createdAt).toLocaleString('id-ID')}</span>
@@ -127,16 +176,20 @@ export default function AnswerDiscussPage() {
                         className="font-semibold text-indigo-700 hover:underline"
                         onClick={() => {
                           if (item.username) {
-                            router.push(`/dashboard/user-profile/${item.username}`);
+                            router.push(`/user-profile/${item.username}`);
                           }
                         }}
                       >
                         @{item.username || item.userId?.slice(0, 6)}
-                      </button>  
+                      </button>
                     </div>
                     <span>{new Date(item.createdAt).toLocaleString('id-ID')}</span>
                   </div>
                   <p className="text-sm text-gray-700">{item.content}</p>
+                  {/* Tampilkan gambar jawaban jika ada */}
+                  {item.imageUrl && (
+                      <img src={item.imageUrl} alt="Answer Image" className="mt-3 w-full max-h-48 object-contain rounded border" />
+                  )}
                 </div>
               ))
             ) : (
@@ -155,6 +208,32 @@ export default function AnswerDiscussPage() {
               value={answerText}
               onChange={(e) => setAnswerText(e.target.value)}
             ></textarea>
+
+            {/* Input Gambar untuk Jawaban */}
+            <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Unggah Gambar (Opsional)</label>
+                {imagePreview && (
+                    <img src={imagePreview} alt="Pratinjau Gambar" className="w-full max-h-48 object-contain rounded mb-2 border" />
+                )}
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setImageFile(file);
+                        if (file) {
+                            setImagePreview(URL.createObjectURL(file));
+                            setUploadError(null); // Reset error
+                        } else {
+                            setImagePreview(null);
+                        }
+                    }}
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {imageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {imageFile.name}</p>}
+                {uploadError && <p className="text-red-500 text-sm mt-2">{uploadError}</p>}
+            </div>
+
             <div className="text-right mt-3">
               <button
                 disabled={isSubmitting}

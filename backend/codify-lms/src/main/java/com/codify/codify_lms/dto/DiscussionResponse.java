@@ -7,6 +7,7 @@ public class DiscussionResponse {
     private UUID id;
     private String title;
     private String content;
+    private String imageUrl; // <<-- Tambahkan properti ini
     private UUID userId;
     private ZonedDateTime createdAt;
     private String username;
@@ -21,6 +22,9 @@ public class DiscussionResponse {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getImageUrl() { return imageUrl; } // <<-- Tambahkan getter ini
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; } // <<-- Tambahkan setter ini
 
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }

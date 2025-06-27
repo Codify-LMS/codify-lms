@@ -6,6 +6,7 @@ import java.util.UUID;
 public class AnswerResponse {
     private UUID id;
     private String content;
+    private String imageUrl; // Tambahkan properti ini
     private UUID userId;
     private String username;
     private String avatarUrl;
@@ -16,6 +17,9 @@ public class AnswerResponse {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getImageUrl() { return imageUrl; } // Tambahkan getter ini
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; } // Tambahkan setter ini
 
     public UUID getUserId() { return userId; }
     public void setUserId(UUID userId) { this.userId = userId; }

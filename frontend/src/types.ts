@@ -78,7 +78,7 @@ export interface ModuleWithCourse {
 export interface FullUploadData {
   course: CourseData | null;
   modules: ModuleData[];
-  lessons: LessonData[]; // Ini akan menyimpan LessonData dengan contentBlocks
+  lessons: LessonData[];
   quiz?: QuizData;
 }
 
@@ -94,7 +94,7 @@ export interface ModuleWithLessons {
 export interface LessonWithQuizDto {
   id: string;
   title: string;
-  contentBlocks: ContentBlock[]; // Ganti dengan List ContentBlock
+  contentBlocks: ContentBlock[];
   orderInModule: number;
   moduleId: string;
   quiz?: QuizData;
@@ -104,6 +104,16 @@ export interface LessonWithQuizDto {
   // contentType: 'video' | 'text' | 'image';
   // videoUrl?: string;
   // imageUrl?: string;
+}
+
+export interface AnswerResponse { 
+  id: string;
+  content: string;
+  imageUrl?: string;
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  createdAt: string;
 }
 
 export interface UserProfile {
