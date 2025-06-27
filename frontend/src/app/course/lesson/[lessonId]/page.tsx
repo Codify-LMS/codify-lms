@@ -205,8 +205,11 @@ export default function LessonPage() {
               className="w-full max-w-3xl mx-auto rounded-lg mb-6"
             />
           )}
+          <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
+            {lesson.content}
+          </pre>
 
-          <div className="prose max-w-none text-gray-700" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+
 
           {lesson.quiz && lesson.quiz.questions && (
             <form className="mt-8 p-6 border rounded-lg bg-gray-50" onSubmit={handleSubmitQuiz}>
