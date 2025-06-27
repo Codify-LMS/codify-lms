@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors; 
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/courses")
@@ -35,13 +35,13 @@ public class CourseController {
     private CourseRepository courseRepository;
 
     @Autowired
-    private ModuleRepository moduleRepository; 
+    private ModuleRepository moduleRepository;
 
     @Autowired
-    private LessonRepository lessonRepository; 
+    private LessonRepository lessonRepository;
 
     @Autowired
-    private QuizRepository quizRepository; 
+    private QuizRepository quizRepository;
 
     @Autowired
     private CourseProgressService courseProgressService;
@@ -55,13 +55,15 @@ public class CourseController {
                 Double progress = courseProgressService.getProgressPercentageByUserAndCourse(userId, course.getId());
 
                 // Hitung jumlah module, lesson, dan quiz
-                List<Module> modules = moduleRepository.findByCourseId(course.getId());
+                // Changed method call from findByCourseId to findByCourseIdOrderByOrderInCourseAsc
+                List<Module> modules = moduleRepository.findByCourseIdOrderByOrderInCourseAsc(course.getId());
                 int moduleCount = modules.size();
                 int lessonCount = 0;
                 int quizCount = 0;
 
                 for (Module module : modules) {
-                    List<Lesson> lessons = lessonRepository.findByModuleId(module.getId());
+                    // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
+                    List<Lesson> lessons = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId());
                     lessonCount += lessons.size();
 
                     for (Lesson lesson : lessons) {
@@ -119,8 +121,8 @@ public class CourseController {
             Course _course = courseData.get();
             _course.setTitle(courseDetails.getTitle());
             _course.setDescription(courseDetails.getDescription());
-            _course.setThumbnailUrl(courseDetails.getThumbnailUrl()); 
-            _course.setInstructorId(courseDetails.getInstructorId()); 
+            _course.setThumbnailUrl(courseDetails.getThumbnailUrl());
+            _course.setInstructorId(courseDetails.getInstructorId());
             return new ResponseEntity<>(courseRepository.save(_course), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(Collections.singletonMap("message", "Course not found with id=" + id), HttpStatus.NOT_FOUND);
@@ -145,10 +147,12 @@ public class CourseController {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Course not found"));
 
-        List<Module> modules = moduleRepository.findByCourseId(course.getId());
+        // Changed method call from findByCourseId to findByCourseIdOrderByOrderInCourseAsc
+        List<Module> modules = moduleRepository.findByCourseIdOrderByOrderInCourseAsc(course.getId());
 
         List<ModuleFullDto> moduleDtos = modules.stream().map(module -> {
-            List<Lesson> lessons = lessonRepository.findByModuleId(module.getId());
+            // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
+            List<Lesson> lessons = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId());
             List<LessonWithQuizDto> lessonDtos = lessons.stream().map(lesson -> {
                 Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);
                 return new LessonWithQuizDto(lesson, quiz);

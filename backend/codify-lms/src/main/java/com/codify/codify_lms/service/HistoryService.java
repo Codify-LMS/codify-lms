@@ -41,6 +41,14 @@ public class HistoryService {
         List<UserCourseProgress> progressList = progressRepository.findByUserId(userId);
         System.out.println("🔍 Found progress entries: " + progressList.size());
 
+        // Sort by last accessed
+        progressList.sort((p1, p2) -> {
+            if (p1.getLastAccessedAt() == null && p2.getLastAccessedAt() == null) return 0;
+            if (p1.getLastAccessedAt() == null) return 1;
+            if (p2.getLastAccessedAt() == null) return -1;
+            return p2.getLastAccessedAt().compareTo(p1.getLastAccessedAt());
+        });
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
 
         return progressList.stream().map(progress -> {

@@ -27,11 +27,21 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
       setError('Judul modul wajib diisi.');
       return;
     }
+    // Pastikan ada Course yang sedang dibuat/dipilih di langkah 1
+    if (!formData.course || (!formData.course.id && !formData.course.title)) {
+        setError('Harap kembali ke langkah 1 dan buat atau pilih Course terlebih dahulu.');
+        return;
+    }
 
     const newModule: ModuleData = {
       title,
       description,
       orderInCourse,
+      // PERUBAHAN PENTING DI SINI: Tambahkan informasi course ke dalam modul baru
+      course: {
+        id: formData.course.id || 'new-course-temp', // Gunakan ID asli jika ada, atau ID sementara
+        title: formData.course.title // Opsional: sertakan judul course untuk tampilan debugging/referensi
+      },
     };
 
     setFormData((prev) => ({
@@ -65,11 +75,24 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
             {formData.modules.map((mod, index) => (
               <li key={index}>
                 <strong>{mod.title}</strong> (urutan: {mod.orderInCourse})
+                {/* Tampilkan Course yang terkait jika ada */}
+                {mod.course?.title && ` - Course: ${mod.course.title}`}
               </li>
             ))}
           </ul>
         </div>
       )}
+
+      {/* Tampilkan Course yang sedang dikerjakan agar jelas konteksnya */}
+      {formData.course ? (
+        <p className="text-sm text-gray-700">
+          Untuk Course: <span className="font-semibold">{formData.course.title}</span>
+          {formData.course.id === 'new-course-temp' && ' (Baru)'}
+        </p>
+      ) : (
+        <p className="text-red-500 text-sm">Peringatan: Course belum dipilih. Harap kembali ke langkah 1.</p>
+      )}
+
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Judul Modul</label>
@@ -119,6 +142,7 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
           type="button"
           onClick={handleAddModule}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!formData.course} // Tombol dinonaktifkan jika belum ada Course
         >
           <FaPlus /> Tambah Modul
         </Button>

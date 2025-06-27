@@ -32,10 +32,10 @@ public class ModuleController {
 
     @Autowired
     private ModuleRepository moduleRepository;
-    
+
     @Autowired
     private LessonRepository lessonRepository;
-    
+
     @Autowired
     private QuizRepository quizRepository;
 
@@ -69,12 +69,12 @@ public class ModuleController {
     }
 
 
-
     @GetMapping("/{id}/full")
     public ResponseEntity<ModuleFullDto> getModuleWithLessons(@PathVariable UUID id) {
         return moduleRepository.findById(id)
             .map(module -> {
-                List<LessonWithQuizDto> lessonDtos = lessonRepository.findByModuleId(module.getId())
+                // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
+                List<LessonWithQuizDto> lessonDtos = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId())
                     .stream()
                     .map(lesson -> {
                         LessonWithQuizDto dto = new LessonWithQuizDto();

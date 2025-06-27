@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiSearch } from 'react-icons/fi'; // Import FiSearch
 import toast from 'react-hot-toast';
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
@@ -25,6 +25,7 @@ interface Lesson {
 const EditLessonPage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(''); // State untuk search term
   const router = useRouter();
   const API_BASE_URL = 'http://localhost:8080/api/v1/lessons';
 
@@ -52,9 +53,14 @@ const EditLessonPage = () => {
         const response = await fetch(`${API_BASE_URL}/${lessonId}`, {
           method: 'DELETE',
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-        toast.success(result.message || 'Lesson deleted.');
+        // Spring Boot DELETE request biasanya tidak mengembalikan JSON body sukses,
+        // hanya status 204 No Content. Perlu penanganan yang sesuai.
+        if (response.status === 204 || response.ok) { // Check for 204 No Content or generic ok
+            toast.success('Lesson deleted successfully.');
+        } else {
+            const result = await response.json(); // Coba parse error jika ada
+            throw new Error(result.message);
+        }
         fetchLessons();
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete lesson.');
@@ -65,6 +71,13 @@ const EditLessonPage = () => {
   useEffect(() => {
     fetchLessons();
   }, []);
+
+  // Filter lessons berdasarkan search term
+  const filteredLessons = lessons.filter(lesson =>
+    lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lesson.module?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || // Filter berdasarkan nama modul
+    lesson.module?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) // Filter berdasarkan nama course
+  );
 
   return (
     <div className="flex h-screen bg-white">
@@ -86,16 +99,30 @@ const EditLessonPage = () => {
 
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold text-gray-800">Edit Lessons</h1>
-              <Link href="/upload-material/">
+              <Link href="/upload-material/"> {/* Mengarah ke halaman pilihan upload */}
                 <Button>Add New Lesson</Button>
               </Link>
             </div>
 
+            {/* Search Bar */}
+            <div className="relative w-full max-w-md mb-6">
+              <FiSearch className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari Lesson berdasarkan judul, Modul, atau Course..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 text-gray-600 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
               {loading ? (
-                <div className="p-6 text-center text-gray-500">Loading lessons...</div>
-              ) : lessons.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">No lessons found.</div>
+                <div className="p-6 text-center text-gray-500">Memuat daftar lesson...</div>
+              ) : filteredLessons.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  {searchTerm ? `Tidak ada lesson ditemukan untuk "${searchTerm}".` : 'Tidak ada lesson ditemukan.'}
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -108,7 +135,7 @@ const EditLessonPage = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {lessons.map((lesson) => (
+                      {filteredLessons.map((lesson) => (
                         <tr key={lesson.id}>
                           <td className="px-6 py-4 text-gray-700">{lesson.title}</td>
                           <td className="px-6 py-4 text-gray-700">{lesson.module?.course?.title || '-'}</td>
