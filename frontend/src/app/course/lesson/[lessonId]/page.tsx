@@ -1,3 +1,4 @@
+// frontend/src/app/course/lesson/[lessonId]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -47,7 +48,7 @@ function LessonPage() {
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
   const [userAttempts, setUserAttempts] = useState<number>(0);
-  const [maxAttempts, setMaxAttempts] = useState<number>(3); // default fallback
+  const [maxAttempts, setMaxAttempts] = useState<number>(3);
 
 
   const handleAnswerChange = (questionId: string, value: any, isEssay = false) => {
@@ -182,7 +183,6 @@ function LessonPage() {
 
   const getQuestionResult = (questionId: string) => quizResults?.find(result => result.questionId === questionId);
 
-  // Fungsi untuk menyalin kode
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => {
@@ -197,7 +197,7 @@ function LessonPage() {
 
   if (isLoadingUser || loadingContent) {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-50 flex justify-center items-center z-50">
+      <div className="fixed inset-0 bg-gray-300 bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white px-6 py-8 rounded-lg shadow-lg text-center flex flex-col items-center gap-4">
           <div className="loader ease-linear rounded-full border-4 border-t-4 border-indigo-500 h-12 w-12 animate-spin"></div>
           <p className="text-gray-700 font-semibold">Memuat konten lesson...</p>
@@ -253,11 +253,11 @@ function LessonPage() {
                 <img
                   src={block.value}
                   alt={`Lesson Image ${block.order}`}
-                  className="w-full h-auto max-h-[500px] object-contain rounded-lg"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-lg "
                 />
               )}
 
-              {block.type === 'script' && block.value && (
+              {block.type === 'script' && block.value && ( // Tambahkan blok ini untuk script
                 <div className="relative bg-gray-100 text-gray-800 rounded-lg overflow-hidden font-mono text-sm shadow-sm border border-gray-200">
                   <div className="absolute top-0 right-0 p-2 z-10">
                     <button
@@ -285,7 +285,7 @@ function LessonPage() {
                   <img
                       src={lesson.quiz.imageUrl}
                       alt={lesson.quiz.title || "Quiz Image"}
-                      className="w-full max-h-64 object-contain rounded-lg mb-4 "
+                      className="w-full max-h-64 object-contain rounded-lg mb-4"
                   />
               )}
 
@@ -330,7 +330,7 @@ function LessonPage() {
                           <img
                               src={q.imageUrl}
                               alt={`Question Image ${index + 1}`}
-                              className="w-full max-h-48 object-contain rounded-lg mb-4"
+                              className="w-full max-h-48 object-contain rounded-lg mb-4 border border-gray-200"
                           />
                       )}
 

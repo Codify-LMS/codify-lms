@@ -1,9 +1,11 @@
+// frontend/src/app/upload-material/standalone-lesson/page.tsx
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'; // Import icons baru
-import { FaEdit } from 'react-icons/fa'; // Import FaEdit
+import { FiArrowLeft, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Tambahkan FiCopy
+import { FaEdit } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { supabase } from '@/supabaseClient';
@@ -11,22 +13,20 @@ import Input from '@/components/Input';
 import Button from '@/components/Button';
 import SidebarAdmin from '../../dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '../../dashboard/components/DashboardHeader';
-import { CourseData, ModuleData, ContentBlock, LessonData } from '@/types'; // Import ContentBlock, LessonData
+import { CourseData, ModuleData, ContentBlock, LessonData } from '@/types';
 
 const UploadStandaloneLessonPage = () => {
   const router = useRouter();
-  const [lessonTitle, setLessonTitle] = useState(''); // Mengganti 'title' dari state lesson
+  const [lessonTitle, setLessonTitle] = useState('');
   const [orderInModule, setOrderInModule] = useState<number>(1);
   const [error, setError] = useState<string>('');
 
-  // State baru untuk mengelola daftar ContentBlock
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
-  // State sementara untuk input blok konten baru/edit
   const [currentBlockType, setCurrentBlockType] = useState<ContentBlock['type']>('text');
   const [currentBlockValue, setCurrentBlockValue] = useState('');
   const [currentImageFile, setCurrentImageFile] = useState<File | null>(null);
   const [currentImagePreview, setCurrentImagePreview] = useState<string | null>(null);
-  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null); // Index blok yang sedang diedit
+  const [editingBlockIndex, setEditingBlockIndex] = useState<number | null>(null);
 
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [modules, setModules] = useState<ModuleData[]>([]);
@@ -38,7 +38,6 @@ const UploadStandaloneLessonPage = () => {
 
   const API_BASE_URL = 'http://localhost:8080/api';
 
-  // --- Fungsi Upload Gambar ke Supabase ---
   const handleImageUpload = async (file: File): Promise<string | null> => {
     const fileExt = file.name.split('.').pop();
     const filePath = `${Date.now()}.${fileExt}`;
@@ -54,8 +53,6 @@ const UploadStandaloneLessonPage = () => {
     return data.publicUrl;
   };
 
-
-  // Fungsi untuk mengambil semua course
   const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
@@ -70,7 +67,6 @@ const UploadStandaloneLessonPage = () => {
     }
   }, []);
 
-  // Fungsi untuk mengambil modul berdasarkan course ID
   const fetchModulesByCourse = useCallback(async (courseId: string) => {
     try {
       setLoading(true);
@@ -100,16 +96,14 @@ const UploadStandaloneLessonPage = () => {
     setOrderInModule(1);
   }, [selectedCourseId, fetchModulesByCourse]);
 
-  // Handle saat modul dipilih, set orderInModule ke angka berikutnya yang logis
   useEffect(() => {
     if (selectedModuleId) {
-      setOrderInModule(1); // Default ke 1, pengguna bisa ubah
+      setOrderInModule(1);
     } else {
       setOrderInModule(1);
     }
-  }, [selectedModuleId, modules]); // modules di sini adalah yang dari DB
+  }, [selectedModuleId, modules]);
 
-  // --- Fungsi untuk menambahkan/mengedit blok konten ---
   const handleAddOrUpdateContentBlock = async () => {
     setError('');
     if (!currentBlockValue.trim() && currentBlockType !== 'image') {
@@ -137,19 +131,18 @@ const UploadStandaloneLessonPage = () => {
     const newBlock: ContentBlock = {
       type: currentBlockType,
       value: finalBlockValue,
-      order: 0, // Order akan dihitung ulang
+      order: 0,
     };
 
-    if (editingBlockIndex !== null) { // Mode edit
+    if (editingBlockIndex !== null) {
       setContentBlocks(prev => prev.map((block, i) =>
         i === editingBlockIndex ? { ...newBlock, order: block.order } : block
       ));
-      setEditingBlockIndex(null); // Keluar dari mode edit
-    } else { // Mode tambah baru
+      setEditingBlockIndex(null);
+    } else {
       setContentBlocks(prev => [...prev, { ...newBlock, order: prev.length + 1 }]);
     }
 
-    // Reset input blok saat ini
     setCurrentBlockType('text');
     setCurrentBlockValue('');
     setCurrentImageFile(null);
@@ -157,24 +150,19 @@ const UploadStandaloneLessonPage = () => {
     setError('');
   };
 
-  // --- Fungsi untuk memulai edit blok konten ---
   const startEditingBlock = (block: ContentBlock, index: number) => {
     setCurrentBlockType(block.type);
     setCurrentBlockValue(block.value);
-    setCurrentImageFile(null); // Reset file, karena kita edit URL
-    setCurrentImagePreview(block.type === 'image' ? block.value : null); // Pratinjau gambar jika tipe gambar
+    setCurrentImageFile(null);
+    setCurrentImagePreview(block.type === 'image' ? block.value : null);
     setEditingBlockIndex(index);
-    // Scroll ke bagian atas formulir blok (jika formulir panjang)
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-
-  // --- Fungsi untuk menghapus blok konten ---
   const removeContentBlock = (index: number) => {
     setContentBlocks(prev => prev.filter((_, i) => i !== index).map((block, i) => ({ ...block, order: i + 1 })));
   };
 
-  // --- Fungsi untuk memindahkan blok konten ke atas/bawah ---
   const moveContentBlock = (index: number, direction: 'up' | 'down') => {
     setContentBlocks(prev => {
       const newBlocks = [...prev];
@@ -183,10 +171,16 @@ const UploadStandaloneLessonPage = () => {
       } else if (direction === 'down' && index < newBlocks.length - 1) {
         [newBlocks[index + 1], newBlocks[index]] = [newBlocks[index], newBlocks[index + 1]];
       }
-      return newBlocks.map((block, i) => ({ ...block, order: i + 1 })); // Update order
+      return newBlocks.map((block, i) => ({ ...block, order: i + 1 }));
     });
   };
 
+  // Fungsi untuk menyalin kode ke clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success('Teks berhasil disalin!'))
+      .catch(() => toast.error('Gagal menyalin teks.'));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,9 +202,9 @@ const UploadStandaloneLessonPage = () => {
     setIsSubmitting(true);
 
     try {
-      const lessonPayload: LessonData = { // Sesuaikan payload ke LessonData
+      const lessonPayload: LessonData = {
         title: lessonTitle,
-        contentBlocks: contentBlocks, // Kirim array contentBlocks
+        contentBlocks: contentBlocks,
         orderInModule: orderInModule,
         moduleId: selectedModuleId,
       };
@@ -219,7 +213,6 @@ const UploadStandaloneLessonPage = () => {
 
       if (response.status === 201 || response.status === 200) {
         toast.success('✅ Lesson berhasil diunggah!');
-        // Reset form setelah sukses
         setLessonTitle('');
         setContentBlocks([]);
         setOrderInModule(1);
@@ -230,7 +223,7 @@ const UploadStandaloneLessonPage = () => {
         setEditingBlockIndex(null);
         setSelectedCourseId(null);
         setSelectedModuleId(null);
-        fetchCourses(); // Refresh daftar course/module
+        fetchCourses();
       } else {
         throw new Error('Gagal mengunggah lesson.');
       }
@@ -270,7 +263,6 @@ const UploadStandaloneLessonPage = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Dropdown untuk memilih Course */}
                 <div>
                   <label htmlFor="select-course" className="block text-sm font-medium text-gray-700 mb-1">
                     Pilih Course Induk
@@ -295,7 +287,6 @@ const UploadStandaloneLessonPage = () => {
                   )}
                 </div>
 
-                {/* Dropdown untuk memilih Module */}
                 {selectedCourseId && (
                   <div>
                     <label htmlFor="select-module" className="block text-sm font-medium text-gray-700 mb-1">
@@ -322,7 +313,6 @@ const UploadStandaloneLessonPage = () => {
                   </div>
                 )}
 
-                {/* Input untuk Detail Lesson */}
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                     Judul Lesson
@@ -355,7 +345,6 @@ const UploadStandaloneLessonPage = () => {
                   />
                 </div>
 
-                {/* Bagian Penambahan Blok Konten */}
                 <div className="space-y-4 border p-4 rounded-lg bg-gray-50">
                   <h3 className="text-lg font-semibold text-gray-800">
                     {editingBlockIndex !== null ? 'Edit Blok Konten' : 'Tambah Blok Konten Baru'}
@@ -375,6 +364,7 @@ const UploadStandaloneLessonPage = () => {
                       <option value="text">Teks</option>
                       <option value="video">Video URL</option>
                       <option value="image">Gambar URL/Upload</option>
+                      <option value="script">Script Kode</option> {/* Tambahkan opsi ini */}
                     </select>
                   </div>
 
@@ -412,11 +402,11 @@ const UploadStandaloneLessonPage = () => {
                       )}
                       <input
                         type="text"
-                        value={currentBlockValue} // Tampilkan URL jika ada, atau nama file jika baru dipilih
+                        value={currentBlockValue}
                         onChange={(e) => {
                           setCurrentBlockValue(e.target.value);
-                          setCurrentImageFile(null); // Hapus file jika user input URL manual
-                          setCurrentImagePreview(e.target.value); // Pratinjau dari URL
+                          setCurrentImageFile(null);
+                          setCurrentImagePreview(e.target.value);
                         }}
                         placeholder="Masukkan URL gambar atau pilih file..."
                         className="w-full border px-4 py-2 rounded-md text-gray-700 mb-2"
@@ -429,7 +419,7 @@ const UploadStandaloneLessonPage = () => {
                           setCurrentImageFile(file);
                           if (file) {
                             setCurrentImagePreview(URL.createObjectURL(file));
-                            setCurrentBlockValue(file.name); // Set nilai ke nama file sementara
+                            setCurrentBlockValue(file.name);
                           } else {
                             setCurrentImagePreview(null);
                             setCurrentBlockValue('');
@@ -438,6 +428,19 @@ const UploadStandaloneLessonPage = () => {
                         className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                       />
                       {currentImageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {currentImageFile.name}</p>}
+                    </div>
+                  )}
+
+                  {currentBlockType === 'script' && ( // Tambahkan blok ini untuk script
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Isi Script</label>
+                      <textarea
+                        value={currentBlockValue}
+                        onChange={(e) => setCurrentBlockValue(e.target.value)}
+                        rows={6}
+                        className="w-full border px-4 py-2 rounded-md text-gray-700 font-mono text-sm"
+                        placeholder="Tulis kode script di sini..."
+                      />
                     </div>
                   )}
 
@@ -457,7 +460,6 @@ const UploadStandaloneLessonPage = () => {
                   )}
                 </div>
 
-                {/* Daftar Blok Konten yang Sudah Ditambahkan */}
                 {contentBlocks.length > 0 && (
                   <div className="space-y-3 mt-6">
                     <h3 className="text-lg font-semibold text-gray-800">Blok Konten Lesson:</h3>
@@ -466,9 +468,43 @@ const UploadStandaloneLessonPage = () => {
                         <span className="font-bold mr-3">{block.order}.</span>
                         <div className="flex-1 overflow-hidden">
                           <span className="font-medium capitalize mr-2 px-2 py-1 bg-gray-200 rounded-full text-xs">{block.type}</span>
-                          <span className="truncate">{block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}</span>
+                          <span className="truncate">
+                            {block.type === 'script' ? (
+                              <code className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                                {block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}
+                              </code>
+                            ) : (
+                              `${block.value.substring(0, 100)}${block.value.length > 100 ? '...' : ''}`
+                            )}
+                          </span>
                         </div>
                         <div className="flex gap-2 ml-4">
+                            {block.type === 'script' && ( // Tambahkan tombol salin untuk script
+                                <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(block.value)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                    title="Salin Kode"
+                                >
+                                    <FiCopy size={18} />
+                                </button>
+                            )}
+                          <button
+                            type="button"
+                            onClick={() => startEditingBlock(block, index)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="Edit blok"
+                          >
+                            <FaEdit size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeContentBlock(index)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Hapus blok"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => moveContentBlock(index, 'up')}
@@ -486,22 +522,6 @@ const UploadStandaloneLessonPage = () => {
                             title="Pindah ke bawah"
                           >
                             <FiChevronDown size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => startEditingBlock(block, index)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="Edit blok"
-                          >
-                            <FaEdit size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeContentBlock(index)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Hapus blok"
-                          >
-                            <FiTrash2 size={18} />
                           </button>
                         </div>
                       </div>
