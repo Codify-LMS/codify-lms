@@ -5,8 +5,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import { LessonData, FullUploadData, CourseData, ModuleData, ContentBlock } from '@/types'; // Import ContentBlock
-import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'; // Import icons baru
+import { LessonData, FullUploadData, CourseData, ModuleData, ContentBlock } from '@/types';
+import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Tambahkan FiCopy
 import axios from 'axios';
 import { supabase } from '@/supabaseClient';
 
@@ -21,11 +21,10 @@ const UploadLessonForm = ({
   formData,
   setFormData,
 }: UploadLessonFormProps) => {
-  const [lessonTitle, setLessonTitle] = useState(''); // Mengganti 'title' untuk menghindari konflik
+  const [lessonTitle, setLessonTitle] = useState('');
   const [orderInModule, setOrderInModule] = useState<number>(1);
   const [error, setError] = useState<string>('');
 
-  // State untuk mengelola daftar ContentBlock
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [currentBlockType, setCurrentBlockType] = useState<ContentBlock['type']>('text');
   const [currentBlockValue, setCurrentBlockValue] = useState('');
@@ -41,7 +40,6 @@ const UploadLessonForm = ({
 
   const API_BASE_URL = 'http://localhost:8080/api';
 
-  // --- Fungsi Upload Gambar ke Supabase ---
   const handleImageUpload = async (file: File): Promise<string | null> => {
     const fileExt = file.name.split('.').pop();
     const filePath = `${Date.now()}.${fileExt}`;
@@ -57,7 +55,6 @@ const UploadLessonForm = ({
     return data.publicUrl;
   };
 
-  // --- Fetch Data Awal dari Database ---
   const fetchDbCourses = useCallback(async () => {
     try {
       const response = await axios.get<CourseData[]>(`${API_BASE_URL}/v1/courses/all`);
@@ -83,7 +80,6 @@ const UploadLessonForm = ({
     fetchDbModules();
   }, [fetchDbCourses, fetchDbModules]);
 
-  // --- Gabungkan Course dari DB dan Course Baru di formData ---
   const allAvailableCourses = useMemo(() => {
     const uniqueCoursesMap = new Map<string, CourseData>();
 
@@ -103,12 +99,10 @@ const UploadLessonForm = ({
     return Array.from(uniqueCoursesMap.values());
   }, [dbCourses, formData.course]);
 
-
-  // --- Gabungkan Module dari DB dan Module Baru di formData ---
   const allAvailableModules = useMemo(() => {
     const uniqueModulesMap = new Map<string, ModuleData>();
 
-    dbModules.forEach(mod => {
+    dbModules.forEach((mod) => {
       if (mod.id) {
         uniqueModulesMap.set(mod.id, mod);
       }
@@ -122,8 +116,6 @@ const UploadLessonForm = ({
     return Array.from(uniqueModulesMap.values());
   }, [dbModules, formData.modules]);
 
-
-  // --- Filter modul yang akan ditampilkan di dropdown berdasarkan course yang dipilih ---
   const modulesToDisplay = useMemo(() => {
     if (!selectedCourseId) {
       return [];
@@ -141,7 +133,6 @@ const UploadLessonForm = ({
       .sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
   }, [allAvailableModules, selectedCourseId, formData.course, formData.modules]);
 
-
   useEffect(() => {
     setSelectedModuleId(null);
     if (selectedModuleId) {
@@ -152,8 +143,6 @@ const UploadLessonForm = ({
     }
   }, [selectedCourseId, selectedModuleId, formData.lessons]);
 
-
-  // --- Fungsi untuk menambahkan blok konten ---
   const addContentBlock = async () => {
     setError('');
     if (!currentBlockValue.trim() && currentBlockType !== 'image') {
@@ -175,18 +164,17 @@ const UploadLessonForm = ({
             return;
         }
         finalBlockValue = uploadedUrl;
-        setError(''); // Clear loading message
+        setError('');
     }
 
     const newBlock: ContentBlock = {
       type: currentBlockType,
       value: finalBlockValue,
-      order: contentBlocks.length + 1, // Urutan otomatis, bisa diubah nanti
+      order: contentBlocks.length + 1,
     };
 
     setContentBlocks(prev => [...prev, newBlock]);
 
-    // Reset input blok saat ini
     setCurrentBlockType('text');
     setCurrentBlockValue('');
     setCurrentImageFile(null);
@@ -194,12 +182,10 @@ const UploadLessonForm = ({
     setError('');
   };
 
-  // --- Fungsi untuk menghapus blok konten ---
   const removeContentBlock = (index: number) => {
     setContentBlocks(prev => prev.filter((_, i) => i !== index).map((block, i) => ({ ...block, order: i + 1 })));
   };
 
-  // --- Fungsi untuk memindahkan blok konten ke atas/bawah ---
   const moveContentBlock = (index: number, direction: 'up' | 'down') => {
     setContentBlocks(prev => {
       const newBlocks = [...prev];
@@ -208,19 +194,24 @@ const UploadLessonForm = ({
       } else if (direction === 'down' && index < newBlocks.length - 1) {
         [newBlocks[index + 1], newBlocks[index]] = [newBlocks[index], newBlocks[index + 1]];
       }
-      return newBlocks.map((block, i) => ({ ...block, order: i + 1 })); // Update order
+      return newBlocks.map((block, i) => ({ ...block, order: i + 1 }));
     });
   };
 
+  // Fungsi untuk menyalin kode ke clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success('Teks berhasil disalin!'))
+      .catch(() => toast.error('Gagal menyalin teks.'));
+  };
 
-  // --- Fungsi Add Lesson (sekarang Lesson memiliki contentBlocks) ---
   const addLesson = async () => {
     setError('');
     if (!selectedCourseId || !selectedModuleId) {
       setError('Harap pilih Course dan Module terlebih dahulu.');
       return;
     }
-    if (!lessonTitle.trim()) { // Gunakan lessonTitle
+    if (!lessonTitle.trim()) {
       setError('Judul lesson tidak boleh kosong.');
       return;
     }
@@ -230,8 +221,8 @@ const UploadLessonForm = ({
     }
 
     const newLesson: LessonData = {
-      title: lessonTitle, // Gunakan lessonTitle
-      contentBlocks: contentBlocks, // Kirim array contentBlocks
+      title: lessonTitle,
+      contentBlocks: contentBlocks,
       orderInModule,
       moduleId: selectedModuleId,
     };
@@ -241,7 +232,6 @@ const UploadLessonForm = ({
       lessons: [...(prev.lessons || []), newLesson],
     }));
 
-    // Reset fields lesson setelah ditambahkan
     setLessonTitle('');
     setContentBlocks([]);
     setOrderInModule(prev => prev + 1);
@@ -252,7 +242,6 @@ const UploadLessonForm = ({
     setError('');
   };
 
-  // --- Fungsi Submit All (langsung ke backend) ---
   const submitAllToBackend = async () => {
     setError('');
     if (!formData.lessons || formData.lessons.length === 0) {
@@ -261,7 +250,6 @@ const UploadLessonForm = ({
     }
 
     try {
-      // 1. Submit Course (jika ada data course baru dari step 1)
       let finalCourseId: string | undefined = formData.course?.id;
       if (formData.course && !formData.course.id) {
         const courseRes = await axios.post(`${API_BASE_URL}/v1/courses`, formData.course);
@@ -274,7 +262,6 @@ const UploadLessonForm = ({
           throw new Error('Course ID tidak ditemukan setelah proses submit course.');
       }
 
-      // 2. Submit Modules (hanya yang baru dari formData, sisanya sudah ada di DB)
       const submittedModuleMapping: { [tempId: string]: string } = {};
       for (const mod of formData.modules) {
         if (mod.id && mod.id.startsWith('new-module-')) {
@@ -285,7 +272,6 @@ const UploadLessonForm = ({
         }
       }
 
-      // 3. Submit Lessons
       for (const lesson of formData.lessons) {
         let actualModuleId = lesson.moduleId;
         if (lesson.moduleId && lesson.moduleId.startsWith('new-module-')) {
@@ -297,7 +283,7 @@ const UploadLessonForm = ({
 
         const lessonPayload = {
           title: lesson.title,
-          contentBlocks: lesson.contentBlocks, // Kirim contentBlocks
+          contentBlocks: lesson.contentBlocks,
           orderInModule: lesson.orderInModule,
           moduleId: actualModuleId,
         };
@@ -307,8 +293,7 @@ const UploadLessonForm = ({
       }
 
       toast.success('✅ Upload berhasil!');
-      // Reset form setelah sukses
-      setFormData({ course: null, modules: [], lessons: [] });
+      setFormData({ course: null, modules: [], lessons: [], module: null, lesson: null });
       setLessonTitle('');
       setContentBlocks([]);
       setOrderInModule(1);
@@ -328,15 +313,13 @@ const UploadLessonForm = ({
     }
   };
 
-
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); /* do nothing, submit is manual */ }}
+      onSubmit={(e) => { e.preventDefault(); }}
       className="space-y-6 w-full bg-white p-6 rounded-lg shadow"
     >
       <h2 className="text-xl font-bold text-gray-800">Step 3: Upload Lesson</h2>
 
-      {/* Pilihan Course */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Course</label>
         <select
@@ -354,7 +337,6 @@ const UploadLessonForm = ({
         </select>
       </div>
 
-      {/* Pilihan Module */}
       {selectedCourseId && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Module</label>
@@ -390,7 +372,7 @@ const UploadLessonForm = ({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Urutan dalam Modul</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Urutan Dalam Modul</label>
         <Input
           type="number"
           value={orderInModule}
@@ -400,7 +382,6 @@ const UploadLessonForm = ({
         />
       </div>
 
-      {/* Bagian Penambahan Blok Konten */}
       <div className="space-y-4 border p-4 rounded-lg bg-gray-50">
         <h3 className="text-lg font-semibold text-gray-800">Tambah Blok Konten</h3>
         <div className="flex items-center gap-2">
@@ -418,6 +399,7 @@ const UploadLessonForm = ({
             <option value="text">Teks</option>
             <option value="video">Video URL</option>
             <option value="image">Gambar URL/Upload</option>
+            <option value="script">Script Kode</option> {/* Tambahkan opsi ini */}
           </select>
         </div>
 
@@ -461,7 +443,7 @@ const UploadLessonForm = ({
                 setCurrentImageFile(file);
                 if (file) {
                   setCurrentImagePreview(URL.createObjectURL(file));
-                  setCurrentBlockValue(file.name); // Simpan nama file sebagai nilai sementara
+                  setCurrentBlockValue(file.name);
                 } else {
                   setCurrentImagePreview(null);
                   setCurrentBlockValue('');
@@ -469,8 +451,20 @@ const UploadLessonForm = ({
               }}
               className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-            {/* Tampilkan nama file yang dipilih jika ada */}
             {currentImageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {currentImageFile.name}</p>}
+          </div>
+        )}
+
+        {currentBlockType === 'script' && ( // Tambahkan blok ini untuk script
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Isi Script</label>
+            <textarea
+              value={currentBlockValue}
+              onChange={(e) => setCurrentBlockValue(e.target.value)}
+              rows={6}
+              className="w-full border px-4 py-2 rounded-md text-gray-700 font-mono text-sm"
+              placeholder="Tulis kode script di sini..."
+            />
           </div>
         )}
 
@@ -479,7 +473,6 @@ const UploadLessonForm = ({
         </Button>
       </div>
 
-      {/* Daftar Blok Konten yang Sudah Ditambahkan */}
       {contentBlocks.length > 0 && (
         <div className="space-y-3 mt-6">
           <h3 className="text-lg font-semibold text-gray-800">Blok Konten Lesson:</h3>
@@ -488,9 +481,35 @@ const UploadLessonForm = ({
               <span className="font-bold mr-3">{block.order}.</span>
               <div className="flex-1 overflow-hidden">
                 <span className="font-medium capitalize mr-2 px-2 py-1 bg-gray-200 rounded-full text-xs">{block.type}</span>
-                <span className="truncate">{block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}</span>
+                <span className="truncate">
+                  {block.type === 'script' ? (
+                    <code className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                      {block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}
+                    </code>
+                  ) : (
+                    `${block.value.substring(0, 100)}${block.value.length > 100 ? '...' : ''}`
+                  )}
+                </span>
               </div>
               <div className="flex gap-2 ml-4">
+                {block.type === 'script' && ( // Tambahkan tombol salin untuk script
+                    <button
+                        type="button"
+                        onClick={() => copyToClipboard(block.value)}
+                        className="text-gray-500 hover:text-gray-700"
+                        title="Salin Kode"
+                    >
+                        <FiCopy size={18} />
+                    </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeContentBlock(index)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Hapus blok"
+                >
+                  <FiTrash2 size={18} />
+                </button>
                 <button
                   type="button"
                   onClick={() => moveContentBlock(index, 'up')}
@@ -508,14 +527,6 @@ const UploadLessonForm = ({
                   title="Pindah ke bawah"
                 >
                   <FiChevronDown size={18} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeContentBlock(index)}
-                  className="text-red-500 hover:text-red-700"
-                  title="Hapus blok"
-                >
-                  <FiTrash2 size={18} />
                 </button>
               </div>
             </div>
