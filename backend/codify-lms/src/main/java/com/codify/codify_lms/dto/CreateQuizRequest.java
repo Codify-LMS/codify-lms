@@ -11,6 +11,7 @@ public class CreateQuizRequest {
     private String lessonId;
     private String moduleId;
     private List<QuizQuestionDto> questions;
+    private String imageUrl; // ADD THIS LINE
 
     public CreateQuizRequest() {}
 
@@ -23,6 +24,19 @@ public class CreateQuizRequest {
         this.lessonId = lessonId;
         this.moduleId = moduleId;
         this.questions = questions;
+    }
+
+    // You might also want to update the constructor to include imageUrl if it's always required
+    public CreateQuizRequest(String title, String description, String type, Integer maxAttempts, Integer passScore, String lessonId, String moduleId, List<QuizQuestionDto> questions, String imageUrl) {
+        this.title = title;
+        this.description = description;
+        this.type = type;
+        this.maxAttempts = maxAttempts;
+        this.passScore = passScore;
+        this.lessonId = lessonId;
+        this.moduleId = moduleId;
+        this.questions = questions;
+        this.imageUrl = imageUrl; // ADD THIS LINE
     }
 
     // Getters and Setters
@@ -89,5 +103,14 @@ public class CreateQuizRequest {
 
     public void setQuestions(List<QuizQuestionDto> questions) {
         this.questions = questions;
+    }
+
+    // ADD THESE GETTER AND SETTER FOR imageUrl
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

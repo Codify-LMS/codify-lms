@@ -6,8 +6,10 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
+import java.util.List; // Import List
 import java.util.UUID;
 import lombok.Builder;
+import java.util.ArrayList; // Import ArrayList
 
 @Builder
 @Entity
@@ -18,14 +20,20 @@ public class Lesson {
     private UUID id;
 
     private String title;
-    private String content;
-    private String contentType;
+
+    @Convert(converter = ContentBlockListConverter.class) // Gunakan converter untuk List<ContentBlock>
+    @Column(columnDefinition = "TEXT") // Simpan sebagai TEXT di DB
+    private List<ContentBlock> contentBlocks; // Ganti 'content', 'videoUrl', 'imageUrl' menjadi satu list
+
+    // Hapus properti-properti lama ini:
+    // private String content;
+    // private String contentType;
+    // private String videoUrl;
+    // private String imageUrl;
+
 
     @Column(name = "order_in_module")
     private int orderInModule;
-
-    @Column(name = "video_url")
-    private String videoUrl;
 
     @ManyToOne
     @JoinColumn(name = "module_id", nullable = false)
@@ -39,15 +47,16 @@ public class Lesson {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    public Lesson() {}
+    public Lesson() {
+        this.contentBlocks = new ArrayList<>(); // Inisialisasi list di konstruktor default
+    }
 
-    public Lesson(UUID id, String title, String content, String contentType, int orderInModule, String videoUrl, Module module, Instant createdAt, Instant updatedAt) {
+    // Sesuaikan konstruktor Builder
+    public Lesson(UUID id, String title, List<ContentBlock> contentBlocks, int orderInModule, Module module, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.title = title;
-        this.content = content;
-        this.contentType = contentType;
+        this.contentBlocks = contentBlocks != null ? contentBlocks : new ArrayList<>(); // Inisialisasi list
         this.orderInModule = orderInModule;
-        this.videoUrl = videoUrl;
         this.module = module;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -57,7 +66,7 @@ public class Lesson {
     public void generateId() {
         if (id == null) id = UUID.randomUUID();
     }
-    
+
 
     // ======== Getter & Setter =========
 
@@ -77,20 +86,12 @@ public class Lesson {
         this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public List<ContentBlock> getContentBlocks() { // Getter baru
+        return contentBlocks;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
+    public void setContentBlocks(List<ContentBlock> contentBlocks) { // Setter baru
+        this.contentBlocks = contentBlocks;
     }
 
     public int getOrderInModule() {
@@ -99,14 +100,6 @@ public class Lesson {
 
     public void setOrderInModule(int orderInModule) {
         this.orderInModule = orderInModule;
-    }
-
-    public String getVideoUrl() {
-        return videoUrl;
-    }
-
-    public void setVideoUrl(String videoUrl) {
-        this.videoUrl = videoUrl;
     }
 
     public Module getModule() {

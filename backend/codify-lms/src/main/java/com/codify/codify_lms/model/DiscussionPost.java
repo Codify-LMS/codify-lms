@@ -20,6 +20,9 @@ public class DiscussionPost {
     @Column(name = "content")
     private String content;
 
+    @Column(name = "image_url") // Tambahkan properti ini
+    private String imageUrl; // Tambahkan kolom ini di DB
+
     @Column(name = "parent_post_id")
     private UUID parentPostId;
 
@@ -58,6 +61,14 @@ public class DiscussionPost {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImageUrl() { // Tambahkan getter ini
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) { // Tambahkan setter ini
+        this.imageUrl = imageUrl;
     }
 
     public UUID getParentPostId() {

@@ -5,9 +5,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import { LessonData, FullUploadData, CourseData, ModuleData } from '@/types';
-import { FiArrowLeft, FiPlus } from 'react-icons/fi';
+import { LessonData, FullUploadData, CourseData, ModuleData, ContentBlock } from '@/types'; // Import ContentBlock
+import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi'; // Import icons baru
 import axios from 'axios';
+import { supabase } from '@/supabaseClient';
 
 interface UploadLessonFormProps {
   onBack: () => void;
@@ -20,23 +21,41 @@ const UploadLessonForm = ({
   formData,
   setFormData,
 }: UploadLessonFormProps) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
+  const [lessonTitle, setLessonTitle] = useState(''); // Mengganti 'title' untuk menghindari konflik
   const [orderInModule, setOrderInModule] = useState<number>(1);
-  const [contentType, setContentType] = useState<'video' | 'text'>('text');
   const [error, setError] = useState<string>('');
 
-  const [dbCourses, setDbCourses] = useState<CourseData[]>([]); // Menyimpan course dari DB
-  const [dbModules, setDbModules] = useState<ModuleData[]>([]); // Menyimpan modul dari DB
-  
-  // Inisialisasi selectedCourseId: jika ada course baru di formData, gunakan itu.
-  // Jika tidak, biarkan null untuk pilihan default.
+  // State untuk mengelola daftar ContentBlock
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
+  const [currentBlockType, setCurrentBlockType] = useState<ContentBlock['type']>('text');
+  const [currentBlockValue, setCurrentBlockValue] = useState('');
+  const [currentImageFile, setCurrentImageFile] = useState<File | null>(null);
+  const [currentImagePreview, setCurrentImagePreview] = useState<string | null>(null);
+
+  const [dbCourses, setDbCourses] = useState<CourseData[]>([]);
+  const [dbModules, setDbModules] = useState<ModuleData[]>([]);
+
   const initialSelectedCourseId = formData.course?.id || (formData.course ? 'new-course-temp' : null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(initialSelectedCourseId);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
   const API_BASE_URL = 'http://localhost:8080/api';
+
+  // --- Fungsi Upload Gambar ke Supabase ---
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage.from('lms-assets').upload(filePath, file);
+    if (uploadError) {
+      console.error('❌ Upload gambar gagal:', uploadError.message);
+      setError('Gagal mengunggah gambar: ' + uploadError.message);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('lms-assets').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
 
   // --- Fetch Data Awal dari Database ---
   const fetchDbCourses = useCallback(async () => {
@@ -68,20 +87,16 @@ const UploadLessonForm = ({
   const allAvailableCourses = useMemo(() => {
     const uniqueCoursesMap = new Map<string, CourseData>();
 
-    // Tambahkan course dari database
     dbCourses.forEach(course => {
       if (course.id) {
         uniqueCoursesMap.set(course.id, course);
       }
     });
 
-    // Tambahkan course baru dari formData jika ada
     if (formData.course && !formData.course.id) {
-      // Beri ID sementara agar bisa dipilih di dropdown
       const tempCourseId = 'new-course-temp';
       uniqueCoursesMap.set(tempCourseId, { ...formData.course, id: tempCourseId });
     } else if (formData.course && formData.course.id) {
-      // Jika course dari formData sudah punya ID (misal dari edit), tambahkan juga
       uniqueCoursesMap.set(formData.course.id, formData.course);
     }
 
@@ -93,16 +108,13 @@ const UploadLessonForm = ({
   const allAvailableModules = useMemo(() => {
     const uniqueModulesMap = new Map<string, ModuleData>();
 
-    // Tambahkan modul yang sudah ada di database
     dbModules.forEach(mod => {
       if (mod.id) {
         uniqueModulesMap.set(mod.id, mod);
       }
     });
 
-    // Tambahkan modul baru dari formData
     formData.modules.forEach((mod, index) => {
-      // Beri ID sementara jika belum ada ID dari DB
       const idToUse = mod.id || `new-module-${index}-${Math.random().toString(36).substring(7)}`;
       uniqueModulesMap.set(idToUse, { ...mod, id: idToUse });
     });
@@ -119,28 +131,19 @@ const UploadLessonForm = ({
 
     return allAvailableModules
       .filter(mod => {
-        // Jika course yang dipilih adalah course baru dari formData
         if (selectedCourseId === 'new-course-temp' && formData.course && !formData.course.id) {
-          // Filter modul yang juga baru di formData dan secara logis milik course baru ini
-          // (Asumsi: modul baru di formData belum punya `course.id` dari backend,
-          // jadi kita cek relasi berdasarkan konteks pembuatan)
-          // Ini bagian yang tricky, kita asumsikan modul di formData sudah "tahu" course-nya
-          // Jika `ModuleData` di `formData` belum punya `course.id`, ini perlu diperbaiki di `UploadModuleForm`
-          // Untuk saat ini, kita asumsikan `mod.course?.id` di `formData.modules` sudah mengacu ke `formData.course.id` (sementara)
-          return mod.course?.id === selectedCourseId || (mod.id?.startsWith('new-module-') && formData.modules.some(fm => fm.id === mod.id && fm.course?.id === selectedCourseId));
+          const originalFormDataModule = formData.modules.find(fm => fm.id === mod.id || (fm.title === mod.title && !fm.id && !mod.id));
+          return originalFormDataModule && (originalFormDataModule.course?.id === selectedCourseId || originalFormDataModule.course?.id === formData.course?.id);
         } else {
-          // Jika course yang dipilih adalah course dari DB atau course baru yang sudah punya ID
           return mod.course?.id === selectedCourseId;
         }
       })
-      .sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0)); // Urutkan berdasarkan orderInCourse
+      .sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
   }, [allAvailableModules, selectedCourseId, formData.course, formData.modules]);
 
 
   useEffect(() => {
-    // Reset modul yang dipilih saat course berubah
     setSelectedModuleId(null);
-    // Atur orderInModule ke angka berikutnya yang tersedia di modul yang dipilih
     if (selectedModuleId) {
         const currentModuleLessons = formData.lessons.filter(lesson => lesson.moduleId === selectedModuleId);
         setOrderInModule(currentModuleLessons.length + 1);
@@ -150,24 +153,87 @@ const UploadLessonForm = ({
   }, [selectedCourseId, selectedModuleId, formData.lessons]);
 
 
-  // --- Fungsi Add Lesson ---
-  const addLesson = () => {
+  // --- Fungsi untuk menambahkan blok konten ---
+  const addContentBlock = async () => {
+    setError('');
+    if (!currentBlockValue.trim() && currentBlockType !== 'image') {
+      setError('Nilai blok konten tidak boleh kosong.');
+      return;
+    }
+    if (currentBlockType === 'image' && !currentImageFile) {
+        setError('Pilih file gambar untuk blok gambar.');
+        return;
+    }
+
+    let finalBlockValue = currentBlockValue;
+
+    if (currentBlockType === 'image' && currentImageFile) {
+        setError('Mengunggah gambar...');
+        const uploadedUrl = await handleImageUpload(currentImageFile);
+        if (!uploadedUrl) {
+            setError('Gagal mengunggah gambar. Coba lagi.');
+            return;
+        }
+        finalBlockValue = uploadedUrl;
+        setError(''); // Clear loading message
+    }
+
+    const newBlock: ContentBlock = {
+      type: currentBlockType,
+      value: finalBlockValue,
+      order: contentBlocks.length + 1, // Urutan otomatis, bisa diubah nanti
+    };
+
+    setContentBlocks(prev => [...prev, newBlock]);
+
+    // Reset input blok saat ini
+    setCurrentBlockType('text');
+    setCurrentBlockValue('');
+    setCurrentImageFile(null);
+    setCurrentImagePreview(null);
+    setError('');
+  };
+
+  // --- Fungsi untuk menghapus blok konten ---
+  const removeContentBlock = (index: number) => {
+    setContentBlocks(prev => prev.filter((_, i) => i !== index).map((block, i) => ({ ...block, order: i + 1 })));
+  };
+
+  // --- Fungsi untuk memindahkan blok konten ke atas/bawah ---
+  const moveContentBlock = (index: number, direction: 'up' | 'down') => {
+    setContentBlocks(prev => {
+      const newBlocks = [...prev];
+      if (direction === 'up' && index > 0) {
+        [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
+      } else if (direction === 'down' && index < newBlocks.length - 1) {
+        [newBlocks[index + 1], newBlocks[index]] = [newBlocks[index], newBlocks[index + 1]];
+      }
+      return newBlocks.map((block, i) => ({ ...block, order: i + 1 })); // Update order
+    });
+  };
+
+
+  // --- Fungsi Add Lesson (sekarang Lesson memiliki contentBlocks) ---
+  const addLesson = async () => {
+    setError('');
     if (!selectedCourseId || !selectedModuleId) {
       setError('Harap pilih Course dan Module terlebih dahulu.');
       return;
     }
-    if (!title.trim() || (contentType === 'text' && !content.trim()) || (contentType === 'video' && !videoUrl.trim())) {
-      setError('Judul dan konten lesson tidak boleh kosong.');
+    if (!lessonTitle.trim()) { // Gunakan lessonTitle
+      setError('Judul lesson tidak boleh kosong.');
+      return;
+    }
+    if (contentBlocks.length === 0) {
+      setError('Lesson harus memiliki setidaknya satu blok konten.');
       return;
     }
 
     const newLesson: LessonData = {
-      title,
-      content: contentType === 'text' ? content : '',
-      contentType,
-      videoUrl: contentType === 'video' ? videoUrl : '',
+      title: lessonTitle, // Gunakan lessonTitle
+      contentBlocks: contentBlocks, // Kirim array contentBlocks
       orderInModule,
-      moduleId: selectedModuleId, // Gunakan ID modul yang dipilih (bisa temporary ID)
+      moduleId: selectedModuleId,
     };
 
     setFormData((prev) => ({
@@ -175,17 +241,20 @@ const UploadLessonForm = ({
       lessons: [...(prev.lessons || []), newLesson],
     }));
 
-    // Reset fields setelah ditambahkan
-    setTitle('');
-    setContent('');
-    setVideoUrl('');
+    // Reset fields lesson setelah ditambahkan
+    setLessonTitle('');
+    setContentBlocks([]);
     setOrderInModule(prev => prev + 1);
+    setCurrentBlockType('text');
+    setCurrentBlockValue('');
+    setCurrentImageFile(null);
+    setCurrentImagePreview(null);
     setError('');
   };
 
   // --- Fungsi Submit All (langsung ke backend) ---
   const submitAllToBackend = async () => {
-    setError(''); // Reset error
+    setError('');
     if (!formData.lessons || formData.lessons.length === 0) {
       setError('Minimal tambahkan 1 lesson terlebih dahulu.');
       return;
@@ -194,11 +263,10 @@ const UploadLessonForm = ({
     try {
       // 1. Submit Course (jika ada data course baru dari step 1)
       let finalCourseId: string | undefined = formData.course?.id;
-      if (formData.course && !formData.course.id) { // Jika ini course baru yang belum punya ID
+      if (formData.course && !formData.course.id) {
         const courseRes = await axios.post(`${API_BASE_URL}/v1/courses`, formData.course);
         if (courseRes.status !== 201 && courseRes.status !== 200) throw new Error('Gagal membuat course');
         finalCourseId = courseRes.data.id;
-        // Update formData.course dengan ID yang sudah tersimpan dari backend
         setFormData(prev => ({ ...prev, course: { ...prev.course!, id: finalCourseId } }));
       }
 
@@ -207,13 +275,13 @@ const UploadLessonForm = ({
       }
 
       // 2. Submit Modules (hanya yang baru dari formData, sisanya sudah ada di DB)
-      const submittedModuleMapping: { [tempId: string]: string } = {}; // Map temporary ID to actual DB ID
+      const submittedModuleMapping: { [tempId: string]: string } = {};
       for (const mod of formData.modules) {
-        if (mod.id && mod.id.startsWith('new-module-')) { // Ini adalah modul baru yang belum tersimpan
-            const modulePayload = { ...mod, course: { id: finalCourseId } }; // Pastikan terhubung ke course yang benar
+        if (mod.id && mod.id.startsWith('new-module-')) {
+            const modulePayload = { ...mod, course: { id: finalCourseId } };
             const moduleRes = await axios.post(`${API_BASE_URL}/modules`, modulePayload);
             if (moduleRes.status !== 201 && moduleRes.status !== 200) throw new Error('Gagal menyimpan module baru ke backend');
-            submittedModuleMapping[mod.id] = moduleRes.data.id; // Simpan mapping ID sementara ke ID asli
+            submittedModuleMapping[mod.id] = moduleRes.data.id;
         }
       }
 
@@ -221,7 +289,7 @@ const UploadLessonForm = ({
       for (const lesson of formData.lessons) {
         let actualModuleId = lesson.moduleId;
         if (lesson.moduleId && lesson.moduleId.startsWith('new-module-')) {
-          actualModuleId = submittedModuleMapping[lesson.moduleId]; // Ambil ID asli dari mapping
+          actualModuleId = submittedModuleMapping[lesson.moduleId];
           if (!actualModuleId) {
               throw new Error(`Module ID asli untuk lesson '${lesson.title}' tidak ditemukan.`);
           }
@@ -229,27 +297,28 @@ const UploadLessonForm = ({
 
         const lessonPayload = {
           title: lesson.title,
-          content: lesson.contentType === 'text' ? lesson.content : '',
-          contentType: lesson.contentType,
-          videoUrl: lesson.contentType === 'video' ? lesson.videoUrl : '',
+          contentBlocks: lesson.contentBlocks, // Kirim contentBlocks
           orderInModule: lesson.orderInModule,
-          moduleId: actualModuleId, // Gunakan ID modul yang sudah valid (dari DB atau baru tersimpan)
+          moduleId: actualModuleId,
         };
 
         const lessonRes = await axios.post(`${API_BASE_URL}/v1/lessons`, [lessonPayload]);
         if (lessonRes.status !== 201 && lessonRes.status !== 200) throw new Error('Gagal membuat lesson');
       }
 
-      alert('✅ Upload berhasil!');
+      toast.success('✅ Upload berhasil!');
       // Reset form setelah sukses
       setFormData({ course: null, modules: [], lessons: [] });
-      setTitle('');
-      setContent('');
-      setVideoUrl('');
+      setLessonTitle('');
+      setContentBlocks([]);
       setOrderInModule(1);
+      setCurrentBlockType('text');
+      setCurrentBlockValue('');
+      setCurrentImageFile(null);
+      setCurrentImagePreview(null);
+      setError('');
       setSelectedCourseId(null);
       setSelectedModuleId(null);
-      // Refresh data dari DB agar form siap untuk upload berikutnya
       fetchDbCourses();
       fetchDbModules();
 
@@ -313,49 +382,12 @@ const UploadLessonForm = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">Judul Lesson</label>
         <Input
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={lessonTitle}
+          onChange={(e) => setLessonTitle(e.target.value)}
           required
           className="text-gray-700"
         />
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Konten</label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={4}
-          required={contentType === 'text'}
-          className="w-full border px-4 py-2 rounded-md text-gray-700"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tipe Konten</label>
-        <select
-          value={contentType}
-          onChange={(e) => setContentType(e.target.value as 'text' | 'video')}
-          className="w-full border px-4 py-2 rounded-md text-gray-700"
-        >
-          <option value="text">Teks</option>
-          <option value="video">Video</option>
-        </select>
-      </div>
-
-      {contentType === 'video' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
-          <Input
-            type="text"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            placeholder="https://youtube.com/..."
-            required
-            className="text-gray-700"
-          />
-        </div>
-      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Urutan dalam Modul</label>
@@ -367,6 +399,130 @@ const UploadLessonForm = ({
           className="text-gray-700"
         />
       </div>
+
+      {/* Bagian Penambahan Blok Konten */}
+      <div className="space-y-4 border p-4 rounded-lg bg-gray-50">
+        <h3 className="text-lg font-semibold text-gray-800">Tambah Blok Konten</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Tipe:</label>
+          <select
+            value={currentBlockType}
+            onChange={(e) => {
+              setCurrentBlockType(e.target.value as ContentBlock['type']);
+              setCurrentBlockValue('');
+              setCurrentImageFile(null);
+              setCurrentImagePreview(null);
+            }}
+            className="flex-1 p-2 border rounded-md text-gray-700"
+          >
+            <option value="text">Teks</option>
+            <option value="video">Video URL</option>
+            <option value="image">Gambar URL/Upload</option>
+          </select>
+        </div>
+
+        {currentBlockType === 'text' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Isi Teks</label>
+            <textarea
+              value={currentBlockValue}
+              onChange={(e) => setCurrentBlockValue(e.target.value)}
+              rows={3}
+              className="w-full border px-4 py-2 rounded-md text-gray-700"
+              placeholder="Tulis paragraf teks di sini..."
+            />
+          </div>
+        )}
+
+        {currentBlockType === 'video' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">URL Video</label>
+            <Input
+              type="url"
+              value={currentBlockValue}
+              onChange={(e) => setCurrentBlockValue(e.target.value)}
+              placeholder="https://youtube.com/..."
+              className="text-gray-700"
+            />
+          </div>
+        )}
+
+        {currentBlockType === 'image' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Upload Gambar</label>
+            {currentImagePreview && (
+              <img src={currentImagePreview} alt="Pratinjau Gambar" className="w-full max-h-48 object-contain rounded mb-2 border" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setCurrentImageFile(file);
+                if (file) {
+                  setCurrentImagePreview(URL.createObjectURL(file));
+                  setCurrentBlockValue(file.name); // Simpan nama file sebagai nilai sementara
+                } else {
+                  setCurrentImagePreview(null);
+                  setCurrentBlockValue('');
+                }
+              }}
+              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {/* Tampilkan nama file yang dipilih jika ada */}
+            {currentImageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {currentImageFile.name}</p>}
+          </div>
+        )}
+
+        <Button type="button" onClick={addContentBlock} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full">
+          <FiPlus /> Tambah Blok
+        </Button>
+      </div>
+
+      {/* Daftar Blok Konten yang Sudah Ditambahkan */}
+      {contentBlocks.length > 0 && (
+        <div className="space-y-3 mt-6">
+          <h3 className="text-lg font-semibold text-gray-800">Blok Konten Lesson:</h3>
+          {contentBlocks.map((block, index) => (
+            <div key={index} className="flex items-center bg-white border rounded-lg p-3 shadow-sm text-sm text-gray-700">
+              <span className="font-bold mr-3">{block.order}.</span>
+              <div className="flex-1 overflow-hidden">
+                <span className="font-medium capitalize mr-2 px-2 py-1 bg-gray-200 rounded-full text-xs">{block.type}</span>
+                <span className="truncate">{block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}</span>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <button
+                  type="button"
+                  onClick={() => moveContentBlock(index, 'up')}
+                  disabled={index === 0}
+                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  title="Pindah ke atas"
+                >
+                  <FiChevronUp size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveContentBlock(index, 'down')}
+                  disabled={index === contentBlocks.length - 1}
+                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  title="Pindah ke bawah"
+                >
+                  <FiChevronDown size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeContentBlock(index)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Hapus blok"
+                >
+                  <FiTrash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 

@@ -17,6 +17,9 @@ public class Discussion {
     @Column(name = "content")
     private String content;
 
+    @Column(name = "image_url") // <<-- Tambahkan properti ini
+    private String imageUrl;    // <<-- Tambahkan properti ini
+
     @Column(name = "course_id")
     private UUID courseId;
 
@@ -56,6 +59,14 @@ public class Discussion {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImageUrl() { // <<-- Tambahkan getter ini
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) { // <<-- Tambahkan setter ini
+        this.imageUrl = imageUrl;
     }
 
     public UUID getCourseId() {

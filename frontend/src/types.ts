@@ -1,44 +1,51 @@
+export interface ContentBlock {
+  type: 'text' | 'image' | 'video' | 'script';
+  value: string;
+  order: number;
+}
+
 export interface CourseData {
-  id?: string; // Penting: bisa null/undefined jika course baru
+  id?: string;
   title: string;
   description: string;
   thumbnailUrl: string;
   isPublished: boolean;
-  modules?: ModuleData[]; // Opsional, karena mungkin belum ada modul saat membuat course
+  modules?: ModuleData[];
 }
 
 export interface ModuleData {
-  id?: string; // Penting: bisa null/undefined jika module baru
+  id?: string;
   title: string;
   description: string;
   orderInCourse: number;
-  course?: { // Ini untuk relasi ke Course
+  course?: {
     id: string;
-    title?: string; // Bisa ditambahkan jika ingin menampilkan nama course di dropdown module
+    title?: string;
   };
-  lessons?: LessonData[]; // Opsional, mungkin belum ada lesson
+  lessons?: LessonData[];
 }
 
 export interface LessonData {
   id?: string;
   title: string;
-  content: string;
-  contentType: 'video' | 'text';
-  videoUrl?: string;
+  contentBlocks: ContentBlock[];
   orderInModule: number;
-  moduleId: string; // Ini akan menjadi ID modul (bisa ID sementara atau ID dari DB)
+  moduleId: string;
   quiz?: QuizData;
 }
 
 export interface QuizData {
   id?: string;
-  description: string;
-  question: string;
-  options: string[];
-  correctAnswerIndex: number;
+  title?: string;
+  description?: string;
+  type?: string;
+  maxAttempts?: number;
+  passScore?: number;
+  imageUrl?: string; // Gambar untuk keseluruhan Quiz
+  questions?: QuizQuestionData[]; // Daftar pertanyaan
 }
 
-export interface QuizQuestion {
+export interface QuizQuestion { // Ini bisa dihapus jika QuizQuestionData mencukupi
   questionText: string;
   options: string[];
   correctAnswerIndex?: number;
@@ -81,12 +88,32 @@ export interface ModuleWithLessons {
 export interface LessonWithQuizDto {
   id: string;
   title: string;
-  content: string;
-  contentType: 'video' | 'text';
-  videoUrl?: string;
+  contentBlocks: ContentBlock[];
   orderInModule: number;
   moduleId: string;
   quiz?: QuizData;
+}
+
+export interface AnswerResponse {
+  id: string;
+  content: string;
+  imageUrl?: string;
+  userId: string;
+  username: string;
+  avatarUrl?: string;
+  createdAt: string;
+}
+
+export interface DiscussionResponse {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  userId: string;
+  createdAt: string;
+  username?: string;
+  avatarUrl?: string;
+  answerCount: number;
 }
 
 export interface UserProfile {
@@ -94,9 +121,9 @@ export interface UserProfile {
   email: string;
   full_name?: string;
   firstName?: string;
-  lastName?: string; 
+  lastName?: string;
   username?: string;
-  avatarUrl?: string; 
+  avatarUrl?: string;
   role?: string;
 }
 
@@ -109,7 +136,7 @@ export interface LeaderboardEntry {
   quizScore: number;
   bonusPoint: number;
   totalScore: number;
-  reward: string; 
+  reward: string;
   username: string;
 }
 
@@ -119,7 +146,7 @@ export interface BookmarkedCourse {
   title: string;
   thumbnailUrl: string;
   isPublished: boolean;
-  progressPercentage?: number; 
+  progressPercentage?: number;
 }
 
 
@@ -130,27 +157,53 @@ export interface TopUser {
   img: string;
 }
 
-
+// Perbarui interface QuizQuestionData untuk menyertakan imageUrl
 export interface QuizQuestionData {
-  id: string;
+  id?: string;
   questionText: string;
+  imageUrl?: string; // <<-- Tambahkan properti ini
   questionType: 'multiple_choice' | 'essay' | 'short_answer';
-  options: string[]; 
-  correctAnswerIndex?: number; 
-  correctAnswerText?: string; 
+  options: string[];
+  correctAnswerIndex?: number;
+  correctAnswerText?: string;
   scoreValue: number;
   orderInQuiz: number;
 }
+
+export interface QuizSummaryDTO {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  maxAttempts: number;
+  passScore: number;
+  imageUrl?: string;
+}
+
 
 export interface QuizSubmissionResponse {
   message: string;
   scoreObtained: number;
   isPassed: boolean;
   answerResults: {
-    questionId: string; 
+    questionId: string;
     isCorrect: boolean;
     correctAnswerText?: string;
     correctAnswerIndex?: number;
   }[];
 }
 
+
+export interface UserDetails {
+  id: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  avatar_url?: string;
+  email?: string;
+  role?: string;
+  bonus_point?: number;
+  created_at?: string;
+  updated_at?: string;
+}

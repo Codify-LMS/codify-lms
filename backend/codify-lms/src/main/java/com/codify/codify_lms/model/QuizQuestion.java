@@ -29,6 +29,9 @@ public class QuizQuestion {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String questionText;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     private String questionType;
 
     @Convert(converter = StringListConverter.class)
@@ -47,19 +50,22 @@ public class QuizQuestion {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    @UpdateTimestamp // <<-- PERBAIKAN DI SINI: Pastikan ini adalah @UpdateTimestamp
+    private LocalDateTime updatedAt; // <<-- PERBAIKAN DI SINI: Nama field harus 'updatedAt'
+
 
     // ======= Constructors =======
 
     public QuizQuestion() {}
 
-    public QuizQuestion(UUID id, Quiz quiz, String questionText, String questionType, List<String> options,
+    // Sesuaikan konstruktor lengkap untuk menyertakan imageUrl dan updatedAt
+    public QuizQuestion(UUID id, Quiz quiz, String questionText, String imageUrl, String questionType, List<String> options,
                         Integer correctAnswerIndex, String correctAnswerText, Integer scoreValue,
-                        Integer orderInQuiz, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                        Integer orderInQuiz, LocalDateTime createdAt, LocalDateTime updatedAt) { // Pastikan updatedAt ada di parameter
         this.id = id;
         this.quiz = quiz;
         this.questionText = questionText;
+        this.imageUrl = imageUrl;
         this.questionType = questionType;
         this.options = options;
         this.correctAnswerIndex = correctAnswerIndex;
@@ -67,7 +73,7 @@ public class QuizQuestion {
         this.scoreValue = scoreValue;
         this.orderInQuiz = orderInQuiz;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.updatedAt = updatedAt; // <<-- Pastikan inisialisasi updatedAt
     }
 
     // ======= Getters & Setters =======
@@ -94,6 +100,14 @@ public class QuizQuestion {
 
     public void setQuestionText(String questionText) {
         this.questionText = questionText;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getQuestionType() {
@@ -152,11 +166,11 @@ public class QuizQuestion {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() { // <<-- Pastikan getter ini ada
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) { // <<-- Pastikan setter ini ada
         this.updatedAt = updatedAt;
     }
 }

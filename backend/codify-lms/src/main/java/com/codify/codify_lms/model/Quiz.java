@@ -21,9 +21,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.Builder; // Keep this, but ensure you also have the manual builder methods
 
-@Builder
+@Builder // This annotation on the class level will only work if you remove your manual Builder class,
+         // or you make sure your manual builder completely mirrors all fields.
+         // For now, let's just make sure your manual builder is complete.
 @Entity
 @Table(name = "quizzes")
 public class Quiz {
@@ -37,6 +39,7 @@ public class Quiz {
     private String type;
     private Integer maxAttempts;
     private Integer passScore;
+    private String imageUrl; // <--- ADD THIS FIELD
 
     @ManyToOne
     @JoinColumn(name = "lesson_id", nullable = true)
@@ -64,7 +67,8 @@ public class Quiz {
     public Quiz() {
     }
 
-    public Quiz(UUID id, String title, String description, String type, Integer maxAttempts, Integer passScore,
+    // UPDATE THIS CONSTRUCTOR to include imageUrl
+    public Quiz(UUID id, String title, String description, String type, Integer maxAttempts, Integer passScore, String imageUrl,
                 Lesson lesson, Module module, Instant createdAt, Instant updatedAt, List<QuizQuestion> questions) {
         this.id = id;
         this.title = title;
@@ -72,6 +76,7 @@ public class Quiz {
         this.type = type;
         this.maxAttempts = maxAttempts;
         this.passScore = passScore;
+        this.imageUrl = imageUrl; // <--- INITIALIZE imageUrl
         this.lesson = lesson;
         this.module = module;
         this.createdAt = createdAt;
@@ -79,6 +84,7 @@ public class Quiz {
         this.questions = questions != null ? questions : new ArrayList<>();
     }
 
+    // This method is fine
     public static Builder builder() {
         return new Builder();
     }
@@ -91,6 +97,7 @@ public class Quiz {
         private String type;
         private Integer maxAttempts;
         private Integer passScore;
+        private String imageUrl; // <--- ADD THIS FIELD TO THE BUILDER
         private Lesson lesson;
         private Module module;
         private Instant createdAt;
@@ -127,6 +134,12 @@ public class Quiz {
             return this;
         }
 
+        // <--- ADD THIS BUILDER METHOD FOR imageUrl
+        public Builder imageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+            return this;
+        }
+
         public Builder lesson(Lesson lesson) {
             this.lesson = lesson;
             return this;
@@ -153,7 +166,8 @@ public class Quiz {
         }
 
         public Quiz build() {
-            return new Quiz(id, title, description, type, maxAttempts, passScore, lesson, module, createdAt, updatedAt, questions);
+            // UPDATE THIS LINE to include imageUrl
+            return new Quiz(id, title, description, type, maxAttempts, passScore, imageUrl, lesson, module, createdAt, updatedAt, questions);
         }
     }
 
@@ -205,6 +219,15 @@ public class Quiz {
 
     public void setPassScore(Integer passScore) {
         this.passScore = passScore;
+    }
+
+    // <--- ADD THESE GETTER AND SETTER FOR imageUrl
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public Lesson getLesson() {

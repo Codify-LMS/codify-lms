@@ -4,6 +4,7 @@ import java.util.UUID;
 
 public class CreateAnswerRequest {
     private String content;
+    private String imageUrl; // Tambahkan properti ini
     private UUID userId;
     private UUID parentPostId; // optional
 
@@ -12,8 +13,9 @@ public class CreateAnswerRequest {
     }
 
     // All-args constructor
-    public CreateAnswerRequest(String content, UUID userId, UUID parentPostId) {
+    public CreateAnswerRequest(String content, String imageUrl, UUID userId, UUID parentPostId) { // Sesuaikan konstruktor
         this.content = content;
+        this.imageUrl = imageUrl; // Inisialisasi imageUrl
         this.userId = userId;
         this.parentPostId = parentPostId;
     }
@@ -25,6 +27,14 @@ public class CreateAnswerRequest {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getImageUrl() { // Tambahkan getter ini
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) { // Tambahkan setter ini
+        this.imageUrl = imageUrl;
     }
 
     public UUID getUserId() {

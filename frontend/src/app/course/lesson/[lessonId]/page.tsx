@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
-import { LessonData, ModuleData, CourseData, QuizSubmissionResponse } from '@/types';
+import { LessonData, ModuleData, CourseData, QuizSubmissionResponse, ContentBlock } from '@/types';
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@/hooks/useUser';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
@@ -12,12 +12,25 @@ import Button from '@/components/Button';
 import toast from 'react-hot-toast';
 import Lottie from 'lottie-react';
 import celebrateAnimation from '@/animations/celebrate.json';
+import { FiCopy } from 'react-icons/fi';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function LessonPage() {
+const getYouTubeEmbedUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('youtube.com/watch?v=')) {
+    return url.replace('watch?v=', 'embed/') + "?modestbranding=1&rel=0";
+  }
+  if (url.includes('youtu.be/')) {
+    return url.replace('youtu.be/', 'youtube.com/embed/') + "?modestbranding=1&rel=0";
+  }
+  return url;
+};
+
+
+function LessonPage() {
   const { lessonId } = useParams() as { lessonId: string };
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonData | null>(null);
@@ -67,6 +80,7 @@ export default function LessonPage() {
         const courseData: CourseData = courseRes.data;
         setCourse(courseData);
       } catch (error) {
+        toast.error("❌ Error fetching lesson data.");
         console.error("❌ Error fetching data:", error);
       } finally {
         setLoadingContent(false);
@@ -168,9 +182,22 @@ export default function LessonPage() {
 
   const getQuestionResult = (questionId: string) => quizResults?.find(result => result.questionId === questionId);
 
+  // Fungsi untuk menyalin kode
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast.success('Kode berhasil disalin!');
+      })
+      .catch((err) => {
+        console.error('Gagal menyalin kode:', err);
+        toast.error('Gagal menyalin kode.');
+      });
+  };
+
+
   if (isLoadingUser || loadingContent) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="fixed inset-0 bg-white bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white px-6 py-8 rounded-lg shadow-lg text-center flex flex-col items-center gap-4">
           <div className="loader ease-linear rounded-full border-4 border-t-4 border-indigo-500 h-12 w-12 animate-spin"></div>
           <p className="text-gray-700 font-semibold">Memuat konten lesson...</p>
@@ -179,7 +206,8 @@ export default function LessonPage() {
     );
   }
 
-  if (!lesson || !course || !user) return <div className="p-6 text-red-600">Data not found</div>;
+  if (!lesson || !course || !user || !lesson.contentBlocks) return <div className="p-6 text-red-600">Data not found or incomplete.</div>;
+
 
   const flattenedLessons = getFlattenedLessons();
   const currentIndex = flattenedLessons.findIndex(entry => entry.lesson.id === lesson.id);
@@ -198,21 +226,69 @@ export default function LessonPage() {
         <main className="flex-1 p-6 bg-white overflow-y-auto m-4 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-indigo-700 mb-4">{lesson.title}</h1>
 
-          {lesson.imageUrl && (
-            <img
-              src={lesson.imageUrl}
-              alt="Lesson illustration"
-              className="w-full max-w-3xl mx-auto rounded-lg mb-6"
-            />
-          )}
-          <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
-            {lesson.content}
-          </pre>
+          {/* Render semua blok konten berdasarkan urutan */}
+          {lesson.contentBlocks.sort((a, b) => a.order - b.order).map((block, index) => (
+            <div key={index} className="mb-6">
+              {block.type === 'text' && (
+                <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
+                  {block.value}
+                </pre>
+              )}
 
+              {block.type === 'video' && block.value && (
+                <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingTop: '56.25%' /* 16:9 Aspect Ratio */ }}>
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={getYouTubeEmbedUrl(block.value)}
+                    title="Video Player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                  ></iframe>
+                </div>
+              )}
+
+              {block.type === 'image' && block.value && (
+                <img
+                  src={block.value}
+                  alt={`Lesson Image ${block.order}`}
+                  className="w-full h-auto max-h-[500px] object-contain rounded-lg"
+                />
+              )}
+
+              {block.type === 'script' && block.value && (
+                <div className="relative bg-gray-100 text-gray-800 rounded-lg overflow-hidden font-mono text-sm shadow-sm border border-gray-200">
+                  <div className="absolute top-0 right-0 p-2 z-10">
+                    <button
+                      onClick={() => copyToClipboard(block.value)}
+                      className="text-gray-500 hover:text-gray-700 transition px-2 py-1 rounded-md bg-white bg-opacity-70 backdrop-blur-sm"
+                      title="Salin Kode"
+                    >
+                      <FiCopy size={16} className="inline-block mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  <pre className="p-4 pt-10 overflow-x-auto">
+                    <code>{block.value}</code>
+                  </pre>
+                </div>
+              )}
+            </div>
+          ))}
 
 
           {lesson.quiz && lesson.quiz.questions && (
             <form className="mt-8 p-6 border rounded-lg bg-gray-50" onSubmit={handleSubmitQuiz}>
+              {/* Tambahkan gambar quiz di sini jika ada */}
+              {lesson.quiz.imageUrl && (
+                  <img
+                      src={lesson.quiz.imageUrl}
+                      alt={lesson.quiz.title || "Quiz Image"}
+                      className="w-full max-h-64 object-contain rounded-lg mb-4 "
+                  />
+              )}
+
               <h2 className="text-xl font-bold text-indigo-600 mb-2">Quiz: {lesson.quiz.title}</h2>
                 <p className="text-gray-600 text-sm mb-4">{lesson.quiz.description}</p>
 
@@ -249,6 +325,14 @@ export default function LessonPage() {
                       <p className="font-semibold mb-2">
                         {index + 1}. {q.questionText}
                       </p>
+                      {/* Tambahkan gambar pertanyaan kuis di sini */}
+                      {q.imageUrl && (
+                          <img
+                              src={q.imageUrl}
+                              alt={`Question Image ${index + 1}`}
+                              className="w-full max-h-48 object-contain rounded-lg mb-4"
+                          />
+                      )}
 
                       {q.questionType === 'multiple_choice' ? (
                         <div className="space-y-1">
@@ -289,18 +373,6 @@ export default function LessonPage() {
                             onChange={(e) => handleAnswerChange(q.id, e.target.value, true)}
                             disabled={quizSubmitted}
                           />
-                          {/* {showFeedback && result?.correctAnswerText && (
-                            <p
-                              className={`text-sm mt-1 ${
-                                isCorrect ? 'text-green-600' : 'text-red-600'
-                              } text-left`}
-                            >
-                              Jawaban Benar:{' '}
-                              <span className="font-semibold">
-                                {result.correctAnswerText}
-                              </span>
-                            </p>
-                          )} */}
                         </>
                       )}
                     </div>
@@ -368,7 +440,7 @@ export default function LessonPage() {
               onClick={async () => {
                   if (!user?.id || !lesson?.id || !nextLesson) return;
 
-                  setIsTransitionLoading(true); // ← Munculkan modal
+                  setIsTransitionLoading(true);
 
                   try {
                     await fetch('http://localhost:8080/api/v1/progress/complete-lesson', {
@@ -437,3 +509,5 @@ export default function LessonPage() {
     </div>
   );
 }
+
+export default LessonPage;

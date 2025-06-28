@@ -27,6 +27,7 @@ public class DiscussionService {
             dto.setId(d.getId());
             dto.setTitle(d.getTitle());
             dto.setContent(d.getContent());
+            dto.setImageUrl(d.getImageUrl()); // Ambil imageUrl dari Discussion entity
             dto.setUserId(d.getUserId());
             dto.setCreatedAt(d.getCreatedAt());
 
@@ -49,6 +50,7 @@ public class DiscussionService {
         discussion.setId(UUID.randomUUID());
         discussion.setTitle(request.getTitle());
         discussion.setContent(request.getContent());
+        discussion.setImageUrl(request.getImageUrl()); // Simpan imageUrl dari request
         discussion.setUserId(request.getUserId());
         discussion.setCourseId(request.getCourseId());
         discussion.setModuleId(request.getModuleId());
@@ -59,6 +61,7 @@ public class DiscussionService {
     }
 
     public List<AnswerResponse> getAnswers(UUID discussionId) {
+        // Mengambil semua discussion posts yang merupakan jawaban utama (bukan balasan balasan)
         List<DiscussionPost> posts = discussionPostRepository
             .findByDiscussionIdAndParentPostIdIsNull(discussionId);
 
@@ -66,6 +69,7 @@ public class DiscussionService {
             AnswerResponse dto = new AnswerResponse();
             dto.setId(post.getId());
             dto.setContent(post.getContent());
+            dto.setImageUrl(post.getImageUrl()); // Ambil imageUrl dari DiscussionPost
             dto.setCreatedAt(post.getCreatedAt());
             dto.setUserId(post.getUserId());
 
@@ -84,6 +88,7 @@ public class DiscussionService {
         post.setDiscussionId(discussionId);
         post.setUserId(request.getUserId());
         post.setContent(request.getContent());
+        post.setImageUrl(request.getImageUrl()); // Simpan imageUrl dari request
         post.setParentPostId(request.getParentPostId()); // bisa null
         post.setCreatedAt(ZonedDateTime.now());
 

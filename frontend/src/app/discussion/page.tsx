@@ -23,6 +23,7 @@ export default function DiscussionPage() {
   useEffect(() => {
     const fetchDiscussions = async () => {
       try {
+        // Endpoint ini harus mengembalikan DiscussionResponse, yang sekarang punya imageUrl
         const res = await fetch('http://localhost:8080/api/discussions');
         const data = await res.json();
 
@@ -43,7 +44,7 @@ export default function DiscussionPage() {
     fetchDiscussions();
   }, []);
 
-  // ✅ Filter berdasarkan searchTerm
+  // Filter berdasarkan searchTerm
   const filteredDiscussions = discussions.filter((item) =>
     item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.content?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -69,7 +70,7 @@ export default function DiscussionPage() {
                 placeholder="🔍 Search all discussions"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 text-gray-600 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="absolute left-3 top-2.5 text-gray-400">🔍</div>
             </div>
@@ -127,6 +128,10 @@ export default function DiscussionPage() {
                     <div className="mt-2 text-base font-semibold text-gray-800 line-clamp-2">
                       {item.title}
                     </div>
+                    {/* Gambar pertanyaan awal diskusi */}
+                    {item.imageUrl && (
+                        <img src={item.imageUrl} alt="Discussion Image" className="mt-3 w-full max-h-48 object-contain rounded border" />
+                    )}
 
                     {/* Bottom Action */}
                     <div className="mt-4 flex justify-between items-center">

@@ -6,40 +6,38 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import axios from 'axios';
-import { CourseData, ModuleData, LessonData } from '@/types';
+import { CourseData, ModuleData, LessonData, QuizData, QuizQuestionData } from '@/types'; // Import QuizQuestionData
 import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { supabase } from '@/supabaseClient'; // Import supabaseClient
 
-
-interface QuizQuestion {
-  questionText: string;
-  options: string[];
-  correctAnswerIndex?: number;
-  questionType: 'multiple_choice' | 'essay' | 'short_answer';
-  correctAnswerText?: string;
-  scoreValue?: number;
-  orderInQuiz?: number;
+// Sesuaikan interface QuizQuestion agar match dengan QuizQuestionData dari types.ts
+interface QuizQuestionState extends QuizQuestionData {
+    imageFile?: File | null; // Untuk menyimpan file gambar sementara di frontend
+    imagePreview?: string | null; // Untuk pratinjau gambar di frontend
 }
 
 const UploadQuizPage = () => {
-  const [quizDetails, setQuizDetails] = useState({
+  const [quizDetails, setQuizDetails] = useState<QuizData>({
     title: '',
     description: '',
     type: 'multiple_choice',
     maxAttempts: 1,
     passScore: 70,
-    lessonId: null as string | null,
-    moduleId: null as string | null,
+    imageUrl: '', // Gambar untuk keseluruhan quiz
   });
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([{
+  const [questions, setQuestions] = useState<QuizQuestionState[]>([{ // Ubah tipe ke QuizQuestionState
     questionText: '',
+    imageUrl: '', // Tambahkan imageUrl
     options: ['', '', '', ''],
     correctAnswerIndex: 0,
     questionType: 'multiple_choice',
     correctAnswerText: '',
     scoreValue: 10,
     orderInQuiz: 1,
+    imageFile: null, // Inisialisasi state file gambar per pertanyaan
+    imagePreview: null, // Inisialisasi state pratinjau gambar per pertanyaan
   }]);
 
   const [expandedIndex, setExpandedIndex] = useState<number>(0);
@@ -53,8 +51,27 @@ const UploadQuizPage = () => {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [quizImageFile, setQuizImageFile] = useState<File | null>(null); // File untuk gambar quiz utama
+  const [quizImagePreview, setQuizImagePreview] = useState<string | null>(null); // Preview untuk gambar quiz utama
 
   const API_BASE_URL = 'http://localhost:8080/api';
+
+  // --- Fungsi Upload Gambar ke Supabase ---
+  const handleImageUpload = async (file: File, subfolder: string): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${subfolder}/${Date.now()}.${fileExt}`; // Menggunakan subfolder
+
+    const { error: uploadError } = await supabase.storage.from('lms-assets').upload(filePath, file);
+    if (uploadError) {
+      console.error('❌ Upload gambar gagal:', uploadError.message);
+      setError('Gagal mengunggah gambar: ' + uploadError.message);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('lms-assets').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -85,7 +102,7 @@ const UploadQuizPage = () => {
     try {
       setLoading(true);
       const response = await axios.get<LessonData[]>(`${API_BASE_URL}/v1/lessons`);
-      const filtered = response.data.filter(lesson => lesson.module?.id === moduleId);
+      const filtered = response.data.filter(lesson => lesson.moduleId === moduleId); // Gunakan lesson.moduleId
       setLessons(filtered);
     } catch {
       setError('Gagal mengambil daftar lesson.');
@@ -115,13 +132,25 @@ const UploadQuizPage = () => {
     }
   }, [selectedModuleId, fetchLessons]);
 
-  const handleQuizDetailChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleQuizDetailChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setQuizDetails(prev => ({
       ...prev,
       [name]: type === 'number' ? Number(value) : value,
     }));
   };
+
+  const handleQuizImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setQuizImageFile(file);
+    if (file) {
+      setQuizImagePreview(URL.createObjectURL(file));
+      setError('');
+    } else {
+      setQuizImagePreview(null);
+    }
+  };
+
 
   const handleCourseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -146,12 +175,15 @@ const UploadQuizPage = () => {
       ...prev,
       {
         questionText: '',
+        imageUrl: '', // Inisialisasi imageUrl
         options: ['', '', '', ''],
         correctAnswerIndex: 0,
         questionType: 'multiple_choice',
         correctAnswerText: '',
         scoreValue: 10,
         orderInQuiz: prev.length + 1,
+        imageFile: null,
+        imagePreview: null,
       },
     ]);
     setExpandedIndex(questions.length); // expand pertanyaan baru
@@ -172,6 +204,21 @@ const UploadQuizPage = () => {
         i === qIndex ? { ...q, [field]: value } : q
       )
     );
+  };
+
+  const handleQuestionImageFileChange = (qIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setQuestions(prev => prev.map((q, i) => {
+      if (i === qIndex) {
+        return {
+          ...q,
+          imageFile: file,
+          imagePreview: file ? URL.createObjectURL(file) : null,
+          imageUrl: file ? URL.createObjectURL(file) : '', // Set imageUrl sementara untuk preview
+        };
+      }
+      return q;
+    }));
   };
 
   const handleOptionChange = (qIndex: number, oIndex: number, value: string) => {
@@ -213,20 +260,57 @@ const UploadQuizPage = () => {
     }
 
     setLoading(true);
+    let finalQuizImageUrl = quizDetails.imageUrl; // URL gambar quiz utama
+    const questionsWithFinalUrls: QuizQuestionData[] = [];
+
     try {
+        // Upload gambar quiz utama jika ada file baru
+        if (quizImageFile) {
+            const uploadedUrl = await handleImageUpload(quizImageFile, 'quiz-thumbnails'); // Subfolder quiz-thumbnails
+            if (!uploadedUrl) {
+                setLoading(false);
+                return;
+            }
+            finalQuizImageUrl = uploadedUrl;
+        }
+
+        // Proses setiap pertanyaan dan upload gambarnya
+        for (const q of questions) {
+            let finalQuestionImageUrl = q.imageUrl;
+            if (q.imageFile) { // Jika ada file gambar baru untuk pertanyaan
+                const uploadedUrl = await handleImageUpload(q.imageFile, 'quiz-question-images'); // Subfolder quiz-question-images
+                if (!uploadedUrl) {
+                    setLoading(false);
+                    return;
+                }
+                finalQuestionImageUrl = uploadedUrl;
+            }
+            questionsWithFinalUrls.push({
+                ...q,
+                imageUrl: finalQuestionImageUrl, // Set imageUrl final untuk pertanyaan
+                imageFile: undefined, // Hapus properti temporary
+                imagePreview: undefined, // Hapus properti temporary
+            });
+        }
+
+
       const payload = {
         ...quizDetails,
+        imageUrl: finalQuizImageUrl, // Sertakan URL gambar quiz utama
         lessonId: selectedLessonId,
         moduleId: selectedModuleId,
-        questions,
+        questions: questionsWithFinalUrls, // Kirim pertanyaan dengan URL gambar final
       };
 
       const quizRes = await axios.post(`${API_BASE_URL}/quiz`, payload);
 
       if (quizRes.status === 201 || quizRes.status === 200) {
         alert('✅ Quiz berhasil diupload!');
-        setQuizDetails({ title: '', description: '', type: 'multiple_choice', maxAttempts: 1, passScore: 70, lessonId: null, moduleId: null });
-        setQuestions([{ questionText: '', options: ['', '', '', ''], correctAnswerIndex: 0, questionType: 'multiple_choice', correctAnswerText: '', scoreValue: 10, orderInQuiz: 1 }]);
+        // Reset form setelah sukses
+        setQuizDetails({ title: '', description: '', type: 'multiple_choice', maxAttempts: 1, passScore: 70, imageUrl: '' });
+        setQuizImageFile(null);
+        setQuizImagePreview(null);
+        setQuestions([{ questionText: '', imageUrl: '', options: ['', '', '', ''], correctAnswerIndex: 0, questionType: 'multiple_choice', correctAnswerText: '', scoreValue: 10, orderInQuiz: 1, imageFile: null, imagePreview: null }]);
         setSelectedCourseId(null);
         setSelectedModuleId(null);
         setSelectedLessonId(null);
@@ -234,8 +318,8 @@ const UploadQuizPage = () => {
       } else {
         throw new Error(`Gagal membuat quiz: ${quizRes.statusText}`);
       }
-    } catch {
-      setError('❌ Terjadi kesalahan saat mengirim data.');
+    } catch (err: any) {
+      setError('❌ Terjadi kesalahan saat mengirim data: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -261,7 +345,7 @@ const UploadQuizPage = () => {
               <Input
                 id="title"
                 name="title"
-                value={quizDetails.title}
+                value={quizDetails.title || ''}
                 onChange={handleQuizDetailChange}
                 placeholder="Mis: Quiz Pengantar Java"
                 className="text-gray-700"
@@ -271,15 +355,32 @@ const UploadQuizPage = () => {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                 Deskripsi Quiz
               </label>
-              <Input
+              <textarea
                 id="description"
                 name="description"
-                value={quizDetails.description}
+                value={quizDetails.description || ''}
                 onChange={handleQuizDetailChange}
                 placeholder="Deskripsi singkat tentang quiz ini"
-                className="text-gray-700"
+                rows={3}
+                className="w-full border px-4 py-2 rounded-md text-gray-700"
               />
             </div>
+
+            {/* Input Gambar untuk Quiz */}
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gambar Quiz (Opsional)</label>
+                {quizImagePreview && (
+                    <img src={quizImagePreview} alt="Pratinjau Gambar Quiz" className="w-full max-h-48 object-contain rounded mb-2 border" />
+                )}
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleQuizImageFileChange}
+                    className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {quizImageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {quizImageFile.name}</p>}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="maxAttempts" className="block text-sm font-medium text-gray-700 mb-1">
@@ -423,6 +524,21 @@ const UploadQuizPage = () => {
                           className="text-gray-700"
                           placeholder="Masukkan teks pertanyaan..."
                         />
+                      </div>
+
+                      {/* Input Gambar untuk Pertanyaan */}
+                      <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Gambar Pertanyaan (Opsional)</label>
+                          {q.imagePreview && (
+                              <img src={q.imagePreview} alt="Pratinjau Gambar Pertanyaan" className="w-full max-h-48 object-contain rounded mb-2 border" />
+                          )}
+                          <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleQuestionImageFileChange(qIndex, e)}
+                              className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          />
+                          {q.imageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {q.imageFile.name}</p>}
                       </div>
 
                       <div>
