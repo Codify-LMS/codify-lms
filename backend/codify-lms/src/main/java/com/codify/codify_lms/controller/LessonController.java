@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors; // Import Collectors
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -68,13 +69,7 @@ public class LessonController {
                 lesson.setTitle(dto.getTitle());
                 lesson.setContentBlocks(dto.getContentBlocks()); // Gunakan contentBlocks
                 lesson.setOrderInModule(dto.getOrderInModule());
-
-                // Hapus baris-baris lama ini:
-                // lesson.setContent(dto.getContent());
-                // lesson.setContentType(dto.getContentType());
-                // lesson.setVideoUrl(dto.getVideoUrl());
-                // lesson.setImageUrl(dto.getImageUrl());
-
+                
                 // 4. Sambungkan lesson ke module induknya (objek Module, bukan hanya ID)
                 lesson.setModule(module);
 
@@ -85,14 +80,30 @@ public class LessonController {
             List<Lesson> savedLessons = lessonRepository.saveAll(lessonsToSave);
             return new ResponseEntity<>(savedLessons, HttpStatus.CREATED);
         } catch (Exception e) {
+            // Ini akan mencetak error lengkap di konsol backend untuk debugging
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    // Ubah method ini untuk mengembalikan List<LessonDTO>
     @GetMapping
-    public List<Lesson> getAllLessons() {
-        return lessonRepository.findAll();
+    public List<LessonDTO> getAllLessons() { // <<-- PERUBAHAN TIPE KEMBALIAN
+        return lessonRepository.findAll().stream()
+                .map(lesson -> {
+                    // Pastikan moduleId diambil dari entity Lesson
+                    String moduleId = (lesson.getModule() != null && lesson.getModule().getId() != null)
+                                      ? lesson.getModule().getId().toString()
+                                      : null;
+                    return new LessonDTO(
+                        lesson.getId().toString(),
+                        lesson.getTitle(),
+                        lesson.getContentBlocks(), // Sertakan ContentBlocks
+                        lesson.getOrderInModule(),
+                        moduleId
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
    @GetMapping("/{id}")
@@ -105,14 +116,9 @@ public class LessonController {
                 dto.setContentBlocks(lesson.getContentBlocks()); // Ambil contentBlocks
                 dto.setOrderInModule(lesson.getOrderInModule());
                 dto.setModuleId(lesson.getModule().getId());
-
-                // Hapus baris-baris lama ini:
-                // dto.setContent(lesson.getContent());
-                // dto.setContentType(lesson.getContentType());
-                // dto.setVideoUrl(lesson.getVideoUrl());
-                // dto.setImageUrl(lesson.getImageUrl());
-
-                Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);
+                
+                List<Quiz> quizzes = quizRepository.findByLessonId(lesson.getId());
+                Quiz quiz = quizzes.isEmpty() ? null : quizzes.get(0);
                 dto.setQuiz(quiz);
 
                 return ResponseEntity.ok(dto);
@@ -129,12 +135,6 @@ public class LessonController {
                 lesson.setContentBlocks(updatedLesson.getContentBlocks()); // Perbarui contentBlocks
                 lesson.setOrderInModule(updatedLesson.getOrderInModule());
                 
-                // Hapus baris-baris lama ini:
-                // lesson.setContent(updatedLesson.getContent());
-                // lesson.setContentType(updatedLesson.getContentType());
-                // lesson.setVideoUrl(updatedLesson.getVideoUrl());
-                // lesson.setImageUrl(updatedLesson.getImageUrl());
-
                 lesson.setUpdatedAt(Instant.now());
                 Lesson saved = lessonRepository.save(lesson);
                 return ResponseEntity.ok(saved);

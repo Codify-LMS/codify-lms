@@ -1,10 +1,7 @@
-// frontend/src/types.ts
-
-// --- Definisi Baru: ContentBlock ---
 export interface ContentBlock {
-  type: 'text' | 'image' | 'video'; // Tipe blok konten
-  value: string; // Nilai konten (teks, URL gambar, atau URL video)
-  order: number; // Urutan blok di dalam lesson
+  type: 'text' | 'image' | 'video' | 'script';
+  value: string;
+  order: number;
 }
 
 export interface CourseData {
@@ -31,27 +28,24 @@ export interface ModuleData {
 export interface LessonData {
   id?: string;
   title: string;
-  contentBlocks: ContentBlock[]; // Ganti properti content lama dengan list ContentBlock
+  contentBlocks: ContentBlock[];
   orderInModule: number;
   moduleId: string;
   quiz?: QuizData;
-
-  // Hapus properti-properti lama ini:
-  // content: string;
-  // contentType: 'video' | 'text' | 'image';
-  // videoUrl?: string;
-  // imageUrl?: string;
 }
 
 export interface QuizData {
   id?: string;
-  description: string;
-  question: string;
-  options: string[];
-  correctAnswerIndex: number;
+  title?: string;
+  description?: string;
+  type?: string;
+  maxAttempts?: number;
+  passScore?: number;
+  imageUrl?: string; // Gambar untuk keseluruhan Quiz
+  questions?: QuizQuestionData[]; // Daftar pertanyaan
 }
 
-export interface QuizQuestion {
+export interface QuizQuestion { // Ini bisa dihapus jika QuizQuestionData mencukupi
   questionText: string;
   options: string[];
   correctAnswerIndex?: number;
@@ -98,15 +92,9 @@ export interface LessonWithQuizDto {
   orderInModule: number;
   moduleId: string;
   quiz?: QuizData;
-
-  // Hapus properti-properti lama ini:
-  // content: string;
-  // contentType: 'video' | 'text' | 'image';
-  // videoUrl?: string;
-  // imageUrl?: string;
 }
 
-export interface AnswerResponse { 
+export interface AnswerResponse {
   id: string;
   content: string;
   imageUrl?: string;
@@ -114,6 +102,18 @@ export interface AnswerResponse {
   username: string;
   avatarUrl?: string;
   createdAt: string;
+}
+
+export interface DiscussionResponse {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  userId: string;
+  createdAt: string;
+  username?: string;
+  avatarUrl?: string;
+  answerCount: number;
 }
 
 export interface UserProfile {
@@ -157,10 +157,11 @@ export interface TopUser {
   img: string;
 }
 
-
+// Perbarui interface QuizQuestionData untuk menyertakan imageUrl
 export interface QuizQuestionData {
-  id: string;
+  id?: string;
   questionText: string;
+  imageUrl?: string; // <<-- Tambahkan properti ini
   questionType: 'multiple_choice' | 'essay' | 'short_answer';
   options: string[];
   correctAnswerIndex?: number;
@@ -168,6 +169,17 @@ export interface QuizQuestionData {
   scoreValue: number;
   orderInQuiz: number;
 }
+
+export interface QuizSummaryDTO {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  maxAttempts: number;
+  passScore: number;
+  imageUrl?: string;
+}
+
 
 export interface QuizSubmissionResponse {
   message: string;
@@ -179,4 +191,19 @@ export interface QuizSubmissionResponse {
     correctAnswerText?: string;
     correctAnswerIndex?: number;
   }[];
+}
+
+
+export interface UserDetails {
+  id: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  avatar_url?: string;
+  email?: string;
+  role?: string;
+  bonus_point?: number;
+  created_at?: string;
+  updated_at?: string;
 }

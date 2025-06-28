@@ -67,7 +67,7 @@ public class CourseController {
                     lessonCount += lessons.size();
 
                     for (Lesson lesson : lessons) {
-                        quizCount += quizRepository.findByLessonId(lesson.getId()).isPresent() ? 1 : 0;
+                        quizCount += quizRepository.findByLessonId(lesson.getId()).isEmpty() ? 0 : 1;
                     }
                 }
 
@@ -154,7 +154,11 @@ public class CourseController {
             // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
             List<Lesson> lessons = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId());
             List<LessonWithQuizDto> lessonDtos = lessons.stream().map(lesson -> {
-                Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);
+                
+                // ✅ FIX bagian ini!
+                List<Quiz> quizzes = quizRepository.findByLessonId(lesson.getId());
+                Quiz quiz = quizzes.isEmpty() ? null : quizzes.get(0);
+
                 return new LessonWithQuizDto(lesson, quiz);
             }).toList();
 
@@ -164,5 +168,6 @@ public class CourseController {
         CourseFullDto response = new CourseFullDto(course, moduleDtos);
         return ResponseEntity.ok(response);
     }
+
 
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
-import { LessonData, ModuleData, CourseData, QuizSubmissionResponse, ContentBlock } from '@/types'; // Import ContentBlock
+import { LessonData, ModuleData, CourseData, QuizSubmissionResponse, ContentBlock } from '@/types';
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@/hooks/useUser';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
@@ -12,23 +12,20 @@ import Button from '@/components/Button';
 import toast from 'react-hot-toast';
 import Lottie from 'lottie-react';
 import celebrateAnimation from '@/animations/celebrate.json';
+import { FiCopy } from 'react-icons/fi';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Fungsi bantu untuk mendapatkan URL embed YouTube yang benar
 const getYouTubeEmbedUrl = (url: string) => {
   if (!url) return '';
-  // Convert typical YouTube watch URLs to embed URLs
-  // Asumsi URL lokal adalah placeholder dari tugas sebelumnya
   if (url.includes('youtube.com/watch?v=')) {
     return url.replace('watch?v=', 'embed/') + "?modestbranding=1&rel=0";
   }
   if (url.includes('youtu.be/')) {
     return url.replace('youtu.be/', 'youtube.com/embed/') + "?modestbranding=1&rel=0";
   }
-  // If it's already an embed URL or another video platform, return as is
   return url;
 };
 
@@ -69,7 +66,7 @@ function LessonPage() {
       if (isLoadingUser || !user) return;
       try {
         const lessonRes = await axios.get(`http://localhost:8080/api/v1/lessons/${lessonId}`);
-        const lessonData: LessonData = lessonRes.data; // lessonData sekarang memiliki contentBlocks
+        const lessonData: LessonData = lessonRes.data;
         setLesson(lessonData);
 
         const moduleRes = await axios.get(`http://localhost:8080/api/modules/${lessonData.moduleId}/full`);
@@ -185,6 +182,19 @@ function LessonPage() {
 
   const getQuestionResult = (questionId: string) => quizResults?.find(result => result.questionId === questionId);
 
+  // Fungsi untuk menyalin kode
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast.success('Kode berhasil disalin!');
+      })
+      .catch((err) => {
+        console.error('Gagal menyalin kode:', err);
+        toast.error('Gagal menyalin kode.');
+      });
+  };
+
+
   if (isLoadingUser || loadingContent) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -196,7 +206,6 @@ function LessonPage() {
     );
   }
 
-  // lesson.contentBlocks mungkin null jika belum ada konten. Pastikan inisialisasi defaultnya list kosong.
   if (!lesson || !course || !user || !lesson.contentBlocks) return <div className="p-6 text-red-600">Data not found or incomplete.</div>;
 
 
@@ -219,9 +228,9 @@ function LessonPage() {
 
           {/* Render semua blok konten berdasarkan urutan */}
           {lesson.contentBlocks.sort((a, b) => a.order - b.order).map((block, index) => (
-            <div key={index} className="mb-6"> {/* Tambahkan margin bawah untuk setiap blok */}
+            <div key={index} className="mb-6">
               {block.type === 'text' && (
-                <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed">
+                <pre className="whitespace-pre-wrap p-4 rounded text-gray-800 font-[Poppins,sans-serif] text-base leading-relaxed border border-gray-200">
                   {block.value}
                 </pre>
               )}
@@ -230,7 +239,7 @@ function LessonPage() {
                 <div className="relative w-full overflow-hidden rounded-lg" style={{ paddingTop: '56.25%' /* 16:9 Aspect Ratio */ }}>
                   <iframe
                     className="absolute top-0 left-0 w-full h-full"
-                    src={getYouTubeEmbedUrl(block.value)} // Gunakan block.value sebagai URL video
+                    src={getYouTubeEmbedUrl(block.value)}
                     title="Video Player"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -242,10 +251,28 @@ function LessonPage() {
 
               {block.type === 'image' && block.value && (
                 <img
-                  src={block.value} // Gunakan block.value sebagai URL gambar
+                  src={block.value}
                   alt={`Lesson Image ${block.order}`}
-                  className="w-full h-auto max-h-[500px] object-contain rounded-lg"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-lg border border-gray-200"
                 />
+              )}
+
+              {block.type === 'script' && block.value && (
+                <div className="relative bg-gray-100 text-gray-800 rounded-lg overflow-hidden font-mono text-sm shadow-sm border border-gray-200">
+                  <div className="absolute top-0 right-0 p-2 z-10">
+                    <button
+                      onClick={() => copyToClipboard(block.value)}
+                      className="text-gray-500 hover:text-gray-700 transition px-2 py-1 rounded-md bg-white bg-opacity-70 backdrop-blur-sm"
+                      title="Salin Kode"
+                    >
+                      <FiCopy size={16} className="inline-block mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                  <pre className="p-4 pt-10 overflow-x-auto">
+                    <code>{block.value}</code>
+                  </pre>
+                </div>
               )}
             </div>
           ))}
@@ -253,6 +280,15 @@ function LessonPage() {
 
           {lesson.quiz && lesson.quiz.questions && (
             <form className="mt-8 p-6 border rounded-lg bg-gray-50" onSubmit={handleSubmitQuiz}>
+              {/* Tambahkan gambar quiz di sini jika ada */}
+              {lesson.quiz.imageUrl && (
+                  <img
+                      src={lesson.quiz.imageUrl}
+                      alt={lesson.quiz.title || "Quiz Image"}
+                      className="w-full max-h-64 object-contain rounded-lg mb-4 border border-gray-200"
+                  />
+              )}
+
               <h2 className="text-xl font-bold text-indigo-600 mb-2">Quiz: {lesson.quiz.title}</h2>
                 <p className="text-gray-600 text-sm mb-4">{lesson.quiz.description}</p>
 
@@ -289,6 +325,14 @@ function LessonPage() {
                       <p className="font-semibold mb-2">
                         {index + 1}. {q.questionText}
                       </p>
+                      {/* Tambahkan gambar pertanyaan kuis di sini */}
+                      {q.imageUrl && (
+                          <img
+                              src={q.imageUrl}
+                              alt={`Question Image ${index + 1}`}
+                              className="w-full max-h-48 object-contain rounded-lg mb-4 border border-gray-200"
+                          />
+                      )}
 
                       {q.questionType === 'multiple_choice' ? (
                         <div className="space-y-1">

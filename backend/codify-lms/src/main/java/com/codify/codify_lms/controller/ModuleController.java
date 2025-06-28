@@ -91,8 +91,9 @@ public class ModuleController {
                         // dto.setImageUrl(lesson.getImageUrl());
 
 
-                        // cari quiz kalau ada
-                        Quiz quiz = quizRepository.findByLessonId(lesson.getId()).orElse(null);
+                        List<Quiz> quizzes = quizRepository.findByLessonId(lesson.getId());
+                        Quiz quiz = quizzes.isEmpty() ? null : quizzes.get(0);
+
                         dto.setQuiz(quiz);
 
                         return dto;

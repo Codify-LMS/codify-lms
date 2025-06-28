@@ -34,6 +34,7 @@ public class QuizController {
                 .type(request.getType())
                 .maxAttempts(request.getMaxAttempts())
                 .passScore(request.getPassScore())
+                .imageUrl(request.getImageUrl())
                 .lesson(
                         request.getLessonId() != null && !request.getLessonId().isEmpty()
                                 ? Lesson.builder().id(UUID.fromString(request.getLessonId())).build()
@@ -53,6 +54,7 @@ public class QuizController {
                 QuizQuestion question = QuizQuestion.builder()
                         .quiz(savedQuiz)
                         .questionText(questionDto.getQuestionText())
+                        .imageUrl(questionDto.getImageUrl()) // <<-- Tambahkan baris ini
                         .questionType(questionDto.getQuestionType())
                         .options(questionDto.getOptions())
                         .correctAnswerIndex(questionDto.getCorrectAnswerIndex())
@@ -77,8 +79,9 @@ public class QuizController {
                         q.getTitle(),
                         q.getDescription(),
                         q.getType(),
-                        q.getMaxAttempts(),
-                        q.getPassScore()
+                        q.getMaxAttempts() != null ? q.getMaxAttempts() : 0,
+                        q.getPassScore() != null ? q.getPassScore() : 0
+                        q.getImageUrl(),
                 ))
                 .collect(Collectors.toList());
 
@@ -92,7 +95,17 @@ public class QuizController {
 
         for (Quiz quiz : quizzes) {
             List<QuizQuestion> questions = quizQuestionRepository.findByQuizId(quiz.getId());
-            quiz.setQuestions(questions);
+            // Map QuizQuestion entities to include imageUrl from DB
+            List<QuizQuestion> mappedQuestions = questions.stream().map(q -> {
+                // Buat objek QuizQuestion baru untuk memastikan semua field (termasuk imageUrl)
+                // ada di objek yang diserialisasi, atau pastikan eager fetching/lazy load bekerja.
+                // Jika QuizQuestion model sudah punya getter/setter imageUrl, ini seharusnya otomatis
+                // oleh Jackson saat diserialisasi ke JSON.
+                // Anda bisa tambahkan log di sini untuk debug jika imageUrl masih kosong:
+                // System.out.println("DEBUG QuizQuestion imageUrl: " + q.getImageUrl());
+                return q; // Cukup kembalikan objek q jika semua getter/setter sudah benar di model
+            }).collect(Collectors.toList());
+            quiz.setQuestions(mappedQuestions); // Set daftar pertanyaan yang sudah dimapping
         }
 
         return ResponseEntity.ok(quizzes);
@@ -103,7 +116,13 @@ public class QuizController {
     public ResponseEntity<Quiz> getQuizById(@PathVariable UUID id) {
         return quizRepository.findById(id)
                 .map(quiz -> {
-                    quiz.setQuestions(quizQuestionRepository.findByQuizId(quiz.getId()));
+                    // imageUrl seharusnya sudah ada di objek quiz jika diambil dari DB oleh findById
+                    List<QuizQuestion> questions = quizQuestionRepository.findByQuizId(quiz.getId());
+                    // Map QuizQuestion entities to include imageUrl from DB for serialization
+                    List<QuizQuestion> mappedQuestions = questions.stream().map(q -> {
+                        return q; // Kembali objek q jika getter/setter sudah benar di model
+                    }).collect(Collectors.toList());
+                    quiz.setQuestions(mappedQuestions); // Set daftar pertanyaan yang sudah dimapping
                     return new ResponseEntity<>(quiz, HttpStatus.OK);
                 })
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -114,23 +133,25 @@ public class QuizController {
     public ResponseEntity<Quiz> updateQuiz(@PathVariable UUID id, @RequestBody Quiz updatedQuiz) {
         return quizRepository.findById(id)
                 .map(existingQuiz -> {
-                    // Delete all old questions
-                    quizQuestionRepository.deleteByQuizId(existingQuiz.getId());
-
                     // Update quiz fields
                     existingQuiz.setTitle(updatedQuiz.getTitle());
                     existingQuiz.setDescription(updatedQuiz.getDescription());
                     existingQuiz.setMaxAttempts(updatedQuiz.getMaxAttempts());
                     existingQuiz.setPassScore(updatedQuiz.getPassScore());
+                    existingQuiz.setImageUrl(updatedQuiz.getImageUrl()); // <<-- Tambahkan baris ini
                     existingQuiz.setUpdatedAt(java.time.Instant.now());
 
                     Quiz savedQuiz = quizRepository.save(existingQuiz);
 
+                    // Delete all old questions
+                    quizQuestionRepository.deleteByQuizId(existingQuiz.getId());
+                    
                     // Add new questions
                     if (updatedQuiz.getQuestions() != null) {
                         for (QuizQuestion q : updatedQuiz.getQuestions()) {
                             q.setId(null); // Ensure save as new
                             q.setQuiz(savedQuiz);
+                            q.setImageUrl(q.getImageUrl()); // <<-- Pastikan imageUrl pertanyaan juga diset ulang
                             quizQuestionRepository.save(q);
                         }
                     }
@@ -139,5 +160,15 @@ public class QuizController {
                     return ResponseEntity.ok(savedQuiz);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ✅ DELETE QUIZ
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteQuiz(@PathVariable UUID id) {
+        if (!quizRepository.existsById(id)) {
+            throw new RuntimeException("Quiz not found with id: " + id);
+        }
+        quizRepository.deleteById(id);
     }
 }
