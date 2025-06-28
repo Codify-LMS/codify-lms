@@ -10,16 +10,18 @@ public class QuizSummaryDTO {
     private String type;
     private int maxAttempts;
     private int passScore;
+    private String imageUrl;
 
     // Optional: kamu bisa tambahkan createdAt / updatedAt kalau dibutuhkan
 
-    public QuizSummaryDTO(UUID id, String title, String description, String type, int maxAttempts, int passScore) {
+    public QuizSummaryDTO(UUID id, String title, String description, String type, int maxAttempts, int passScore, String imageUrl) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.type = type;
         this.maxAttempts = maxAttempts;
         this.passScore = passScore;
+        this.imageUrl = imageUrl;
     }
 
     // Getters & Setters (atau pakai @Getter @Setter dari Lombok)
@@ -40,4 +42,7 @@ public class QuizSummaryDTO {
 
     public int getPassScore() { return passScore; }
     public void setPassScore(int passScore) { this.passScore = passScore; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

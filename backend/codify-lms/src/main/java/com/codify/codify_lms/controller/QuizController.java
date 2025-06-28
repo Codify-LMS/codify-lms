@@ -80,8 +80,8 @@ public class QuizController {
                         q.getDescription(),
                         q.getType(),
                         q.getMaxAttempts() != null ? q.getMaxAttempts() : 0,
-                        q.getPassScore() != null ? q.getPassScore() : 0
-                        q.getImageUrl(),
+                        q.getPassScore() != null ? q.getPassScore() : 0,
+                        q.getImageUrl()
                 ))
                 .collect(Collectors.toList());
 
