@@ -32,6 +32,7 @@ const EditLessonPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   // Fungsi untuk upload gambar ke Supabase Storage
   const handleImageUpload = async (file: File): Promise<string | null> => {
