@@ -1,4 +1,3 @@
-// frontend/src/app/course/lesson/[lessonId]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -81,6 +80,12 @@ function LessonPage() {
         const courseRes = await axios.get(`http://localhost:8080/api/v1/courses/${courseId}/full`);
         const courseData: CourseData = courseRes.data;
         setCourse(courseData);
+
+        await axios.post(`http://localhost:8080/api/progress/complete-lesson`, {
+          userId: user.id,
+          lessonId: lessonId,
+        });
+
       } catch (error) {
         toast.error("❌ Error fetching lesson data.");
         console.error("❌ Error fetching data:", error);

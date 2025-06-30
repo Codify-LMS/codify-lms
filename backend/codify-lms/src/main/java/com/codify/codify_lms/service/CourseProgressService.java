@@ -1,3 +1,4 @@
+// backend/codify-lms/src/main/java/com/codify/codify_lms/service/CourseProgressService.java
 package com.codify.codify_lms.service;
 
 import com.codify.codify_lms.model.UserCourseProgress;
@@ -12,21 +13,51 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.codify.codify_lms.repository.ModuleRepository; // Impor ini
+import com.codify.codify_lms.repository.LessonRepository; // Impor ini
+import com.codify.codify_lms.repository.UserLessonsCompletionRepository; // Impor ini
+
 @Service
 public class CourseProgressService {
 
-    @Autowired
-    private UserCourseProgressRepository userCourseProgressRepository;
+    private final UserCourseProgressRepository userCourseProgressRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final ModuleRepository moduleRepository; // Suntikkan ini
+    private final LessonRepository lessonRepository; // Suntikkan ini
+    private final UserLessonsCompletionRepository userLessonsCompletionRepository; // Suntikkan ini
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+
+    @Autowired // Perbarui konstruktor untuk menyuntikkan repository baru
+    public CourseProgressService(UserCourseProgressRepository userCourseProgressRepository,
+                                 JdbcTemplate jdbcTemplate,
+                                 ModuleRepository moduleRepository,
+                                 LessonRepository lessonRepository,
+                                 UserLessonsCompletionRepository userLessonsCompletionRepository) {
+        this.userCourseProgressRepository = userCourseProgressRepository;
+        this.jdbcTemplate = jdbcTemplate;
+        this.moduleRepository = moduleRepository;
+        this.lessonRepository = lessonRepository;
+        this.userLessonsCompletionRepository = userLessonsCompletionRepository;
+    }
+
 
     public void markLessonCompleted(UUID userId, UUID lessonId) {
         UUID courseId = getCourseIdFromLesson(lessonId);
-        int totalLessons = getTotalLessonsInCourse(courseId);
-        int completedLessons = getCompletedLessonsCount(userId, courseId) + 1; // karena baru saja diselesaikan
+        UUID moduleId = getModuleIdFromLesson(lessonId);
 
-        BigDecimal progress = calculateProgressPercentage(completedLessons, totalLessons);
+        int completedLessons = getCompletedLessonsCount(userId, courseId);
+        // Pastikan kita hanya menambahkan hitungan jika pelajaran ini belum selesai sebelumnya
+        if (!userLessonsCompletionRepository.existsByUserIdAndLessonId(userId, lessonId)) {
+            completedLessons++;
+            // Juga, masukkan entri di user_lessons_completion jika belum ada
+            jdbcTemplate.update(
+                "INSERT INTO user_lessons_completion (id, user_id, lesson_id, completed_at) " +
+                "VALUES (?, ?, ?, NOW()) ON CONFLICT (user_id, lesson_id) DO NOTHING",
+                UUID.randomUUID(), userId, lessonId
+            );
+        }
+
+        BigDecimal progress = calculateProgressPercentage(completedLessons, getTotalLessonsInCourse(courseId));
         boolean isCompleted = progress.compareTo(BigDecimal.valueOf(100)) >= 0;
 
         Optional<UserCourseProgress> existingProgressOpt =
@@ -39,6 +70,10 @@ public class CourseProgressService {
             p.setCreatedAt(Instant.now());
             return p;
         });
+
+        // Set atau perbarui pelajaran dan modul terkini yang diakses
+        progressEntity.setCurrentModuleId(moduleId);
+        progressEntity.setCurrentLessonId(lessonId);
 
         progressEntity.setCompletedLessonsCount(completedLessons);
         progressEntity.setProgressPercentage(progress);
@@ -65,6 +100,19 @@ public class CourseProgressService {
             return newProgress;
         });
 
+        // Ketika kursus selesai, atur pelajaran dan modul terakhir yang diakses ke pelajaran terakhir di kursus
+        // Ini memastikan bahwa jika mereka mengklik "Lanjutkan", mereka dibawa ke akhir kursus atau pelajaran terakhir yang relevan.
+        // Anda mungkin perlu logika yang lebih kompleks di sini untuk menemukan pelajaran "terakhir" yang sebenarnya.
+        // Untuk saat ini, bisa diatur ke null atau biarkan saja nilai terakhir yang ada jika kursus sudah selesai.
+        // Atau, jika Anda memiliki konsep "pelajaran terakhir" yang jelas setelah kursus selesai:
+        // Misalnya, temukan pelajaran terakhir dari modul terakhir di kursus ini.
+        // UUID lastCourseLessonId = findLastLessonOfCourse(courseId); // Perlu metode helper baru
+        // if (lastCourseLessonId != null) {
+        //     progress.setCurrentLessonId(lastCourseLessonId);
+        //     progress.setCurrentModuleId(getModuleIdFromLesson(lastCourseLessonId));
+        // }
+
+
         progress.setCompleted(true);
         progress.setCompletedAt(Instant.now());
         progress.setProgressPercentage(BigDecimal.valueOf(100));
@@ -73,22 +121,22 @@ public class CourseProgressService {
         userCourseProgressRepository.save(progress);
     }
 
-    /**
-     * Ambil progress course user dalam bentuk persen (0.0 - 100.0).
-     */
-    public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
-        return userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId)
-                .map(p -> p.getProgressPercentage() != null
-                        ? p.getProgressPercentage().doubleValue()
-                        : 0.0)
-                .orElse(0.0);
-    }
+    // ... (metode helper lainnya, pastikan tidak ada duplikasi kode dari QuizSubmissionController)
 
     private UUID getCourseIdFromLesson(UUID lessonId) {
         String sql = """
             SELECT c.id FROM lessons l
             JOIN modules m ON l.module_id = m.id
             JOIN courses c ON m.course_id = c.id
+            WHERE l.id = ?
+        """;
+        return jdbcTemplate.queryForObject(sql, UUID.class, lessonId);
+    }
+
+    private UUID getModuleIdFromLesson(UUID lessonId) {
+        String sql = """
+            SELECT m.id FROM lessons l
+            JOIN modules m ON l.module_id = m.id
             WHERE l.id = ?
         """;
         return jdbcTemplate.queryForObject(sql, UUID.class, lessonId);
@@ -113,9 +161,18 @@ public class CourseProgressService {
         return jdbcTemplate.queryForObject(sql, Integer.class, userId, courseId);
     }
 
+
     private BigDecimal calculateProgressPercentage(int completed, int total) {
         if (total == 0) return BigDecimal.ZERO;
         return BigDecimal.valueOf(completed * 100)
                 .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
+    }
+
+    public Double getProgressPercentageByUserAndCourse(UUID userId, UUID courseId) {
+        return userCourseProgressRepository.findByUserIdAndCourseId(userId, courseId)
+                .map(p -> p.getProgressPercentage() != null
+                        ? p.getProgressPercentage().doubleValue()
+                        : 0.0)
+                .orElse(0.0);
     }
 }

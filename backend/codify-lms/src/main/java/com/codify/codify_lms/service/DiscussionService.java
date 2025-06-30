@@ -20,7 +20,7 @@ public class DiscussionService {
     private final DiscussionPostRepository discussionPostRepository;
 
     public List<DiscussionResponse> getAllDiscussions() {
-        List<Discussion> discussions = discussionRepository.findAll();
+        List<Discussion> discussions = discussionRepository.findAllByOrderByCreatedAtDesc();
 
         return discussions.stream().map(d -> {
             DiscussionResponse dto = new DiscussionResponse();
@@ -63,7 +63,7 @@ public class DiscussionService {
     public List<AnswerResponse> getAnswers(UUID discussionId) {
         // Mengambil semua discussion posts yang merupakan jawaban utama (bukan balasan balasan)
         List<DiscussionPost> posts = discussionPostRepository
-            .findByDiscussionIdAndParentPostIdIsNull(discussionId);
+            .findByDiscussionIdAndParentPostIdIsNullOrderByCreatedAtDesc(discussionId);
 
         return posts.stream().map(post -> {
             AnswerResponse dto = new AnswerResponse();

@@ -1,9 +1,12 @@
+// backend/codify-lms/src/main/java/com/codify/codify_lms/dto/LearningHistoryDTO.java
 package com.codify.codify_lms.dto;
 
 import java.util.UUID;
 
 public class LearningHistoryDTO {
-    private UUID lessonId;
+    private UUID lastAccessedLessonId; // Diubah namanya dari lessonId
+    private UUID lastAccessedModuleId; // Field baru
+    private UUID courseId;             // Field baru
     private String courseName;
     private String progress;
     private String lastAccessed;
@@ -12,24 +15,42 @@ public class LearningHistoryDTO {
     public LearningHistoryDTO() {
     }
 
-    // All-args constructor
-    public LearningHistoryDTO(UUID lessonId, String courseName, String progress, String lastAccessed) {
-        this.lessonId = lessonId;
+    // All-args constructor - DIPERBARUI
+    public LearningHistoryDTO(UUID lastAccessedLessonId, UUID lastAccessedModuleId, UUID courseId, String courseName, String progress, String lastAccessed) {
+        this.lastAccessedLessonId = lastAccessedLessonId;
+        this.lastAccessedModuleId = lastAccessedModuleId;
+        this.courseId = courseId;
         this.courseName = courseName;
         this.progress = progress;
         this.lastAccessed = lastAccessed;
     }
 
-    // Getters and Setters
+    // Getters and Setters - DIPERBARUI
 
-    public UUID getLessonId() {
-        return lessonId;
+    public UUID getLastAccessedLessonId() { // Getter baru/diubah
+        return lastAccessedLessonId;
     }
 
-    public void setLessonId(UUID lessonId) {
-        this.lessonId = lessonId;
+    public void setLastAccessedLessonId(UUID lastAccessedLessonId) { // Setter baru/diubah
+        this.lastAccessedLessonId = lastAccessedLessonId;
     }
-    
+
+    public UUID getLastAccessedModuleId() { // Getter baru
+        return lastAccessedModuleId;
+    }
+
+    public void setLastAccessedModuleId(UUID lastAccessedModuleId) { // Setter baru
+        this.lastAccessedModuleId = lastAccessedModuleId;
+    }
+
+    public UUID getCourseId() { // Getter baru
+        return courseId;
+    }
+
+    public void setCourseId(UUID courseId) { // Setter baru
+        this.courseId = courseId;
+    }
+
     public String getCourseName() {
         return courseName;
     }
