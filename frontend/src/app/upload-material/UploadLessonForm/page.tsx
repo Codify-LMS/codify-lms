@@ -9,6 +9,7 @@ import { LessonData, FullUploadData, CourseData, ModuleData, ContentBlock } from
 import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Tambahkan FiCopy
 import axios from 'axios';
 import { supabase } from '@/supabaseClient';
+import toast from 'react-hot-toast'; // Import toast for messages
 
 interface UploadLessonFormProps {
   onBack: () => void;
@@ -118,20 +119,22 @@ const UploadLessonForm = ({
 
   const modulesToDisplay = useMemo(() => {
     if (!selectedCourseId) {
+      console.log('DEBUG: No course selected, modulesToDisplay is empty.');
       return [];
     }
 
-    return allAvailableModules
+    const filtered = allAvailableModules
       .filter(mod => {
-        if (selectedCourseId === 'new-course-temp' && formData.course && !formData.course.id) {
-          const originalFormDataModule = formData.modules.find(fm => fm.id === mod.id || (fm.title === mod.title && !fm.id && !mod.id));
-          return originalFormDataModule && (originalFormDataModule.course?.id === selectedCourseId || originalFormDataModule.course?.id === formData.course?.id);
-        } else {
-          return mod.course?.id === selectedCourseId;
-        }
+        // Check if the module belongs to the selected course (either a real ID or 'new-course-temp')
+        const isMatch = mod.course?.id === selectedCourseId;
+        console.log(`  DEBUG Filter - Module: "${mod.title}" (ID: ${mod.id}), Module's Course ID: ${mod.course?.id}, Selected Course ID: ${selectedCourseId}. Match: ${isMatch}`);
+        return isMatch;
       })
       .sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
-  }, [allAvailableModules, selectedCourseId, formData.course, formData.modules]);
+
+    console.log('DEBUG: Final modulesToDisplay:', filtered);
+    return filtered;
+  }, [allAvailableModules, selectedCourseId]); // Removed formData.modules, formData.course as they are covered by allAvailableModules' dependency
 
   useEffect(() => {
     setSelectedModuleId(null);
@@ -142,6 +145,16 @@ const UploadLessonForm = ({
         setOrderInModule(1);
     }
   }, [selectedCourseId, selectedModuleId, formData.lessons]);
+
+  // DEBUG LOGS FOR INITIAL MOUNT AND STATE PROPAGATION
+  useEffect(() => {
+    console.log('DEBUG: LessonForm Mounted/Re-rendered.');
+    console.log('DEBUG: formData on mount:', formData);
+    console.log('DEBUG: initialSelectedCourseId:', initialSelectedCourseId);
+    console.log('DEBUG: Current selectedCourseId state:', selectedCourseId);
+    console.log('DEBUG: allAvailableCourses on mount:', allAvailableCourses);
+    console.log('DEBUG: allAvailableModules on mount:', allAvailableModules);
+  }, []); // Empty dependency array means this runs once on mount
 
   const addContentBlock = async () => {
     setError('');
@@ -157,8 +170,9 @@ const UploadLessonForm = ({
     let finalBlockValue = currentBlockValue;
 
     if (currentBlockType === 'image' && currentImageFile) {
-        setError('Mengunggah gambar...');
+        toast.loading('Mengunggah gambar...', { id: 'upload-img' });
         const uploadedUrl = await handleImageUpload(currentImageFile);
+        toast.dismiss('upload-img');
         if (!uploadedUrl) {
             setError('Gagal mengunggah gambar. Coba lagi.');
             return;
@@ -198,7 +212,6 @@ const UploadLessonForm = ({
     });
   };
 
-  // Fungsi untuk menyalin kode ke clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => toast.success('Teks berhasil disalin!'))
