@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import Lottie from 'lottie-react';
 import celebrateAnimation from '@/animations/celebrate.json';
 import { FiCopy } from 'react-icons/fi';
+import { FiEdit } from 'react-icons/fi';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;

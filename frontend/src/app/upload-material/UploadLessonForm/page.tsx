@@ -6,10 +6,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import { LessonData, FullUploadData, CourseData, ModuleData, ContentBlock } from '@/types';
-import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Tambahkan FiCopy
+import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi';
 import axios from 'axios';
 import { supabase } from '@/supabaseClient';
-import toast from 'react-hot-toast'; // Import toast for messages
+import toast from 'react-hot-toast';
 
 interface UploadLessonFormProps {
   onBack: () => void;
@@ -35,8 +35,16 @@ const UploadLessonForm = ({
   const [dbCourses, setDbCourses] = useState<CourseData[]>([]);
   const [dbModules, setDbModules] = useState<ModuleData[]>([]);
 
-  const initialSelectedCourseId = formData.course?.id || (formData.course ? 'new-course-temp' : null);
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(initialSelectedCourseId);
+  // Initialize selectedCourseId properly
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => {
+    if (formData.course?.id) {
+      return formData.course.id;
+    } else if (formData.course && !formData.course.id) {
+      return 'new-course-temp';
+    }
+    return null;
+  });
+  
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
   const API_BASE_URL = 'http://localhost:8080/api';
@@ -60,6 +68,7 @@ const UploadLessonForm = ({
     try {
       const response = await axios.get<CourseData[]>(`${API_BASE_URL}/v1/courses/all`);
       setDbCourses(response.data);
+      console.log('Fetched DB courses:', response.data);
     } catch (err) {
       setError('Gagal mengambil daftar course dari database.');
       console.error('Error fetching DB courses:', err);
@@ -70,6 +79,7 @@ const UploadLessonForm = ({
     try {
       const response = await axios.get<ModuleData[]>(`${API_BASE_URL}/modules`);
       setDbModules(response.data);
+      console.log('Fetched DB modules:', response.data);
     } catch (err) {
       setError('Gagal mengambil daftar modul dari database.');
       console.error('Error fetching DB modules:', err);
@@ -81,80 +91,111 @@ const UploadLessonForm = ({
     fetchDbModules();
   }, [fetchDbCourses, fetchDbModules]);
 
+  // Create available courses list
   const allAvailableCourses = useMemo(() => {
     const uniqueCoursesMap = new Map<string, CourseData>();
 
+    // Add database courses
     dbCourses.forEach(course => {
       if (course.id) {
         uniqueCoursesMap.set(course.id, course);
       }
     });
 
-    if (formData.course && !formData.course.id) {
-      const tempCourseId = 'new-course-temp';
-      uniqueCoursesMap.set(tempCourseId, { ...formData.course, id: tempCourseId });
-    } else if (formData.course && formData.course.id) {
-      uniqueCoursesMap.set(formData.course.id, formData.course);
+    // Add new course from formData if exists
+    if (formData.course) {
+      const courseId = formData.course.id || 'new-course-temp';
+      uniqueCoursesMap.set(courseId, { 
+        ...formData.course, 
+        id: courseId 
+      });
     }
 
-    return Array.from(uniqueCoursesMap.values());
+    const result = Array.from(uniqueCoursesMap.values());
+    console.log('All available courses:', result);
+    return result;
   }, [dbCourses, formData.course]);
 
+  // Create available modules list
   const allAvailableModules = useMemo(() => {
     const uniqueModulesMap = new Map<string, ModuleData>();
 
+    // Add database modules
     dbModules.forEach((mod) => {
       if (mod.id) {
         uniqueModulesMap.set(mod.id, mod);
       }
     });
 
+    // Add modules from formData
     formData.modules.forEach((mod, index) => {
-      const idToUse = mod.id || `new-module-${index}-${Math.random().toString(36).substring(7)}`;
-      uniqueModulesMap.set(idToUse, { ...mod, id: idToUse });
+      const moduleId = mod.id || `new-module-${index}-${Math.random().toString(36).substring(7)}`;
+      uniqueModulesMap.set(moduleId, { 
+        ...mod, 
+        id: moduleId 
+      });
     });
 
-    return Array.from(uniqueModulesMap.values());
+    const result = Array.from(uniqueModulesMap.values());
+    console.log('All available modules:', result);
+    return result;
   }, [dbModules, formData.modules]);
 
+  // Filter modules based on selected course
   const modulesToDisplay = useMemo(() => {
     if (!selectedCourseId) {
-      console.log('DEBUG: No course selected, modulesToDisplay is empty.');
+      console.log('No course selected, returning empty modules');
       return [];
     }
 
-    const filtered = allAvailableModules
-      .filter(mod => {
-        // Check if the module belongs to the selected course (either a real ID or 'new-course-temp')
-        const isMatch = mod.course?.id === selectedCourseId;
-        console.log(`  DEBUG Filter - Module: "${mod.title}" (ID: ${mod.id}), Module's Course ID: ${mod.course?.id}, Selected Course ID: ${selectedCourseId}. Match: ${isMatch}`);
-        return isMatch;
-      })
-      .sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
+    const filtered = allAvailableModules.filter(mod => {
+      // For new course temp, match with modules that belong to the new course
+      if (selectedCourseId === 'new-course-temp') {
+        // Check if module's course matches the formData course or has no course ID (new module)
+        const isNewCourseModule = !mod.course?.id || mod.course?.id === 'new-course-temp';
+        console.log(`Module ${mod.title} - isNewCourseModule: ${isNewCourseModule}, mod.course:`, mod.course);
+        return isNewCourseModule;
+      }
+      
+      // For existing courses, match by course ID
+      const isMatch = mod.course?.id === selectedCourseId;
+      console.log(`Module ${mod.title} - course match: ${isMatch}, mod.course?.id: ${mod.course?.id}, selectedCourseId: ${selectedCourseId}`);
+      return isMatch;
+    }).sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
 
-    console.log('DEBUG: Final modulesToDisplay:', filtered);
+    console.log('Filtered modules to display:', filtered);
     return filtered;
-  }, [allAvailableModules, selectedCourseId]); // Removed formData.modules, formData.course as they are covered by allAvailableModules' dependency
+  }, [allAvailableModules, selectedCourseId]);
 
+  // Reset module selection when course changes
   useEffect(() => {
+    console.log('Course changed, resetting module selection');
     setSelectedModuleId(null);
-    if (selectedModuleId) {
-        const currentModuleLessons = formData.lessons.filter(lesson => lesson.moduleId === selectedModuleId);
-        setOrderInModule(currentModuleLessons.length + 1);
-    } else {
-        setOrderInModule(1);
-    }
-  }, [selectedCourseId, selectedModuleId, formData.lessons]);
+  }, [selectedCourseId]);
 
-  // DEBUG LOGS FOR INITIAL MOUNT AND STATE PROPAGATION
+  // Update lesson order when module changes
   useEffect(() => {
-    console.log('DEBUG: LessonForm Mounted/Re-rendered.');
-    console.log('DEBUG: formData on mount:', formData);
-    console.log('DEBUG: initialSelectedCourseId:', initialSelectedCourseId);
-    console.log('DEBUG: Current selectedCourseId state:', selectedCourseId);
-    console.log('DEBUG: allAvailableCourses on mount:', allAvailableCourses);
-    console.log('DEBUG: allAvailableModules on mount:', allAvailableModules);
-  }, []); // Empty dependency array means this runs once on mount
+    if (selectedModuleId) {
+      const currentModuleLessons = formData.lessons.filter(lesson => lesson.moduleId === selectedModuleId);
+      setOrderInModule(currentModuleLessons.length + 1);
+      console.log(`Module ${selectedModuleId} selected, setting order to ${currentModuleLessons.length + 1}`);
+    } else {
+      setOrderInModule(1);
+    }
+  }, [selectedModuleId, formData.lessons]);
+
+  // Handle course selection change
+  const handleCourseChange = (courseId: string) => {
+    console.log('Course selection changed to:', courseId);
+    setSelectedCourseId(courseId || null);
+    setSelectedModuleId(null); // Reset module selection
+  };
+
+  // Handle module selection change
+  const handleModuleChange = (moduleId: string) => {
+    console.log('Module selection changed to:', moduleId);
+    setSelectedModuleId(moduleId || null);
+  };
 
   const addContentBlock = async () => {
     setError('');
@@ -253,6 +294,8 @@ const UploadLessonForm = ({
     setCurrentImageFile(null);
     setCurrentImagePreview(null);
     setError('');
+
+    toast.success('Lesson berhasil ditambahkan!');
   };
 
   const submitAllToBackend = async () => {
@@ -263,6 +306,8 @@ const UploadLessonForm = ({
     }
 
     try {
+      toast.loading('Mengirim data ke server...', { id: 'submit-all' });
+
       let finalCourseId: string | undefined = formData.course?.id;
       if (formData.course && !formData.course.id) {
         const courseRes = await axios.post(`${API_BASE_URL}/v1/courses`, formData.course);
@@ -305,7 +350,10 @@ const UploadLessonForm = ({
         if (lessonRes.status !== 201 && lessonRes.status !== 200) throw new Error('Gagal membuat lesson');
       }
 
+      toast.dismiss('submit-all');
       toast.success('✅ Upload berhasil!');
+      
+      // Reset form
       setFormData({ course: null, modules: [], lessons: [], module: null, lesson: null });
       setLessonTitle('');
       setContentBlocks([]);
@@ -317,12 +365,16 @@ const UploadLessonForm = ({
       setError('');
       setSelectedCourseId(null);
       setSelectedModuleId(null);
+      
+      // Refresh data
       fetchDbCourses();
       fetchDbModules();
 
     } catch (error) {
       console.error('Gagal submit:', error);
+      toast.dismiss('submit-all');
       setError('❌ Terjadi kesalahan saat mengirim data: ' + (error as Error).message);
+      toast.error('Gagal mengirim data');
     }
   };
 
@@ -337,8 +389,8 @@ const UploadLessonForm = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Course</label>
         <select
           value={selectedCourseId || ''}
-          onChange={(e) => setSelectedCourseId(e.target.value)}
-          className="w-full border px-4 py-2 rounded-md text-gray-700"
+          onChange={(e) => handleCourseChange(e.target.value)}
+          className="w-full border px-4 py-2 rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">-- Pilih Course --</option>
           {allAvailableCourses.map(course => (
@@ -355,9 +407,9 @@ const UploadLessonForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">Pilih Module</label>
           <select
             value={selectedModuleId || ''}
-            onChange={(e) => setSelectedModuleId(e.target.value)}
-            className="w-full border px-4 py-2 rounded-md text-gray-700"
-            disabled={!selectedCourseId || modulesToDisplay.length === 0}
+            onChange={(e) => handleModuleChange(e.target.value)}
+            className="w-full border px-4 py-2 rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+            disabled={!selectedCourseId}
           >
             <option value="">-- Pilih Module --</option>
             {modulesToDisplay.map(module => (
@@ -368,7 +420,14 @@ const UploadLessonForm = ({
             ))}
           </select>
           {modulesToDisplay.length === 0 && selectedCourseId && (
-            <p className="text-sm text-gray-500 mt-2">Tidak ada modul yang tersedia untuk course ini. Harap buat modul baru di langkah sebelumnya atau melalui halaman Edit Material.</p>
+            <p className="text-sm text-yellow-600 mt-2 p-2 bg-yellow-50 rounded">
+              ⚠️ Tidak ada modul yang tersedia untuk course ini. Harap buat modul baru di langkah sebelumnya atau melalui halaman Edit Material.
+            </p>
+          )}
+          {modulesToDisplay.length > 0 && (
+            <p className="text-sm text-green-600 mt-2">
+              ✅ {modulesToDisplay.length} modul tersedia untuk course ini
+            </p>
           )}
         </div>
       )}
@@ -381,6 +440,7 @@ const UploadLessonForm = ({
           onChange={(e) => setLessonTitle(e.target.value)}
           required
           className="text-gray-700"
+          placeholder="Masukkan judul lesson"
         />
       </div>
 
@@ -407,12 +467,12 @@ const UploadLessonForm = ({
               setCurrentImageFile(null);
               setCurrentImagePreview(null);
             }}
-            className="flex-1 p-2 border rounded-md text-gray-700"
+            className="flex-1 p-2 border rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="text">Teks</option>
             <option value="video">Video URL</option>
             <option value="image">Gambar URL/Upload</option>
-            <option value="script">Script Kode</option> {/* Tambahkan opsi ini */}
+            <option value="script">Script Kode</option>
           </select>
         </div>
 
@@ -423,7 +483,7 @@ const UploadLessonForm = ({
               value={currentBlockValue}
               onChange={(e) => setCurrentBlockValue(e.target.value)}
               rows={3}
-              className="w-full border px-4 py-2 rounded-md text-gray-700"
+              className="w-full border px-4 py-2 rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Tulis paragraf teks di sini..."
             />
           </div>
@@ -468,20 +528,24 @@ const UploadLessonForm = ({
           </div>
         )}
 
-        {currentBlockType === 'script' && ( // Tambahkan blok ini untuk script
+        {currentBlockType === 'script' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Isi Script</label>
             <textarea
               value={currentBlockValue}
               onChange={(e) => setCurrentBlockValue(e.target.value)}
               rows={6}
-              className="w-full border px-4 py-2 rounded-md text-gray-700 font-mono text-sm"
+              className="w-full border px-4 py-2 rounded-md text-gray-700 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Tulis kode script di sini..."
             />
           </div>
         )}
 
-        <Button type="button" onClick={addContentBlock} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full">
+        <Button 
+          type="button" 
+          onClick={addContentBlock} 
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white w-full"
+        >
           <FiPlus /> Tambah Blok
         </Button>
       </div>
@@ -505,7 +569,7 @@ const UploadLessonForm = ({
                 </span>
               </div>
               <div className="flex gap-2 ml-4">
-                {block.type === 'script' && ( // Tambahkan tombol salin untuk script
+                {block.type === 'script' && (
                     <button
                         type="button"
                         onClick={() => copyToClipboard(block.value)}
@@ -547,14 +611,13 @@ const UploadLessonForm = ({
         </div>
       )}
 
-
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded">{error}</p>}
 
       <div className="flex items-center justify-between mt-4">
         <Button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 bg-gray-100 text-gray-800"
+          className="flex items-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200"
         >
           <FiArrowLeft /> Back
         </Button>
@@ -564,25 +627,30 @@ const UploadLessonForm = ({
             type="button"
             onClick={addLesson}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-            disabled={!selectedModuleId}
+            disabled={!selectedModuleId || !lessonTitle.trim() || contentBlocks.length === 0}
           >
             <FiPlus /> Add Lesson
           </Button>
-          <Button type="button" onClick={submitAllToBackend}>
+          <Button 
+            type="button" 
+            onClick={submitAllToBackend}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            disabled={!formData.lessons || formData.lessons.length === 0}
+          >
             Submit All
           </Button>
         </div>
       </div>
 
       {formData.lessons && formData.lessons.length > 0 && (
-        <div className="mt-6">
-          <h4 className="text-md font-semibold text-gray-800 mb-2">Lessons Added:</h4>
+        <div className="mt-6 bg-blue-50 p-4 rounded-lg">
+          <h4 className="text-md font-semibold text-gray-800 mb-2">Lessons Added ({formData.lessons.length}):</h4>
           <ul className="list-disc pl-5 space-y-1 text-gray-700">
             {formData.lessons.map((lesson, index) => {
                const moduleTitle = allAvailableModules.find(mod => mod.id === lesson.moduleId)?.title || lesson.moduleId;
                return (
                 <li key={index}>
-                  {lesson.title} (Urutan: {lesson.orderInModule}, Modul: {moduleTitle})
+                  <strong>{lesson.title}</strong> (Urutan: {lesson.orderInModule}, Modul: {moduleTitle})
                 </li>
                );
             })}
