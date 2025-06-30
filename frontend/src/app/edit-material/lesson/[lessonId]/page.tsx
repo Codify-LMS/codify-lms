@@ -11,6 +11,7 @@ import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown } from 'react
 import { supabase } from '@/supabaseClient'; // Import supabaseClient
 import axios from 'axios'; // Import axios
 import { ContentBlock } from '@/types'; // Import ContentBlock
+import { FaEdit } from 'react-icons/fa'; // Import FaEdit untuk ikon edit
 
 const EditLessonPage = () => {
   const { lessonId } = useParams();
