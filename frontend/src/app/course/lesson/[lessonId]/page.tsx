@@ -443,7 +443,7 @@ function LessonPage() {
                   setIsTransitionLoading(true);
 
                   try {
-                    await fetch('http://localhost:8080/api/v1/progress/complete-lesson', {
+                    await fetch('http://localhost:8080/api/progress/complete-lesson', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
