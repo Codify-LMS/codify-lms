@@ -10,7 +10,7 @@ import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import Input from '@/components/Input';
 import Button from '@/components/Button';
-import { CourseData, ModuleData } from '@/types'; // Pastikan CourseData dan ModuleData diimpor
+import { CourseData } from '@/types'; // Pastikan CourseData dan ModuleData diimpor
 
 const UploadStandaloneModulePage = () => {
   const router = useRouter();

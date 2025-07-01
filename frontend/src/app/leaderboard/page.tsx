@@ -65,8 +65,8 @@ export default function LeaderboardPage() {
   return (
     <div className="flex h-screen bg-gray-100">
       <div className="w-64 flex-shrink-0">
-        <Sidebar active="Leaderboard" />
-      </div>
+        <Sidebar>
+      
 
       <div className="flex flex-col flex-1 h-full overflow-hidden">
         <DashboardHeader />
@@ -131,6 +131,8 @@ export default function LeaderboardPage() {
             )}
           </div>
         </main>
+      </div>
+      </Sidebar>
       </div>
     </div>
   );

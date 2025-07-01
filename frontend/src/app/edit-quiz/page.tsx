@@ -29,7 +29,7 @@ const QuizListPage = () => {
         const res = await axios.get('https://codify-lms-production.up.railway.app/api/quiz/with-questions');
         console.log('🔥 Full quizzes with questions:', res.data);
         setQuizzes(res.data);
-      } catch (error) {
+      } catch () {
         toast.error('Failed to fetch quizzes');
       } finally {
         setLoading(false);

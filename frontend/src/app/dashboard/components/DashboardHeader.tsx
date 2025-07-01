@@ -3,7 +3,6 @@
 import { useUser } from '@/hooks/useUser';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { HiOutlineLogout } from 'react-icons/hi';
 
 const DashboardHeader = () => {
@@ -26,14 +25,11 @@ const DashboardHeader = () => {
       ? `${userDetails.firstName} ${userDetails.lastName}`
       : userDetails?.username || 'User';
 
-  // Fallback avatar
-  const avatarUrl = userDetails?.avatarUrl || '/default-avatar.png';
-
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-white shadow-sm">
       {/* Left: Greeting */}
       <h1 className="text-xl font-semibold text-gray-800">
-        Let’s crush it today, {displayName}! 💪
+        Let&#39;s crush it today, {displayName}! 💪
       </h1>
 
 

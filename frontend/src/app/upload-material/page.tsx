@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { FaBook, FaPlusSquare, FaFileAlt } from 'react-icons/fa'; // Import icons baru
 import SidebarAdmin from '../dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
-import Button from '@/components/Button';
 
 const UploadMaterialPage = () => {
   return (

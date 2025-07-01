@@ -7,7 +7,6 @@ import { FaBookOpen, FaChartLine, FaHistory, FaBookmark, FaComments } from 'reac
 import { IoSettings } from 'react-icons/io5';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
-import Box from './Box';
 import SidebarItem from './SidebarItem';
 import LogoWhite from './LogoWhite';
 

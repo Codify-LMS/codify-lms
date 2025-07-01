@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
-import { LessonData, ModuleData, CourseData, QuizSubmissionResponse, ContentBlock } from '@/types';
+import { LessonData, ModuleData, CourseData, QuizSubmissionResponse } from '@/types';
 import { createClient } from '@supabase/supabase-js';
 import { useUser } from '@/hooks/useUser';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
@@ -13,7 +13,6 @@ import toast from 'react-hot-toast';
 import Lottie from 'lottie-react';
 import celebrateAnimation from '@/animations/celebrate.json';
 import { FiCopy } from 'react-icons/fi';
-import { FiEdit } from 'react-icons/fi';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -35,7 +34,7 @@ function LessonPage() {
   const { lessonId } = useParams() as { lessonId: string };
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonData | null>(null);
-  const [module, setModule] = useState<ModuleData | null>(null);
+  const [setModule] = useState<ModuleData | null>(null);
   const [course, setCourse] = useState<CourseData | null>(null);
   const { user, isLoading: isLoadingUser } = useUser();
   const [loadingContent, setLoadingContent] = useState(true);
@@ -46,7 +45,7 @@ function LessonPage() {
   const [quizResults, setQuizResults] = useState<QuizSubmissionResponse['answerResults'] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
-  const [isTransitionLoading, setIsTransitionLoading] = useState(false);
+  const [ setIsTransitionLoading] = useState(false);
   const [userAttempts, setUserAttempts] = useState<number>(0);
   const [maxAttempts, setMaxAttempts] = useState<number>(3);
 

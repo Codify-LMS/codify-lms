@@ -7,7 +7,7 @@ import axios from 'axios';
 import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
-import { Bookmark, BookmarkCheck, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import CourseCard from '@/components/CourseCard'; // Import komponen baru
 
 interface Course {
@@ -139,7 +139,7 @@ export default function CourseListPage() {
           </div>
 
           {filteredCourses.length === 0 && (
-            <p className="text-gray-500 text-sm mt-4">Tidak ada kursus ditemukan untuk "{searchTerm}"</p>
+            <p className="text-gray-500 text-sm mt-4">Tidak ada kursus ditemukan untuk &#39;{searchTerm}&#39;</p>
           )}
         </div>
       </Sidebar>

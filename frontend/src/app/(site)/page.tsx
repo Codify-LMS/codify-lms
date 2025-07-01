@@ -193,7 +193,7 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-lg text-gray-900 mb-2">Find Course</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Find what do you want to learn by searching class name, category or instructor name's.
+                Find what do you want to learn by searching class name, category or instructor name&#39;s.
               </p>
             </div>
 

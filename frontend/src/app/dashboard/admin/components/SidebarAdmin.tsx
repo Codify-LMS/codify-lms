@@ -3,12 +3,11 @@
 import { usePathname } from 'next/navigation';
 import React, { useMemo, useEffect, useState } from 'react';
 import { RxDashboard } from 'react-icons/rx';
-import { FaBookOpen, FaComments, FaEdit } from 'react-icons/fa';
+import { FaBookOpen, FaEdit } from 'react-icons/fa';
 import { MdAssignment } from 'react-icons/md';
 
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
-import Box from '@/components/Box';
 import SidebarItem from '@/components/SidebarItem';
 import LogoWhite from '@/components/LogoWhite';
 

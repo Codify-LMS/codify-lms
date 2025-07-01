@@ -1,15 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
 
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { useUser } from '@/hooks/useUser';
 
-import Box from '@/components/Box';
 import Button from '@/components/Button';
 
 const LoginPage = () => {
@@ -157,7 +154,7 @@ const LoginPage = () => {
         <div className="hidden md:flex w-1/2 bg-cover bg-center relative" style={{ backgroundImage: "url('/thumbnail.jpg')" }}>
           <div className="absolute inset-0 bg-[#1e1e60]/60 flex flex-col items-center justify-center text-white text-center px-6">
             <h2 className="text-3xl font-bold mb-2">Start your journey now</h2>
-            <p className="mb-6 text-sm">If you don't have an account yet, join us and start your journey.</p>
+            <p className="mb-6 text-sm">If you don&#39;t have an account yet, join us and start your journey.</p>
             <Link href="/auth/register">
                <button className="bg-white text-[#1E1E60] border-2 border-[#1E1E60] font-medium px-6 py-2 rounded-md hover:bg-[#f0f0f0] transition duration-200">
                 Register now

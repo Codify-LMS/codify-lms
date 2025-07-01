@@ -7,7 +7,7 @@ import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import Input from '@/components/Input';
 import Button from '@/components/Button';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Impor FiCopy jika digunakan
+import { FiArrowLeft, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Impor FiCopy jika digunakan
 import { supabase } from '@/supabaseClient'; // Impor supabaseClient
 import axios from 'axios'; // Impor axios
 import { ContentBlock } from '@/types'; // Impor ContentBlock

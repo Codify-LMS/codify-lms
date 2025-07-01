@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { TopUser } from '@/types';
 
 interface LeaderboardTopProps {

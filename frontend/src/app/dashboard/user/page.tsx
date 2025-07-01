@@ -22,7 +22,7 @@ type DashboardStats = {
 
 const DashboardPage = () => {
   const router = useRouter();
-  const supabaseClient = useSupabaseClient();
+  //const supabaseClient = useSupabaseClient();
   const { user, isLoading } = useUser();
 
   const [shouldRender, setShouldRender] = useState(false);

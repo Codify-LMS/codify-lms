@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { FaEdit } from 'react-icons/fa';
 import SidebarAdmin from '../dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
-import Button from '@/components/Button';
 
 const EditMaterialPage = () => {
   return (

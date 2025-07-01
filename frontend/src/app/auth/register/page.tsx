@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from 'react-icons/fc';
@@ -9,7 +8,6 @@ import { FcGoogle } from 'react-icons/fc';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
 import Button from '@/components/Button';
-import Box from '@/components/Box';
 
 const RegisterPage = () => {
   const [email, setEmail] = useState('');

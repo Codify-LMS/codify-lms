@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiTrash2 } from 'react-icons/fi'; // Import FiTrash2
+import { FiArrowLeft, FiTrash2, FiPlus, FiChevronDown, FiChevronUp } from 'react-icons/fi'; // Import FiTrash2
 import { supabase } from '@/supabaseClient'; // Import supabaseClient
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
