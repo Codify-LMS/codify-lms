@@ -15,7 +15,7 @@ export default function PublicProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/profiles/public-profile/${username}`);
+        const res = await fetch(`https://codify-lms-production.up.railway.app/api/profiles/public-profile/${username}`);
         if (!res.ok) throw new Error(`Status: ${res.status}`);
         const data = await res.json();
         setProfile(data);
@@ -26,7 +26,7 @@ export default function PublicProfilePage() {
 
     const fetchAchievements = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/profiles/achievements/${username}`);
+        const res = await fetch(`https://codify-lms-production.up.railway.app/api/profiles/achievements/${username}`);
         if (!res.ok) throw new Error(`Status: ${res.status}`);
         const data = await res.json();
         setAchievements(data);

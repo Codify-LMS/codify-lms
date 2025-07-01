@@ -27,7 +27,7 @@ export default function SettingsPage() {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/v1/users/me`, {
+        const res = await fetch(`https://codify-lms-production.up.railway.app/api/v1/users/me`, {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },

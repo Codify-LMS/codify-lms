@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       try {
         setLoadingLeaderboard(true);
-        const response = await fetch('http://localhost:8080/api/leaderboard?limit=20');
+        const response = await fetch('https://codify-lms-production.up.railway.app/api/leaderboard?limit=20');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

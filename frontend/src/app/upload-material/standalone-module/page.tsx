@@ -23,7 +23,7 @@ const UploadStandaloneModulePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
 
-  const API_BASE_URL = 'http://localhost:8080/api';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api';
 
   // Fungsi untuk mengambil semua course dari backend
   const fetchCourses = useCallback(async () => {

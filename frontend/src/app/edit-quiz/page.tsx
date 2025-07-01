@@ -26,7 +26,7 @@ const QuizListPage = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const res = await axios.get('http://localhost:8080/api/quiz/with-questions');
+        const res = await axios.get('https://codify-lms-production.up.railway.app/api/quiz/with-questions');
         console.log('🔥 Full quizzes with questions:', res.data);
         setQuizzes(res.data);
       } catch (error) {
@@ -45,7 +45,7 @@ const QuizListPage = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/quiz/${quizId}`);
+      await axios.delete(`https://codify-lms-production.up.railway.app/api/quiz/${quizId}`);
       setQuizzes(prev => prev.filter(q => q.id !== quizId));
       toast.success('Quiz deleted successfully!');
     } catch (err) {

@@ -18,7 +18,7 @@ const UploadMaterialPage = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:8080/api/courses', {
+      const response = await axios.post('https://codify-lms-production.up.railway.app/api/courses', {
         title,
         description,
         thumbnailUrl,

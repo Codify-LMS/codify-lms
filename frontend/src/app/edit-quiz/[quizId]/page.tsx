@@ -37,7 +37,7 @@ const EditQuizPage = () => {
   const [quizImageFile, setQuizImageFile] = useState<File | null>(null); // File untuk gambar quiz utama
   const [quizImagePreview, setQuizImagePreview] = useState<string | null>(null); // Preview untuk gambar quiz utama
   const [expandedIndex, setExpandedIndex] = useState<number>(0);
-  const API_BASE_URL = `http://localhost:8080/api/quiz`;
+  const API_BASE_URL = `https://codify-lms-production.up.railway.app/api/quiz`;
 
   // --- Fungsi Upload Gambar ke Supabase (reused) ---
   const handleImageUpload = async (file: File, subfolder: string): Promise<string | null> => {

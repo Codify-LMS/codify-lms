@@ -24,7 +24,7 @@ const EditCoursePage = () => {
   const [searchTerm, setSearchTerm] = useState(''); // State untuk search term
   const router = useRouter();
 
-  const API_BASE_URL = 'http://localhost:8080/api/v1/courses';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api/v1/courses';
 
   const fetchCourses = async () => {
     setLoading(true);

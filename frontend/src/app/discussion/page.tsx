@@ -25,7 +25,7 @@ export default function DiscussionPage() {
     const fetchDiscussions = async () => {
       try {
         // Endpoint ini harus mengembalikan DiscussionResponse, yang sekarang punya imageUrl
-        const res = await fetch('http://localhost:8080/api/discussions');
+        const res = await fetch('https://codify-lms-production.up.railway.app/api/discussions');
         const data = await res.json();
 
         if (Array.isArray(data)) {
@@ -63,7 +63,7 @@ export default function DiscussionPage() {
       <div className="flex flex-col flex-1 h-full overflow-hidden">
         <DashboardHeader />
 
-        <main className="flex-1 bg-gray-50 px-6 py-6 overflow-y-auto">
+        <main className="flex-1 bg-gray-50 px-6 py-6 overflow-y-auto scrollbar-hide">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">💬 Community Discussions</h1>
 
           {/* Search and Action Button */}

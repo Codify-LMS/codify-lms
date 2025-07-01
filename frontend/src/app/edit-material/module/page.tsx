@@ -24,7 +24,7 @@ const EditModulePage = () => {
   const [searchTerm, setSearchTerm] = useState(''); // State untuk search term
   const router = useRouter();
 
-  const API_BASE_URL = 'http://localhost:8080/api/modules';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api/modules';
 
   const fetchModules = async () => {
     try {

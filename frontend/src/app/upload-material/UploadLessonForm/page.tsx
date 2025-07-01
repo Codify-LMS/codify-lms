@@ -48,7 +48,7 @@ const UploadLessonForm = ({
   
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 
-  const API_BASE_URL = 'http://localhost:8080/api';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api';
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
     const fileExt = file.name.split('.').pop();

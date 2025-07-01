@@ -55,7 +55,7 @@ const EditLessonPage = () => {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
-        const res = await axios.get(`http://localhost:8080/api/v1/lessons/${lessonId}`);
+        const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/lessons/${lessonId}`);
         const data = res.data;
 
         // Set state utama lesson
@@ -65,7 +65,7 @@ const EditLessonPage = () => {
 
         // Ambil info Course dan Module untuk tampilan kontekstual
         if (data.moduleId) {
-          const moduleRes = await axios.get(`http://localhost:8080/api/modules/${data.moduleId}/full`);
+          const moduleRes = await axios.get(`https://codify-lms-production.up.railway.app/api/modules/${data.moduleId}/full`);
           setLessonModuleInfo(moduleRes.data);
         }
 
@@ -173,7 +173,7 @@ const EditLessonPage = () => {
     }
 
     try {
-      const res = await axios.put(`http://localhost:8080/api/v1/lessons/${lessonId}`, {
+      const res = await axios.put(`https://codify-lms-production.up.railway.app/api/v1/lessons/${lessonId}`, {
         title: lessonTitle,
         contentBlocks: contentBlocks, // Kirim array contentBlocks
         orderInModule: orderInModule,

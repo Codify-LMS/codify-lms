@@ -31,7 +31,7 @@ export default function BookmarksPage() {
   const toggleBookmark = async (courseId: string) => {
     if (!user?.id) return;
     try {
-      await axios.delete(`http://localhost:8080/api/v1/bookmarks`, {
+      await axios.delete(`https://codify-lms-production.up.railway.app/api/v1/bookmarks`, {
         params: { userId: user.id, courseId },
       });
       setBookmarkedCourses((prev) => prev.filter((course) => course.id !== courseId));
@@ -47,7 +47,7 @@ export default function BookmarksPage() {
 
   const fetchBookmarks = async () => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/v1/bookmarks/user/${user.id}`);
+      const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/bookmarks/user/${user.id}`);
 
       const mappedCourses = res.data.map((item: any) => ({
         id: item.id,
@@ -74,7 +74,7 @@ export default function BookmarksPage() {
 
   const handleCourseClick = async (courseId: string) => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/v1/courses/${courseId}/full`);
+      const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${courseId}/full`);
       const courseData = res.data;
       const firstLessonId = courseData.modules?.[0]?.lessons?.[0]?.id;
 

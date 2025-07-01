@@ -31,7 +31,7 @@ const EditModuleFormPage = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:8080/api/modules';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api/modules';
 
   useEffect(() => {
     if (!moduleId) return;

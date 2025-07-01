@@ -46,7 +46,7 @@ export default function AnswerDiscussPage() {
       try {
         // endpoint /api/discussions/{id} sudah mengembalikan DiscussionResponse
         // yang sekarang punya imageUrl
-        const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}`);
+        const res = await fetch(`https://codify-lms-production.up.railway.app/api/discussions/${discussionId}`);
         const data = await res.json();
         setDiscussion(data);
       } catch (error) {
@@ -64,7 +64,7 @@ export default function AnswerDiscussPage() {
       try {
         // endpoint /api/discussions/{id}/answers sudah mengembalikan AnswerResponse
         // yang sekarang punya imageUrl
-        const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`);
+        const res = await fetch(`https://codify-lms-production.up.railway.app/api/discussions/${discussionId}/answers`);
         const data = await res.json();
         setAnswers(data);
       } catch (error) {
@@ -94,7 +94,7 @@ export default function AnswerDiscussPage() {
         }
       }
 
-      await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`, {
+      await fetch(`https://codify-lms-production.up.railway.app/api/discussions/${discussionId}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,7 +109,7 @@ export default function AnswerDiscussPage() {
       setImagePreview(null);
 
       // Refresh answers
-      const res = await fetch(`http://localhost:8080/api/discussions/${discussionId}/answers`);
+      const res = await fetch(`https://codify-lms-production.up.railway.app/api/discussions/${discussionId}/answers`);
       const data = await res.json();
       setAnswers(data);
 

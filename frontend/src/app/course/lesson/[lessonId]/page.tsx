@@ -66,22 +66,22 @@ function LessonPage() {
       setLoadingContent(true);
       if (isLoadingUser || !user) return;
       try {
-        const lessonRes = await axios.get(`http://localhost:8080/api/v1/lessons/${lessonId}`);
+        const lessonRes = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/lessons/${lessonId}`);
         const lessonData: LessonData = lessonRes.data;
         setLesson(lessonData);
 
-        const moduleRes = await axios.get(`http://localhost:8080/api/modules/${lessonData.moduleId}/full`);
+        const moduleRes = await axios.get(`https://codify-lms-production.up.railway.app/api/modules/${lessonData.moduleId}/full`);
         const moduleData = moduleRes.data;
         setModule(moduleData);
 
         const courseId = moduleData.courseId;
         if (!courseId) return;
 
-        const courseRes = await axios.get(`http://localhost:8080/api/v1/courses/${courseId}/full`);
+        const courseRes = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${courseId}/full`);
         const courseData: CourseData = courseRes.data;
         setCourse(courseData);
 
-        await axios.post(`http://localhost:8080/api/progress/complete-lesson`, {
+        await axios.post(`https://codify-lms-production.up.railway.app/api/progress/complete-lesson`, {
           userId: user.id,
           lessonId: lessonId,
         });
@@ -106,7 +106,7 @@ function LessonPage() {
   const fetchUserAttempts = async () => {
     if (!user?.id || !lesson?.quiz?.id) return;
     try {
-      const res = await axios.get(`http://localhost:8080/api/v1/quiz-submissions/attempts`, {
+      const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/quiz-submissions/attempts`, {
         params: {
           userId: user.id,
           quizId: lesson.quiz.id,
@@ -145,7 +145,7 @@ function LessonPage() {
 
     try {
       const res = await axios.post<QuizSubmissionResponse>(
-        'http://localhost:8080/api/v1/quiz-submissions',
+        'https://codify-lms-production.up.railway.app/api/v1/quiz-submissions',
         payload,
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -165,7 +165,7 @@ function LessonPage() {
 
   const handleCompleteCourse = async () => {
     try {
-      await axios.patch(`http://localhost:8080/api/user-course-progress/complete`, {
+      await axios.patch(`https://codify-lms-production.up.railway.app/api/user-course-progress/complete`, {
         userId: user?.id,
         courseId: course?.id
       });
@@ -449,7 +449,7 @@ function LessonPage() {
                   setIsTransitionLoading(true);
 
                   try {
-                    await fetch('http://localhost:8080/api/progress/complete-lesson', {
+                    await fetch('https://codify-lms-production.up.railway.app/api/progress/complete-lesson', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({

@@ -46,7 +46,7 @@ const DashboardPage = () => {
       if (user && user.id) {
         try {
           // Asumsi backend berjalan di port 8080 dan endpointnya adalah /api/v1/dashboard/{userId}
-          const res = await fetch(`http://localhost:8080/api/v1/dashboard/${user.id}`);
+          const res = await fetch(`https://codify-lms-production.up.railway.app/api/v1/dashboard/${user.id}`);
           if (!res.ok) {
             throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
           }
@@ -76,7 +76,7 @@ const DashboardPage = () => {
   return (
     <div className="flex h-screen bg-white">
       <Sidebar>
-        <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide">
           <DashboardHeader />
 
           <main className="p-6 flex-1 overflow-y-auto bg-[#F9FAFB]">

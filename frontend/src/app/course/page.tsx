@@ -36,7 +36,7 @@ export default function CourseListPage() {
       if (!user?.id) return;
       try {
         // Endpoint ini sekarang akan mengembalikan currentLessonId dan currentModuleId
-        const res = await axios.get<Course[]>(`http://localhost:8080/api/v1/courses/all-with-progress?userId=${user.id}`);
+        const res = await axios.get<Course[]>(`https://codify-lms-production.up.railway.app/api/v1/courses/all-with-progress?userId=${user.id}`);
         setCourses(res.data);
       } catch (err) {
         console.error('Failed to fetch courses:', err);
@@ -46,7 +46,7 @@ export default function CourseListPage() {
     const fetchBookmarks = async () => {
       if (!user?.id) return;
       try {
-        const res = await axios.get(`http://localhost:8080/api/v1/bookmarks?userId=${user.id}`);
+        const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/bookmarks?userId=${user.id}`);
         setBookmarkedIds(res.data);
       } catch (err) {
         console.error('Failed to fetch bookmarks:', err);
@@ -66,7 +66,7 @@ export default function CourseListPage() {
       // Fallback: Jika tidak ada currentLessonId (misalnya, kursus baru belum dimulai),
       // maka ambil data kursus lengkap untuk menemukan pelajaran pertama.
       try {
-        const res = await axios.get(`http://localhost:8080/api/v1/courses/${course.id}/full`);
+        const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${course.id}/full`);
         const courseData = res.data;
         const firstLessonId = courseData.modules?.[0]?.lessons?.[0]?.id;
 
@@ -88,12 +88,12 @@ export default function CourseListPage() {
     const isBookmarked = bookmarkedIds.includes(courseId);
     try {
       if (isBookmarked) {
-        await axios.delete(`http://localhost:8080/api/v1/bookmarks`, {
+        await axios.delete(`https://codify-lms-production.up.railway.app/api/v1/bookmarks`, {
           params: { userId: user.id, courseId },
         });
         setBookmarkedIds((prev) => prev.filter((id) => id !== courseId));
       } else {
-        await axios.post(`http://localhost:8080/api/v1/bookmarks`, null, {
+        await axios.post(`https://codify-lms-production.up.railway.app/api/v1/bookmarks`, null, {
           params: { userId: user.id, courseId },
         });
         setBookmarkedIds((prev) => [...prev, courseId]);
@@ -111,7 +111,7 @@ export default function CourseListPage() {
     <div className="flex h-screen bg-white">
       <Sidebar>
         <DashboardHeader />
-        <div className="flex flex-col flex-1 overflow-y-auto p-6">
+        <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Kursus Populer</h1>
 
           {/* Search bar */}

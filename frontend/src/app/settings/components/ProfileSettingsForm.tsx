@@ -84,7 +84,7 @@ export default function ProfileSettingsForm({
       console.log("➡️ Payload ke backend:", payload)
 
     try {
-      const res = await axios.put('http://localhost:8080/api/v1/users/me', payload, {
+      const res = await axios.put('https://codify-lms-production.up.railway.app/api/v1/users/me', payload, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`,

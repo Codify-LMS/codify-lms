@@ -55,7 +55,7 @@ export default function AskQuestionPage() {
         }
       }
 
-      const res = await fetch('http://localhost:8080/api/discussions', {
+      const res = await fetch('https://codify-lms-production.up.railway.app/api/discussions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

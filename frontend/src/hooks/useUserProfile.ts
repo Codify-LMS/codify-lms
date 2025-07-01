@@ -31,7 +31,7 @@ export default function useUserProfile() {
       }
 
       try {
-        const res = await axios.get('http://localhost:8080/api/v1/users/me', {
+        const res = await axios.get('https://codify-lms-production.up.railway.app/api/v1/users/me', {
           headers: {
             Authorization: `Bearer ${session.access_token}`
           }

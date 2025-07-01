@@ -32,7 +32,7 @@ const DashboardPage = () => {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/admin/stats')
+    fetch('https://codify-lms-production.up.railway.app/api/admin/stats')
       .then((res) => res.json())
       .then((data) => {
         setStats({
