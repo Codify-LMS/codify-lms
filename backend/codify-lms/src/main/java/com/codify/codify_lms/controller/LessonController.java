@@ -1,10 +1,11 @@
+// backend/codify-lms/src/main/java/com/codify/codify_lms/controller/LessonController.java
 package com.codify.codify_lms.controller;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors; // Import Collectors
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,12 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codify.codify_lms.dto.LessonDTO;
 import com.codify.codify_lms.dto.LessonWithQuizDto;
+import com.codify.codify_lms.dto.LessonListDTO; // Impor DTO yang baru
+import com.codify.codify_lms.model.ContentBlock;
 import com.codify.codify_lms.model.Lesson;
-import com.codify.codify_lms.model.Module;
+import com.codify.codify_lms.model.Module; // Impor Module
+import com.codify.codify_lms.model.Course; // Impor Course
 import com.codify.codify_lms.model.Quiz;
 import com.codify.codify_lms.repository.LessonRepository;
 import com.codify.codify_lms.repository.ModuleRepository;
 import com.codify.codify_lms.repository.QuizRepository;
+import org.hibernate.Hibernate; // Impor ini untuk inisialisasi proxy
 
 @RestController
 @RequestMapping("/api/v1/lessons")
@@ -86,22 +91,22 @@ public class LessonController {
         }
     }
 
-    // Ubah method ini untuk mengembalikan List<LessonDTO>
+    // Ubah method ini untuk mengembalikan List<LessonListDTO>
     @GetMapping
-    public List<LessonDTO> getAllLessons() { // <<-- PERUBAHAN TIPE KEMBALIAN
-        return lessonRepository.findAll().stream()
+    public List<LessonListDTO> getAllLessons() { // <-- PERUBAHAN TIPE KEMBALIAN
+        List<Lesson> lessons = lessonRepository.findAll(); // Ambil semua pelajaran
+
+        return lessons.stream()
                 .map(lesson -> {
-                    // Pastikan moduleId diambil dari entity Lesson
-                    String moduleId = (lesson.getModule() != null && lesson.getModule().getId() != null)
-                                      ? lesson.getModule().getId().toString()
-                                      : null;
-                    return new LessonDTO(
-                        lesson.getId().toString(),
-                        lesson.getTitle(),
-                        lesson.getContentBlocks(), // Sertakan ContentBlocks
-                        lesson.getOrderInModule(),
-                        moduleId
-                    );
+                    // Inisialisasi proxy Hibernate untuk Module dan Course
+                    // Ini penting agar Jackson dapat mengakses judul saat membuat DTO
+                    if (lesson.getModule() != null) {
+                        Hibernate.initialize(lesson.getModule()); // Inisialisasi modul
+                        if (lesson.getModule().getCourse() != null) {
+                            Hibernate.initialize(lesson.getModule().getCourse()); // Inisialisasi course
+                        }
+                    }
+                    return new LessonListDTO(lesson); // Petakan ke DTO baru
                 })
                 .collect(Collectors.toList());
     }

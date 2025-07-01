@@ -1,9 +1,10 @@
+// frontend/src/app/upload-material/UploadModuleForm/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { FaArrowLeft, FaPlus, FaArrowRight } from 'react-icons/fa';
 import Button from '@/components/Button';
-import { ModuleData, FullUploadData } from '@/types';
+import { ModuleData, FullUploadData } from '@/types'; // Pastikan ModuleData diimpor
 import Input from '@/components/Input';
 
 interface UploadModuleFormProps {
@@ -33,15 +34,14 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
         return;
     }
 
+    const tempModuleId = `new-module-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`; // ID sementara unik
+
     const newModule: ModuleData = {
+      id: tempModuleId,
       title,
       description,
       orderInCourse,
-      // PERUBAHAN PENTING DI SINI: Tambahkan informasi course ke dalam modul baru
-      course: {
-        id: formData.course.id || 'new-course-temp', // Gunakan ID asli jika ada, atau ID sementara
-        title: formData.course.title // Opsional: sertakan judul course untuk tampilan debugging/referensi
-      },
+      courseId: formData.course.id || 'new-course-temp',
     };
 
     setFormData((prev) => ({
@@ -76,7 +76,9 @@ const UploadModuleForm = ({ onNext, onBack, formData, setFormData }: UploadModul
               <li key={index}>
                 <strong>{mod.title}</strong> (urutan: {mod.orderInCourse})
                 {/* Tampilkan Course yang terkait jika ada */}
-                {mod.course?.title && ` - Course: ${mod.course.title}`}
+                {/* Modifikasi ini bergantung pada bagaimana 'mod.course' diisi di frontend.
+                   Jika 'mod.course' tidak lagi ada, mungkin perlu disesuaikan. */}
+                {mod.courseId && ` - Course ID: ${mod.courseId}`}
               </li>
             ))}
           </ul>

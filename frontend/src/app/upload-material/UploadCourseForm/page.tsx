@@ -1,11 +1,11 @@
 'use client';
 
 import { useSession } from '@supabase/auth-helpers-react'
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Pastikan useEffect diimpor
 import Button from '@/components/Button';
 import { CourseData, FullUploadData } from '@/types';
 import { FaArrowRight } from 'react-icons/fa';
-import { supabase } from '@/supabaseClient'; // pastikan kamu punya file ini
+import { supabase } from '@/supabaseClient';
 
 interface UploadCourseFormProps {
   onNext: () => void;
@@ -74,17 +74,19 @@ const UploadCourseForm = ({
   };
 
   const session = useSession();
-  if (session?.access_token) {
-    try {
-      const payload = JSON.parse(atob(session.access_token.split('.')[1]));
-      console.log("🧪 JWT Payload:", payload);
-    } catch (err) {
-      console.error("❌ Failed to parse JWT payload", err);
-    }
-  } else {
-    console.warn("⚠️ Session belum tersedia");
-  }
 
+  useEffect(() => {
+    if (session?.access_token) {
+      try {
+        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+        console.log("🧪 JWT Payload:", payload);
+      } catch (err) {
+        console.error("❌ Failed to parse JWT payload", err);
+      }
+    } else {
+      console.warn("⚠️ Session belum tersedia");
+    }
+  }, [session?.access_token]); 
 
 
   return (
@@ -139,7 +141,7 @@ const UploadCourseForm = ({
             htmlFor="thumbnailUpload"
             className="inline-block bg-purple-300 text-black px-4 py-2 rounded-full cursor-pointer hover:bg-purple-500 transition"
           >
-            Choose an image
+            Pilih gambar
           </label>
         </div>
       </div>
@@ -151,13 +153,13 @@ const UploadCourseForm = ({
           checked={isPublished}
           onChange={(e) => setIsPublished(e.target.checked)}
         />
-        <label className="text-sm text-gray-700">Publish sekarang</label>
+        <label className="text-sm text-gray-700">Publikasikan sekarang</label>
       </div>
 
       <div className="flex justify-end w-full">
         <Button type="submit" disabled={isUploading}>
           <span className="flex items-center gap-2">
-            {isUploading ? 'Uploading...' : 'Next: Module'} <FaArrowRight />
+            {isUploading ? 'Mengunggah...' : 'Lanjut: Modul'} <FaArrowRight />
           </span>
         </Button>
 

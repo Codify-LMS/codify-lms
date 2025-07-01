@@ -1,3 +1,4 @@
+// backend/codify-lms/src/main/java/com/codify/codify_lms/controller/CourseController.java
 package com.codify.codify_lms.controller;
 
 import com.codify.codify_lms.model.Course;
@@ -11,6 +12,10 @@ import com.codify.codify_lms.service.CourseProgressService;
 import com.codify.codify_lms.dto.ModuleFullDto;
 import com.codify.codify_lms.dto.CourseFullDto;
 import com.codify.codify_lms.dto.CourseWithProgressDTO;
+import com.codify.codify_lms.repository.UserCourseProgressRepository; // Import ini
+import com.codify.codify_lms.model.UserCourseProgress; // Import ini
+import com.codify.codify_lms.model.Module; // Import Module
+import java.util.Optional; // Import Optional
 
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +23,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.codify.codify_lms.dto.LessonWithQuizDto;
-import com.codify.codify_lms.model.Module;
 
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -46,23 +49,36 @@ public class CourseController {
     @Autowired
     private CourseProgressService courseProgressService;
 
+    @Autowired
+    private UserCourseProgressRepository userCourseProgressRepository; // Suntikkan ini
+
     @GetMapping("/all-with-progress")
     public List<CourseWithProgressDTO> getAllCoursesWithProgress(@RequestParam UUID userId) {
         List<Course> courses = courseRepository.findAll();
 
         return courses.stream()
             .map(course -> {
-                Double progress = courseProgressService.getProgressPercentageByUserAndCourse(userId, course.getId());
+                // Ambil progress pengguna untuk kursus ini
+                Optional<UserCourseProgress> userProgressOpt = userCourseProgressRepository.findByUserIdAndCourseId(userId, course.getId());
+
+                UUID currentLessonId = null;
+                UUID currentModuleId = null;
+                Double progressPercentage = 0.0;
+
+                if (userProgressOpt.isPresent()) {
+                    UserCourseProgress progressEntity = userProgressOpt.get();
+                    currentLessonId = progressEntity.getCurrentLessonId();
+                    currentModuleId = progressEntity.getCurrentModuleId();
+                    progressPercentage = progressEntity.getProgressPercentage().doubleValue();
+                }
 
                 // Hitung jumlah module, lesson, dan quiz
-                // Changed method call from findByCourseId to findByCourseIdOrderByOrderInCourseAsc
                 List<Module> modules = moduleRepository.findByCourseIdOrderByOrderInCourseAsc(course.getId());
                 int moduleCount = modules.size();
                 int lessonCount = 0;
                 int quizCount = 0;
 
                 for (Module module : modules) {
-                    // Changed method call from findByModuleId to findByModuleIdOrderByOrderInModuleAsc
                     List<Lesson> lessons = lessonRepository.findByModuleIdOrderByOrderInModuleAsc(module.getId());
                     lessonCount += lessons.size();
 
@@ -71,15 +87,31 @@ public class CourseController {
                     }
                 }
 
+                // Jika currentLessonId null (misal kursus baru belum diakses), coba temukan pelajaran pertama
+                if (currentLessonId == null && course.getId() != null) {
+                    Optional<Module> firstModuleOpt = moduleRepository.findFirstByCourseIdOrderByOrderInCourseAsc(course.getId());
+                    if (firstModuleOpt.isPresent()) {
+                        Module firstModule = firstModuleOpt.get();
+                        Optional<Lesson> firstLessonOpt = lessonRepository.findFirstByModuleIdOrderByOrderInModuleAsc(firstModule.getId());
+                        if (firstLessonOpt.isPresent()) {
+                            currentLessonId = firstLessonOpt.get().getId();
+                            currentModuleId = firstModule.getId();
+                        }
+                    }
+                }
+
+
                 return new CourseWithProgressDTO(
                     course.getId(),
                     course.getTitle(),
                     course.getThumbnailUrl(),
                     course.isPublished(),
-                    progress,
+                    progressPercentage, // Gunakan progress yang sudah diambil
                     moduleCount,
                     lessonCount,
-                    quizCount
+                    quizCount,
+                    currentLessonId, // Sertakan currentLessonId
+                    currentModuleId  // Sertakan currentModuleId
                 );
             })
             .collect(Collectors.toList());

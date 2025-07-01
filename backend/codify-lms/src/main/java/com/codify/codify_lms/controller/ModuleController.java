@@ -4,9 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codify.codify_lms.dto.LessonWithQuizDto;
 import com.codify.codify_lms.dto.ModuleFullDto;
+import com.codify.codify_lms.dto.CreateModuleRequest;
+import com.codify.codify_lms.dto.ModuleResponseDTO; // Impor DTO yang baru
 import com.codify.codify_lms.model.Module;
 import com.codify.codify_lms.model.Quiz;
+import com.codify.codify_lms.model.Course;
 import com.codify.codify_lms.repository.CourseRepository;
 import com.codify.codify_lms.repository.LessonRepository;
 import com.codify.codify_lms.repository.ModuleRepository;
@@ -42,22 +45,47 @@ public class ModuleController {
     @Autowired
     private CourseRepository courseRepository;
 
-    // POST: Tambah satu module (perbaikan di sini)
+    @PersistenceContext
+    private EntityManager entityManager;
+
+
     @PostMapping
-    public ResponseEntity<Module> createModule(@RequestBody Module module) {
+    // ===============================================================
+    // PERBAIKAN PENTING DI SINI: Ubah tipe kembalian menjadi DTO
+    // ===============================================================
+    public ResponseEntity<ModuleResponseDTO> createModule(@RequestBody CreateModuleRequest request) { // Tipe parameter tetap sama
+        if (request.getCourseId() == null) {
+            throw new IllegalArgumentException("Course ID tidak boleh null untuk pembuatan modul.");
+        }
+        
+        Course courseReference = entityManager.getReference(Course.class, request.getCourseId());
+
+        Module module = new Module();
         if (module.getId() == null) {
             module.setId(UUID.randomUUID());
         }
+        module.setTitle(request.getTitle());
+        module.setDescription(request.getDescription());
+        module.setOrderInCourse(request.getOrderInCourse());
+        module.setCourse(courseReference);
         module.setCreatedAt(Instant.now());
         module.setUpdatedAt(Instant.now());
 
         Module saved = moduleRepository.save(module);
-        return ResponseEntity.ok(saved);
+
+        // ===============================================================
+        // KEMBALIKAN DTO alih-alih entitas JPA
+        // ===============================================================
+        return ResponseEntity.ok(new ModuleResponseDTO(saved)); // Buat dan kembalikan DTO
     }
 
-    // GET: Ambil semua module (tidak diubah)
+    // ... (metode-metode lain di controller seperti @GetMapping, @PutMapping, @DeleteMapping)
+    // Catatan: Jika metode GET seperti getAllModules() juga mengembalikan entitas Module secara langsung,
+    // Anda mungkin perlu mengubahnya untuk mengembalikan List<ModuleResponseDTO> juga
+    // untuk konsistensi dan menghindari masalah serialisasi di masa mendatang.
+
     @GetMapping
-    public ResponseEntity<List<Module>> getAllModules() {
+    public ResponseEntity<List<Module>> getAllModules() { // Jika ini mengembalikan entitas Module langsung, bisa jadi sumber masalah serialisasi juga
         return ResponseEntity.ok(moduleRepository.findAll());
     }
 

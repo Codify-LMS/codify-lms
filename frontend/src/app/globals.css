@@ -30,6 +30,17 @@
   animation: spin 1s linear infinite;
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    scrollbar-width: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+}
 
 body {
   background: var(--background);

@@ -11,6 +11,13 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+
+  {
+    files: ["tailwind.config.js"], // Terapkan aturan ini hanya untuk file ini
+    rules: {
+      "@typescript-eslint/no-require-imports": "off", // Nonaktifkan aturan ini
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -13,6 +13,7 @@ export default function DiscussionPage() {
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [displayCount, setDisplayCount] = useState(10);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -44,11 +45,14 @@ export default function DiscussionPage() {
     fetchDiscussions();
   }, []);
 
-  // Filter berdasarkan searchTerm
-  const filteredDiscussions = discussions.filter((item) =>
-    item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.content?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter berdasarkan searchTerm dan limit tampilan
+  const filteredDiscussions = discussions
+    .filter((item) =>
+      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.content?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(0, displayCount);
+
 
   return (
     <div className="flex h-screen">
@@ -83,7 +87,7 @@ export default function DiscussionPage() {
           </div>
 
           {/* Discussion List */}
-          <div className="h-[440px] overflow-y-auto pr-2">
+          <div className="h-[440px] overflow-y-auto scrollbar-hide pr-2">
             {isFetching ? (
               <div className="text-gray-500 text-sm">Loading discussions...</div>
             ) : filteredDiscussions.length === 0 ? (
@@ -157,6 +161,19 @@ export default function DiscussionPage() {
                 ))}
               </div>
             )}
+
+             {/* Tombol Lihat Lebih Banyak */}
+            {!isFetching && discussions.length > displayCount && (
+              <div className="text-center mt-6">
+                <button
+                  onClick={() => setDisplayCount(displayCount + 10)}
+                  className="text-sm bg-white text-gray-600 block w-full py-2 border rounded-lg shadow-sm hover:bg-blue-100 hover:text-blue-700 transition"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+
           </div>
         </main>
       </div>

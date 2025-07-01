@@ -16,5 +16,9 @@ module.exports = {
     },
     },
   },
-  plugins: [],
+  plugins: [
+    require('tailwind-scrollbar-hide') 
+  ],
 };
+
+console.log('✅ Tailwind config is loaded, and tailwind-scrollbar-hide plugin is required.');

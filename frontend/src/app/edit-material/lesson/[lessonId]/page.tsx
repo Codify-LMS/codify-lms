@@ -7,11 +7,11 @@ import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import Input from '@/components/Input';
 import Button from '@/components/Button';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown } from 'react-icons/fi';
-import { supabase } from '@/supabaseClient'; // Import supabaseClient
-import axios from 'axios'; // Import axios
-import { ContentBlock } from '@/types'; // Import ContentBlock
-import { FaEdit } from 'react-icons/fa'; // Import FaEdit untuk ikon edit
+import { FiArrowLeft, FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiCopy } from 'react-icons/fi'; // Impor FiCopy jika digunakan
+import { supabase } from '@/supabaseClient'; // Impor supabaseClient
+import axios from 'axios'; // Impor axios
+import { ContentBlock } from '@/types'; // Impor ContentBlock
+import { FaEdit } from 'react-icons/fa'; // Impor FaEdit untuk ikon edit
 
 const EditLessonPage = () => {
   const { lessonId } = useParams();
@@ -224,13 +224,13 @@ const EditLessonPage = () => {
             </h1>
 
             {/* Informasi Course dan Module */}
-            {(lessonModuleInfo?.title || lessonModuleInfo?.course?.title) && (
+            {(lessonModuleInfo?.title || lessonModuleInfo?.courseTitle) && (
               <div className="text-sm text-gray-700 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <p>
-                  **Course:** <span className="font-semibold">{lessonModuleInfo.course?.title || '-'}</span>
+                  Course: <span className="font-semibold">{lessonModuleInfo.courseTitle || '-'}</span>
                 </p>
                 <p>
-                  **Module:** <span className="font-semibold">{lessonModuleInfo.title || '-'}</span>
+                  Module: <span className="font-semibold">{lessonModuleInfo.title || '-'}</span>
                 </p>
               </div>
             )}
@@ -282,6 +282,7 @@ const EditLessonPage = () => {
                       <option value="text">Teks</option>
                       <option value="video">Video URL</option>
                       <option value="image">Gambar URL/Upload</option>
+                      <option value="script">Script Kode</option> {/* Tambahkan opsi ini */}
                     </select>
                   </div>
 
@@ -319,11 +320,11 @@ const EditLessonPage = () => {
                       )}
                       <input
                         type="text"
-                        value={currentBlockValue} // Tampilkan URL jika ada, atau nama file jika baru dipilih
+                        value={currentBlockValue}
                         onChange={(e) => {
                           setCurrentBlockValue(e.target.value);
-                          setCurrentImageFile(null); // Hapus file jika user input URL manual
-                          setCurrentImagePreview(e.target.value); // Pratinjau dari URL
+                          setCurrentImageFile(null);
+                          setCurrentImagePreview(e.target.value);
                         }}
                         placeholder="Masukkan URL gambar atau pilih file..."
                         className="w-full border px-4 py-2 rounded-md text-gray-700 mb-2"
@@ -336,7 +337,7 @@ const EditLessonPage = () => {
                           setCurrentImageFile(file);
                           if (file) {
                             setCurrentImagePreview(URL.createObjectURL(file));
-                            setCurrentBlockValue(file.name); // Set nilai ke nama file sementara
+                            setCurrentBlockValue(file.name);
                           } else {
                             setCurrentImagePreview(null);
                             setCurrentBlockValue('');
@@ -345,6 +346,19 @@ const EditLessonPage = () => {
                         className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                       />
                       {currentImageFile && <p className="text-sm text-gray-500 mt-1">File dipilih: {currentImageFile.name}</p>}
+                    </div>
+                  )}
+
+                  {currentBlockType === 'script' && ( // Tambahkan blok ini untuk script
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Isi Script</label>
+                      <textarea
+                        value={currentBlockValue}
+                        onChange={(e) => setCurrentBlockValue(e.target.value)}
+                        rows={6}
+                        className="w-full border px-4 py-2 rounded-md text-gray-700 font-mono text-sm"
+                        placeholder="Tulis kode script di sini..."
+                      />
                     </div>
                   )}
 
@@ -373,9 +387,43 @@ const EditLessonPage = () => {
                         <span className="font-bold mr-3">{block.order}.</span>
                         <div className="flex-1 overflow-hidden">
                           <span className="font-medium capitalize mr-2 px-2 py-1 bg-gray-200 rounded-full text-xs">{block.type}</span>
-                          <span className="truncate">{block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}</span>
+                          <span className="truncate">
+                            {block.type === 'script' ? (
+                              <code className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                                {block.value.substring(0, 100)}{block.value.length > 100 ? '...' : ''}
+                              </code>
+                            ) : (
+                              `${block.value.substring(0, 100)}${block.value.length > 100 ? '...' : ''}`
+                            )}
+                          </span>
                         </div>
                         <div className="flex gap-2 ml-4">
+                            {block.type === 'script' && ( // Tambahkan tombol salin untuk script
+                                <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(block.value)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                    title="Salin Kode"
+                                >
+                                    <FiCopy size={18} />
+                                </button>
+                            )}
+                          <button
+                            type="button"
+                            onClick={() => startEditingBlock(block, index)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="Edit blok"
+                          >
+                            <FaEdit size={18} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeContentBlock(index)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Hapus blok"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
                           <button
                             type="button"
                             onClick={() => moveContentBlock(index, 'up')}
@@ -393,22 +441,6 @@ const EditLessonPage = () => {
                             title="Pindah ke bawah"
                           >
                             <FiChevronDown size={18} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => startEditingBlock(block, index)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="Edit blok"
-                          >
-                            <FaEdit size={18} /> {/* Menggunakan FaEdit */}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeContentBlock(index)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Hapus blok"
-                          >
-                            <FiTrash2 size={18} />
                           </button>
                         </div>
                       </div>

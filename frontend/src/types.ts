@@ -18,10 +18,7 @@ export interface ModuleData {
   title: string;
   description: string;
   orderInCourse: number;
-  course?: {
-    id: string;
-    title?: string;
-  };
+  courseId?: string; 
   lessons?: LessonData[];
 }
 

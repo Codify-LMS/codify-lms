@@ -40,6 +40,7 @@ const UploadLessonForm = ({
     if (formData.course?.id) {
       return formData.course.id;
     } else if (formData.course && !formData.course.id) {
+      // Jika course baru tapi belum disubmit (temp ID di formData.course belum ada)
       return 'new-course-temp';
     }
     return null;
@@ -104,7 +105,8 @@ const UploadLessonForm = ({
 
     // Add new course from formData if exists
     if (formData.course) {
-      const courseId = formData.course.id || 'new-course-temp';
+      // Jika course belum punya ID dari DB, anggap sebagai 'new-course-temp'
+      const courseId = formData.course.id || 'new-course-temp'; 
       uniqueCoursesMap.set(courseId, { 
         ...formData.course, 
         id: courseId 
@@ -127,45 +129,56 @@ const UploadLessonForm = ({
       }
     });
 
-    // Add modules from formData
+    // Add modules from formData (modules created in UploadModuleForm)
     formData.modules.forEach((mod, index) => {
-      const moduleId = mod.id || `new-module-${index}-${Math.random().toString(36).substring(7)}`;
+      // LOG INI: Lihat ID modul dari formData.modules sebelum ID sementara di generate ulang (jika null)
+      console.log(`🔷 formData.modules[${index}] - ID Awal:`, mod.id);
+      // Jika mod.id sudah ada (berarti dari new-module-temp dari UploadModuleForm), gunakan itu.
+      // Jika mod.id null (kasus lama atau jika UploadModuleForm tidak memberi ID), baru beri ID temp baru
+      const moduleId = mod.id || `new-module-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       uniqueModulesMap.set(moduleId, { 
         ...mod, 
         id: moduleId 
       });
+      console.log(`🔷 formData.modules[${index}] - ID Setelah proses di allAvailableModules:`, moduleId); // LOG INI
     });
 
     const result = Array.from(uniqueModulesMap.values());
-    console.log('All available modules:', result);
+    console.log('🟢 allAvailableModules yang tersedia untuk dipilih:', result.map(m => m.id)); // LOG INI
     return result;
   }, [dbModules, formData.modules]);
 
-  // Filter modules based on selected course
+  // =========================================================================
+  // PERBAIKAN PENTING DI SINI: Logika penyaringan `modulesToDisplay`
+  // =========================================================================
   const modulesToDisplay = useMemo(() => {
     if (!selectedCourseId) {
       console.log('No course selected, returning empty modules');
       return [];
     }
 
-    const filtered = allAvailableModules.filter(mod => {
-      // For new course temp, match with modules that belong to the new course
-      if (selectedCourseId === 'new-course-temp') {
-        // Check if module's course matches the formData course or has no course ID (new module)
-        const isNewCourseModule = !mod.course?.id || mod.course?.id === 'new-course-temp';
-        console.log(`Module ${mod.title} - isNewCourseModule: ${isNewCourseModule}, mod.course:`, mod.course);
-        return isNewCourseModule;
-      }
-      
-      // For existing courses, match by course ID
-      const isMatch = mod.course?.id === selectedCourseId;
-      console.log(`Module ${mod.title} - course match: ${isMatch}, mod.course?.id: ${mod.course?.id}, selectedCourseId: ${selectedCourseId}`);
-      return isMatch;
-    }).sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
+    let filtered: ModuleData[] = [];
 
-    console.log('Filtered modules to display:', filtered);
+    if (selectedCourseId === 'new-course-temp') {
+        // Jika kursus yang dipilih adalah kursus baru (belum disubmit ke DB),
+        // kita HANYA ingin menampilkan modul yang dibuat di sesi form ini
+        // dan memiliki courseId 'new-course-temp'.
+        filtered = allAvailableModules.filter(mod => mod.courseId === 'new-course-temp');
+        console.log('Filtering for new-course-temp, showing:', filtered.map(m => m.title));
+    } else {
+        // Jika kursus yang dipilih adalah kursus yang sudah ada di DB (memiliki UUID),
+        // kita ingin menampilkan semua modul dari 'allAvailableModules'
+        // yang terkait dengan courseId tersebut.
+        filtered = allAvailableModules.filter(mod => mod.courseId === selectedCourseId);
+        console.log(`Filtering for existing course ${selectedCourseId}, showing:`, filtered.map(m => m.title));
+    }
+
+    // Urutkan berdasarkan orderInCourse
+    filtered.sort((a, b) => (a.orderInCourse || 0) - (b.orderInCourse || 0));
+
+    console.log('Filtered modules to display (final):', filtered.map(m => m.title));
     return filtered;
-  }, [allAvailableModules, selectedCourseId]);
+  }, [allAvailableModules, selectedCourseId]); // allAvailableModules sudah jadi dependency
 
   // Reset module selection when course changes
   useEffect(() => {
@@ -193,7 +206,7 @@ const UploadLessonForm = ({
 
   // Handle module selection change
   const handleModuleChange = (moduleId: string) => {
-    console.log('Module selection changed to:', moduleId);
+    console.log('✨ Modul dipilih oleh pengguna (selectedModuleId):', moduleId); // LOG INI
     setSelectedModuleId(moduleId || null);
   };
 
@@ -278,9 +291,10 @@ const UploadLessonForm = ({
       title: lessonTitle,
       contentBlocks: contentBlocks,
       orderInModule,
-      moduleId: selectedModuleId,
+      moduleId: selectedModuleId, // selectedModuleId saat ini
     };
 
+    console.log('➕ Pelajaran baru ditambahkan ke formData.lessons dengan moduleId:', newLesson.moduleId); // LOG INI
     setFormData((prev) => ({
       ...prev,
       lessons: [...(prev.lessons || []), newLesson],
@@ -309,11 +323,15 @@ const UploadLessonForm = ({
       toast.loading('Mengirim data ke server...', { id: 'submit-all' });
 
       let finalCourseId: string | undefined = formData.course?.id;
+      // Jika course baru (ID belum dari DB)
       if (formData.course && !formData.course.id) {
+        console.log('🚀 Mengirim Course baru:', formData.course.title); // LOG INI
         const courseRes = await axios.post(`${API_BASE_URL}/v1/courses`, formData.course);
         if (courseRes.status !== 201 && courseRes.status !== 200) throw new Error('Gagal membuat course');
         finalCourseId = courseRes.data.id;
+        // Update formData dengan ID kursus yang sebenarnya dari backend
         setFormData(prev => ({ ...prev, course: { ...prev.course!, id: finalCourseId } }));
+        console.log('✅ Course baru berhasil disubmit, ID:', finalCourseId); // LOG INI
       }
 
       if (!finalCourseId) {
@@ -321,33 +339,67 @@ const UploadLessonForm = ({
       }
 
       const submittedModuleMapping: { [tempId: string]: string } = {};
+      console.log('🔄 Memproses modul dari formData.modules untuk pemetaan ID...'); // LOG INI
       for (const mod of formData.modules) {
+        // LOG INI: Periksa ID modul yang sedang diproses
+        console.log(`   - Modul dalam iterasi: ${mod.title}, ID Awal: ${mod.id}`); 
+
         if (mod.id && mod.id.startsWith('new-module-')) {
-            const modulePayload = { ...mod, course: { id: finalCourseId } };
+            // ===============================================
+            // PERBAIKAN PENTING DI SINI untuk masalah 400 Bad Request:
+            // Kirim courseId langsung di payload modul, bukan objek course bersarang.
+            // Ini akan cocok dengan CreateModuleRequest DTO di backend.
+            // ===============================================
+            const modulePayload = {
+                title: mod.title,
+                description: mod.description,
+                orderInCourse: mod.orderInCourse,
+                courseId: finalCourseId // Kirim courseId langsung
+            };
+            console.log(`   - Mengirim Modul baru ke backend: ${mod.title}, Payload:`, modulePayload); // LOG INI
             const moduleRes = await axios.post(`${API_BASE_URL}/modules`, modulePayload);
             if (moduleRes.status !== 201 && moduleRes.status !== 200) throw new Error('Gagal menyimpan module baru ke backend');
-            submittedModuleMapping[mod.id] = moduleRes.data.id;
+            submittedModuleMapping[mod.id] = moduleRes.data.id; // Simpan pemetaan ID sementara ke ID asli
+            console.log(`   - Modul baru di-submit: Temp ID ${mod.id} -> DB ID ${moduleRes.data.id}`); // LOG INI
+        } else if (mod.id) {
+            // Modul yang sudah ada dari DB, petakan ID-nya ke dirinya sendiri
+            submittedModuleMapping[mod.id] = mod.id;
+            console.log(`   - Modul existing dipetakan: ${mod.id} -> ${mod.id}`); // LOG INI
+        } else {
+            console.warn(`⚠️ Modul tanpa ID (null/undefined) terlewat: ${mod.title}. Ini seharusnya tidak terjadi jika modul baru diberi ID sementara.`); // LOG INI
         }
       }
+      console.log('🗺️ Pemetaan Modul Selesai:', submittedModuleMapping); // LOG INI
 
+      console.log('📚 Memproses pelajaran dari formData.lessons...'); // LOG INI
       for (const lesson of formData.lessons) {
-        let actualModuleId = lesson.moduleId;
+        console.log(`   - Pelajaran dalam iterasi: ${lesson.title}, Modul ID Sementara: ${lesson.moduleId}`); // LOG INI
+        let actualModuleId = lesson.moduleId; // ID modul dari pelajaran (bisa sementara atau asli)
+        
+        // Jika lesson.moduleId adalah ID sementara (dimulai dengan 'new-module-')
         if (lesson.moduleId && lesson.moduleId.startsWith('new-module-')) {
-          actualModuleId = submittedModuleMapping[lesson.moduleId];
+          actualModuleId = submittedModuleMapping[lesson.moduleId]; // Ambil ID asli dari pemetaan
+          console.log(`   - ID Modul Sementara '${lesson.moduleId}' dipetakan ke:`, actualModuleId); // LOG INI
+
           if (!actualModuleId) {
+              // Jika ini terpanggil, berarti lesson.moduleId tidak ada di submittedModuleMapping
+              console.error(`❌ GAGAL: Module ID sementara '${lesson.moduleId}' tidak ditemukan di submittedModuleMapping! Ini menyebabkan error.`); // LOG INI KRITIS
               throw new Error(`Module ID asli untuk lesson '${lesson.title}' tidak ditemukan.`);
           }
         }
+        // Jika lesson.moduleId sudah berupa UUID asli (modul existing), actualModuleId tetap sama
 
         const lessonPayload = {
           title: lesson.title,
           contentBlocks: lesson.contentBlocks,
           orderInModule: lesson.orderInModule,
-          moduleId: actualModuleId,
+          moduleId: actualModuleId, // Gunakan ID modul yang sudah dipetakan (asli dari DB)
         };
+        console.log(`   - Mengirim Pelajaran ke backend: ${lesson.title}, Payload:`, lessonPayload); // LOG INI
 
         const lessonRes = await axios.post(`${API_BASE_URL}/v1/lessons`, [lessonPayload]);
         if (lessonRes.status !== 201 && lessonRes.status !== 200) throw new Error('Gagal membuat lesson');
+        console.log(`   - Pelajaran '${lesson.title}' berhasil di-submit dengan actualModuleId: ${actualModuleId}`); // LOG INI
       }
 
       toast.dismiss('submit-all');
@@ -366,7 +418,7 @@ const UploadLessonForm = ({
       setSelectedCourseId(null);
       setSelectedModuleId(null);
       
-      // Refresh data
+      // Refresh data course/module dari DB agar dropdown terisi data terbaru
       fetchDbCourses();
       fetchDbModules();
 
@@ -471,7 +523,7 @@ const UploadLessonForm = ({
           >
             <option value="text">Teks</option>
             <option value="video">Video URL</option>
-            <option value="image">Gambar URL/Upload</option>
+            <option value="image">Upload Gambar</option>
             <option value="script">Script Kode</option>
           </select>
         </div>
@@ -647,6 +699,8 @@ const UploadLessonForm = ({
           <h4 className="text-md font-semibold text-gray-800 mb-2">Lessons Added ({formData.lessons.length}):</h4>
           <ul className="list-disc pl-5 space-y-1 text-gray-700">
             {formData.lessons.map((lesson, index) => {
+               // Perbaiki pencarian modul dengan menggunakan Map (allAvailableModules)
+               // Pastikan allAvailableModules sudah terisi dengan benar (termasuk modul baru)
                const moduleTitle = allAvailableModules.find(mod => mod.id === lesson.moduleId)?.title || lesson.moduleId;
                return (
                 <li key={index}>

@@ -1,3 +1,4 @@
+// frontend/src/app/edit-material/lesson/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,19 +12,18 @@ import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import Button from '@/components/Button';
 
-interface Lesson {
+interface LessonListItem { // Menggunakan nama berbeda agar tidak bentrok dengan LessonData di types.ts
   id: string;
   title: string;
-  module: {
-    title: string;
-    course: {
-      title: string;
-    };
-  };
+  orderInModule: number;
+  moduleId: string;
+  moduleTitle: string; // Properti baru
+  courseId: string;    // Properti baru
+  courseTitle: string; // Properti baru
 }
 
 const EditLessonPage = () => {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessons, setLessons] = useState<LessonListItem[]>([]); // Perbarui tipe state
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(''); // State untuk search term
   const router = useRouter();
@@ -31,12 +31,13 @@ const EditLessonPage = () => {
 
   const fetchLessons = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}`);
+      const response = await fetch(`${API_BASE_URL}`); // Ini akan mengembalikan List<LessonListDTO>
       const data = await response.json();
       if (Array.isArray(data)) {
+        // Data yang diterima seharusnya sudah sesuai dengan LessonListItem
         setLessons(data);
       } else {
-        toast.error(data.message || 'Failed to fetch lessons.');
+        toast.error(data.message || 'Gagal mengambil daftar pelajaran.');
         setLessons([]);
       }
     } catch (error) {
@@ -48,22 +49,21 @@ const EditLessonPage = () => {
   };
 
   const handleDelete = async (lessonId: string) => {
-    if (window.confirm('Delete this lesson?')) {
+    if (window.confirm('Hapus pelajaran ini?')) {
       try {
         const response = await fetch(`${API_BASE_URL}/${lessonId}`, {
           method: 'DELETE',
         });
-        // Spring Boot DELETE request biasanya tidak mengembalikan JSON body sukses,
-        // hanya status 204 No Content. Perlu penanganan yang sesuai.
-        if (response.status === 204 || response.ok) { // Check for 204 No Content or generic ok
-            toast.success('Lesson deleted successfully.');
+        
+        if (response.status === 204 || response.ok) {
+            toast.success('Pelajaran berhasil dihapus.');
         } else {
-            const result = await response.json(); // Coba parse error jika ada
+            const result = await response.json();
             throw new Error(result.message);
         }
         fetchLessons();
       } catch (error: any) {
-        toast.error(error.message || 'Failed to delete lesson.');
+        toast.error(error.message || 'Gagal menghapus pelajaran.');
       }
     }
   };
@@ -75,8 +75,8 @@ const EditLessonPage = () => {
   // Filter lessons berdasarkan search term
   const filteredLessons = lessons.filter(lesson =>
     lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lesson.module?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || // Filter berdasarkan nama modul
-    lesson.module?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) // Filter berdasarkan nama course
+    lesson.moduleTitle?.toLowerCase().includes(searchTerm.toLowerCase()) || // Filter berdasarkan nama modul
+    lesson.courseTitle?.toLowerCase().includes(searchTerm.toLowerCase()) // Filter berdasarkan nama course
   );
 
   return (
@@ -98,9 +98,9 @@ const EditLessonPage = () => {
             </div>
 
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800">Edit Lessons</h1>
-              <Link href="/upload-material/"> {/* Mengarah ke halaman pilihan upload */}
-                <Button>Add New Lesson</Button>
+              <h1 className="text-3xl font-bold text-gray-800">Edit Pelajaran</h1>
+              <Link href="/upload-material/">
+                <Button>Tambah Pelajaran Baru</Button>
               </Link>
             </div>
 
@@ -109,7 +109,7 @@ const EditLessonPage = () => {
               <FiSearch className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cari Lesson berdasarkan judul, Modul, atau Course..."
+                placeholder="Cari Pelajaran berdasarkan judul, Modul, atau Kursus..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 text-gray-600 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -118,28 +118,28 @@ const EditLessonPage = () => {
 
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
               {loading ? (
-                <div className="p-6 text-center text-gray-500">Memuat daftar lesson...</div>
+                <div className="p-6 text-center text-gray-500">Memuat daftar pelajaran...</div>
               ) : filteredLessons.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
-                  {searchTerm ? `Tidak ada lesson ditemukan untuk "${searchTerm}".` : 'Tidak ada lesson ditemukan.'}
+                  {searchTerm ? `Tidak ada pelajaran ditemukan untuk "${searchTerm}".` : 'Tidak ada pelajaran ditemukan.'}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Module</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kursus</th> {/* Kolom Kursus */}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modul</th> {/* Kolom Modul */}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-100">
                       {filteredLessons.map((lesson) => (
                         <tr key={lesson.id}>
                           <td className="px-6 py-4 text-gray-700">{lesson.title}</td>
-                          <td className="px-6 py-4 text-gray-700">{lesson.module?.course?.title || '-'}</td>
-                          <td className="px-6 py-4 text-gray-700">{lesson.module?.title || '-'}</td>
+                          <td className="px-6 py-4 text-gray-700">{lesson.courseTitle || '-'}</td> {/* Gunakan properti baru */}
+                          <td className="px-6 py-4 text-gray-700">{lesson.moduleTitle || '-'}</td> {/* Gunakan properti baru */}
                           <td className="px-6 py-4 text-gray-700">
                             <div className="flex gap-4">
                               <Link href={`/edit-material/lesson/${lesson.id}`}>
@@ -151,7 +151,7 @@ const EditLessonPage = () => {
                                 onClick={() => handleDelete(lesson.id)}
                                 className="text-red-600 hover:text-red-900 flex items-center gap-1"
                               >
-                                <FaTrash /> Delete
+                                <FaTrash /> Hapus
                               </button>
                             </div>
                           </td>
