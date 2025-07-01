@@ -1,25 +1,35 @@
-# Menggunakan image OpenJDK 21 sebagai base image
+# === Stage 1: Build aplikasi Spring Boot ===
+# Menggunakan image OpenJDK yang sudah termasuk Maven
+FROM openjdk:21-jdk-slim AS builder
+
+# Set working directory di dalam container
+WORKDIR /app
+
+# Salin Maven wrapper, pom.xml, dan direktori src/
+# Ini membantu caching layer Docker: jika pom.xml tidak berubah, dependensi Maven tidak diunduh ulang
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src/ ./src/
+
+# Pastikan Maven wrapper bisa dieksekusi
+RUN chmod +x mvnw
+
+# Bangun aplikasi Spring Boot, lewati tes
+RUN ./mvnw clean install -DskipTests
+
+# === Stage 2: Buat image runtime akhir yang lebih kecil ===
+# Menggunakan image OpenJDK yang lebih kecil untuk runtime
 FROM openjdk:21-jdk-slim
 
-# Menentukan argumen BUILD_DIR dengan nilai default "target"
-# Ini adalah folder di mana Maven akan menghasilkan JAR Anda
-ARG BUILD_DIR=target
+# Set working directory di dalam container
+WORKDIR /app
 
-# Menentukan argumen JAR_FILE dengan nama JAR yang dihasilkan oleh Maven
-# Pastikan nama ini sesuai dengan nama file JAR Anda di folder target
-ARG JAR_FILE=codify-lms-0.0.1-SNAPSHOT.jar
+# Salin file JAR dari stage "builder"
+# "target/codify-lms-0.0.1-SNAPSHOT.jar" relatif terhadap WORKDIR dari stage builder (/app)
+COPY --from=builder /app/target/codify-lms-0.0.1-SNAPSHOT.jar app.jar
 
-# Menambahkan JAR aplikasi Anda ke dalam container
-# Path di sisi kiri adalah di dalam konteks build Docker (root directory Anda di Render setelah Build Command)
-# Path di sisi kanan adalah di dalam container Docker (akan menjadi /app.jar)
-COPY ${BUILD_DIR}/${JAR_FILE} app.jar
-
-# Mengekspos port yang digunakan aplikasi Spring Boot Anda (default: 8080)
-# Ini memberi tahu Docker bahwa container akan mendengarkan di port ini
+# Expose port yang digunakan aplikasi Spring Boot Anda (default adalah 8080)
 EXPOSE 8080
 
-# Menjalankan aplikasi JAR saat container Docker dimulai
-ENTRYPOINT ["java", "-jar", "/app.jar"]
-
-# Opsional: Jika Anda ingin menggunakan user non-root untuk keamanan tambahan (tidak wajib untuk deployment awal)
-# USER springboot
+# Perintah untuk menjalankan aplikasi Anda saat container dimulai
+ENTRYPOINT ["java", "-jar", "app.jar"]
