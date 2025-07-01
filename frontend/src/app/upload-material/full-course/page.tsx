@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import UploadCourseForm from '../UploadCourseForm/page'; // Perhatikan path relatif
+import UploadCourseForm from '../UploadCourseForm'; // Perhatikan path relatif
 import UploadModuleForm from '../UploadModuleForm/page'; // Perhatikan path relatif
-import UploadLessonForm from '../UploadLessonForm/page'; // Perhatikan path relatif
+import UploadLessonForm from '../UploadLessonForm'; // Perhatikan path relatif
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
 import { CourseData, ModuleData, LessonData } from '@/types';
