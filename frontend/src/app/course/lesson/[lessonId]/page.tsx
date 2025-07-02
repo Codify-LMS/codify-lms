@@ -1,3 +1,4 @@
+// frontend/src/app/course/lesson/[lessonId]/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -34,20 +35,21 @@ function LessonPage() {
   const { lessonId } = useParams() as { lessonId: string };
   const router = useRouter();
   const [lesson, setLesson] = useState<LessonData | null>(null);
-  const [setModule] = useState<ModuleData | null>(null);
+  // Corrected line: declare moduleData and its setter setModuleData
+  const [moduleData, setModuleData] = useState<ModuleData | null>(null);
   const [course, setCourse] = useState<CourseData | null>(null);
   const { user, isLoading: isLoadingUser } = useUser();
   const [loadingContent, setLoadingContent] = useState(true);
   const [answers, setAnswers] = useState<{ questionId?: string; selectedAnswerIndex: number | null; writtenAnswer: string; }[]>([]);
   const [score, setScore] = useState<number | null>(null);
   const [isPassed, setIsPassed] = useState<boolean | null>(null);
-  const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizResults, setQuizResults] = useState<QuizSubmissionResponse['answerResults'] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
-  const [ setIsTransitionLoading] = useState(false);
-  const [userAttempts, setUserAttempts] = useState<number>(0);
-  const [maxAttempts, setMaxAttempts] = useState<number>(3);
+  const [setIsTransitionLoading] = useState(false);
+  const [userAttempts, setUserAttempts] = useState(0);
+  const [maxAttempts, setMaxAttempts] = useState(3);
 
 
   const handleAnswerChange = (questionId: string, value: any, isEssay = false) => {
@@ -70,10 +72,9 @@ function LessonPage() {
         setLesson(lessonData);
 
         const moduleRes = await axios.get(`https://codify-lms-production.up.railway.app/api/modules/${lessonData.moduleId}/full`);
-        const moduleData = moduleRes.data;
-        // @ts-expect-error
-        setModule(moduleData);
-        const courseId = moduleData.courseId; 
+        const fetchedModuleData = moduleRes.data;
+        setModuleData(fetchedModuleData); // Correctly set the module data
+        const courseId = fetchedModuleData.courseId; 
         if (!courseId) return;
 
         const courseRes = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${courseId}/full`);
