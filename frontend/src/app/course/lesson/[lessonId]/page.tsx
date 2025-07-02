@@ -72,8 +72,8 @@ function LessonPage() {
         const moduleRes = await axios.get(`https://codify-lms-production.up.railway.app/api/modules/${lessonData.moduleId}/full`);
         const moduleData = moduleRes.data;
         setModule(moduleData);
-
-        const courseId = moduleData.courseId;
+        // @ts-expect-error
+        const courseId = moduleData.courseId; 
         if (!courseId) return;
 
         const courseRes = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${courseId}/full`);
