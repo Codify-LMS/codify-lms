@@ -38,7 +38,7 @@ function LessonPage() {
   const [course, setCourse] = useState<CourseData | null>(null);
   const { user, isLoading: isLoadingUser } = useUser();
   const [loadingContent, setLoadingContent] = useState(true);
-  const [answers, setAnswers] = useState<{ questionId: string; selectedAnswerIndex: number | null; writtenAnswer: string; }[]>([]);
+  const [answers, setAnswers] = useState<{ questionId?: string; selectedAnswerIndex: number | null; writtenAnswer: string; }[]>([]);
   const [score, setScore] = useState<number | null>(null);
   const [isPassed, setIsPassed] = useState<boolean | null>(null);
   const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
