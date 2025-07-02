@@ -419,7 +419,7 @@ const UploadQuizPage = () => {
             <h3 className="text-xl font-semibold text-gray-800">2. Asosiasi Quiz</h3>
             <div>
               <label htmlFor="select-course" className="block text-sm font-medium text-gray-700 mb-1">
-                Pilih Course (Opsional)
+                Pilih Course
               </label>
               <select
                 id="select-course"
@@ -439,7 +439,7 @@ const UploadQuizPage = () => {
             {selectedCourseId && (
               <div>
                 <label htmlFor="select-module" className="block text-sm font-medium text-gray-700 mb-1">
-                  Pilih Module (Opsional)
+                  Pilih Module
                 </label>
                 <select
                   id="select-module"
@@ -460,7 +460,7 @@ const UploadQuizPage = () => {
             {selectedModuleId && (
               <div>
                 <label htmlFor="select-lesson" className="block text-sm font-medium text-gray-700 mb-1">
-                  Pilih Lesson (Opsional)
+                  Pilih Lesson
                 </label>
                 <select
                   id="select-lesson"
