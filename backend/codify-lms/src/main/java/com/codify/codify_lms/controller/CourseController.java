@@ -1,34 +1,40 @@
 // backend/codify-lms/src/main/java/com/codify/codify_lms/controller/CourseController.java
 package com.codify.codify_lms.controller;
 
-import com.codify.codify_lms.model.Course;
-import com.codify.codify_lms.model.Lesson;
-import com.codify.codify_lms.model.Quiz;
-import com.codify.codify_lms.repository.CourseRepository;
-import com.codify.codify_lms.repository.ModuleRepository;
-import com.codify.codify_lms.repository.LessonRepository;
-import com.codify.codify_lms.repository.QuizRepository;
-import com.codify.codify_lms.service.CourseProgressService;
-import com.codify.codify_lms.dto.ModuleFullDto;
-import com.codify.codify_lms.dto.CourseFullDto;
-import com.codify.codify_lms.dto.CourseWithProgressDTO;
-import com.codify.codify_lms.repository.UserCourseProgressRepository; // Import ini
-import com.codify.codify_lms.model.UserCourseProgress; // Import ini
-import com.codify.codify_lms.model.Module; // Import Module
-import java.util.Optional; // Import Optional
-
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping; // Import ini
+import org.springframework.web.bind.annotation.PutMapping; // Import ini
+import org.springframework.web.bind.annotation.RequestBody; // Import Module
+import org.springframework.web.bind.annotation.RequestMapping; // Import Optional
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.codify.codify_lms.dto.CourseFullDto;
+import com.codify.codify_lms.dto.CourseWithProgressDTO;
 import com.codify.codify_lms.dto.LessonWithQuizDto;
-
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import com.codify.codify_lms.dto.ModuleFullDto;
+import com.codify.codify_lms.model.Course;
+import com.codify.codify_lms.model.Lesson;
+import com.codify.codify_lms.model.Module;
+import com.codify.codify_lms.model.Quiz;
+import com.codify.codify_lms.model.UserCourseProgress;
+import com.codify.codify_lms.repository.CourseRepository;
+import com.codify.codify_lms.repository.LessonRepository;
+import com.codify.codify_lms.repository.ModuleRepository;
+import com.codify.codify_lms.repository.QuizRepository;
+import com.codify.codify_lms.repository.UserCourseProgressRepository;
+import com.codify.codify_lms.service.CourseProgressService;
 
 @RestController
 @RequestMapping("/api/v1/courses")
@@ -58,7 +64,6 @@ public class CourseController {
 
         return courses.stream()
             .map(course -> {
-                // Ambil progress pengguna untuk kursus ini
                 Optional<UserCourseProgress> userProgressOpt = userCourseProgressRepository.findByUserIdAndCourseId(userId, course.getId());
 
                 UUID currentLessonId = null;
@@ -72,7 +77,6 @@ public class CourseController {
                     progressPercentage = progressEntity.getProgressPercentage().doubleValue();
                 }
 
-                // Hitung jumlah module, lesson, dan quiz
                 List<Module> modules = moduleRepository.findByCourseIdOrderByOrderInCourseAsc(course.getId());
                 int moduleCount = modules.size();
                 int lessonCount = 0;
@@ -87,7 +91,6 @@ public class CourseController {
                     }
                 }
 
-                // Jika currentLessonId null (misal kursus baru belum diakses), coba temukan pelajaran pertama
                 if (currentLessonId == null && course.getId() != null) {
                     Optional<Module> firstModuleOpt = moduleRepository.findFirstByCourseIdOrderByOrderInCourseAsc(course.getId());
                     if (firstModuleOpt.isPresent()) {
@@ -100,22 +103,23 @@ public class CourseController {
                     }
                 }
 
-
                 return new CourseWithProgressDTO(
                     course.getId(),
                     course.getTitle(),
+                    course.getDescription(), 
                     course.getThumbnailUrl(),
                     course.isPublished(),
-                    progressPercentage, // Gunakan progress yang sudah diambil
+                    progressPercentage,
                     moduleCount,
                     lessonCount,
                     quizCount,
-                    currentLessonId, // Sertakan currentLessonId
-                    currentModuleId  // Sertakan currentModuleId
+                    currentLessonId,
+                    currentModuleId
                 );
             })
             .collect(Collectors.toList());
     }
+
 
 
     @PostMapping
