@@ -64,10 +64,12 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
       <div className="w-64 flex-shrink-0">
-        <Sidebar>
-      
+        <Sidebar />
+      </div>
 
+      {/* Main Content */}
       <div className="flex flex-col flex-1 h-full overflow-hidden">
         <DashboardHeader />
         <main className="flex-1 bg-white p-6 overflow-y-auto">
@@ -89,9 +91,7 @@ export default function LeaderboardPage() {
               <div className="p-6 text-center text-gray-500">Loading remaining users...</div>
             ) : remainingUsersForTable.length === 0 ? (
               <div className="grid grid-cols-1 items-center px-6 py-4 text-sm text-center text-gray-500">
-                <div>
-                  No more users found beyond the top 3. Try participating in quizzes to rank up!
-                </div>
+                <div>No more users found beyond the top 3. Try participating in quizzes to rank up!</div>
               </div>
             ) : (
               remainingUsersForTable.map((user, idx) => (
@@ -113,27 +113,26 @@ export default function LeaderboardPage() {
                   <div className="text-gray-700">{user.point.toLocaleString()}</div>
 
                   <div className="flex justify-start items-center">
-                      {user.reward === 'Gold' && (
-                        <span className="bg-yellow-400 text-white text-xs px-3 py-1 rounded-full">🥇 Gold</span>
-                      )}
-                      {user.reward === 'Silver' && (
-                        <span className="bg-gray-400 text-white text-xs px-3 py-1 rounded-full">🥈 Silver</span>
-                      )}
-                      {user.reward === 'Bronze' && (
-                        <span className="bg-orange-400 text-white text-xs px-3 py-1 rounded-full">🥉 Bronze</span>
-                      )}
-                      {user.reward === 'N/A' && (
-                        <span className="text-gray-500 text-xs">No reward</span>
-                      )}
-                    </div>
+                    {user.reward === 'Gold' && (
+                      <span className="bg-yellow-400 text-white text-xs px-3 py-1 rounded-full">🥇 Gold</span>
+                    )}
+                    {user.reward === 'Silver' && (
+                      <span className="bg-gray-400 text-white text-xs px-3 py-1 rounded-full">🥈 Silver</span>
+                    )}
+                    {user.reward === 'Bronze' && (
+                      <span className="bg-orange-400 text-white text-xs px-3 py-1 rounded-full">🥉 Bronze</span>
+                    )}
+                    {user.reward === 'N/A' && (
+                      <span className="text-gray-500 text-xs">No reward</span>
+                    )}
+                  </div>
                 </div>
               ))
             )}
           </div>
         </main>
       </div>
-      </Sidebar>
-      </div>
     </div>
   );
+
 }
