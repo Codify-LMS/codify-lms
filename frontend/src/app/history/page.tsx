@@ -7,9 +7,9 @@ import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
 
 interface HistoryItem {
-  lastAccessedLessonId: string | null; // Pastikan ini sesuai dengan nama dari backend (LearningHistoryDTO)
-  lastAccessedModuleId: string | null; // Tambahkan ini jika Anda ingin menggunakannya di masa depan
-  courseId: string; // Tambahkan ini jika Anda ingin menggunakannya untuk fallback ke halaman kursus
+  lastAccessedLessonId: string | null;
+  lastAccessedModuleId: string | null;
+  courseId: string;
   courseName: string;
   progress: string;
   lastAccessed: string;
@@ -21,7 +21,7 @@ export default function HistoryPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
 
-  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api';
+  const API_BASE_URL = 'http://localhost:8080/api';
 
   const fetchHistoryData = async (userId: string) => {
     try {
@@ -38,14 +38,13 @@ export default function HistoryPage() {
       }
 
       const data = await response.json();
-      console.log('✅ History Data:', data); // Debugging log
+      console.log('✅ History Data:', data);
 
       if (Array.isArray(data)) {
-        // Penting: Pastikan properti yang diterima dari backend sesuai dengan HistoryItem
         const mappedData: HistoryItem[] = data.map((item: any) => ({
-          lastAccessedLessonId: item.lastAccessedLessonId, // Pastikan nama properti ini benar dari backend
-          lastAccessedModuleId: item.lastAccessedModuleId, // Pastikan nama properti ini benar dari backend
-          courseId: item.courseId, // Pastikan nama properti ini benar dari backend
+          lastAccessedLessonId: item.lastAccessedLessonId,
+          lastAccessedModuleId: item.lastAccessedModuleId,
+          courseId: item.courseId,
           courseName: item.courseName,
           progress: item.progress,
           lastAccessed: item.lastAccessed,
@@ -73,20 +72,13 @@ export default function HistoryPage() {
     }
   }, [user, isUserLoading]);
 
-  // Fungsi ini sekarang akan dipanggil oleh tombol, bukan oleh baris
   const handleContinueButtonClick = (item: HistoryItem) => {
     if (item.lastAccessedLessonId) {
       console.log('➡ Navigasi ke pelajaran terakhir diakses:', item.lastAccessedLessonId);
       router.push(`/course/lesson/${item.lastAccessedLessonId}`);
     } else if (item.courseId) {
-      // Fallback jika tidak ada pelajaran terakhir yang diakses, arahkan ke halaman detail kursus atau pelajaran pertama
       toast.error('Tidak ada pelajaran terakhir yang diakses. Membuka kursus dari awal.');
-      // Anda bisa mengarahkan ke halaman overview kursus atau modul/pelajaran pertama kursus
-      // Contoh: router.push(`/course/${item.courseId}`);
-      // Untuk saat ini, kita akan tetap di halaman history atau bisa arahkan ke halaman utama kursus jika ada
       console.log('⚠ Tidak ada ID pelajaran ditemukan untuk kursus:', item.courseName);
-      // Jika Anda ingin mengarahkan ke halaman daftar kursus atau halaman utama kursus:
-      // router.push('/courses'); // Sesuaikan dengan route daftar kursus Anda
     } else {
       toast.error('Tidak ada informasi navigasi yang tersedia untuk kursus ini.');
     }
@@ -95,8 +87,6 @@ export default function HistoryPage() {
   const getContinueButtonText = (progress: string) => {
     if (progress.includes('100%')) {
       return 'Review';
-    } else if (progress.includes('0%') || progress === 'Thers is no progress available') {
-      return 'Start';
     } else {
       return 'Continue';
     }
@@ -112,19 +102,24 @@ export default function HistoryPage() {
     }
   };
 
+  // Function to check if progress is 0% or no progress
+  const shouldShowButton = (progress: string) => {
+    return !(progress === '0% Completed' || progress.startsWith('0%') || progress === 'Thers is no progress available' || progress === 'Progres tidak tersedia');
+  };
+
   return (
     <Sidebar>
       <DashboardHeader />
       <div className="p-6 w-full">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Riwayat Pembelajaran</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Learning History</h1>
         <div className="overflow-x-auto">
           {loading ? (
             <div className="p-6 text-center text-gray-500">
-              Memuat riwayat pembelajaran...
+              Loading learning history...
             </div>
           ) : historyData.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              Tidak ada riwayat pembelajaran ditemukan. Mulai kursus untuk melihat progres Anda di sini!
+              No learning history found. Start a course to see your progress here!
             </div>
           ) : (
             <div className="space-y-4">
@@ -144,62 +139,73 @@ export default function HistoryPage() {
                       </span>
                     </div>
                     <p className="text-gray-600 text-sm mb-3">
-                      Terakhir diakses: {item.lastAccessed}
+                      Last accessed: {item.lastAccessed}
                     </p>
-                    <button
-                      onClick={() => handleContinueButtonClick(item)} // Dipanggil oleh tombol
-                      disabled={!item.lastAccessedLessonId && !item.courseId} // Nonaktifkan jika tidak ada ID pelajaran atau ID kursus
-                      className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition ${
-                        (item.lastAccessedLessonId || item.courseId)
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {item.lastAccessedLessonId || item.courseId ? getContinueButtonText(item.progress) : 'Tidak Ada Aksi'}
-                    </button>
+                    {shouldShowButton(item.progress) && (
+                      <button
+                        onClick={() => handleContinueButtonClick(item)}
+                        disabled={!item.lastAccessedLessonId && !item.courseId}
+                        className={`w-full py-2 px-4 rounded-lg font-medium text-sm transition ${
+                          (item.lastAccessedLessonId || item.courseId)
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {getContinueButtonText(item.progress)}
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Tampilan Desktop/Tabel */}
               <div className="hidden md:block">
-                <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-md">
-                  <thead className="bg-gray-100 text-gray-700">
+                <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-md table-fixed">
+                  <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-6 py-3 text-left">Nama Kursus</th>
-                      <th className="px-6 py-3 text-left">Progres</th>
-                      <th className="px-6 py-3 text-left">Terakhir Diakses</th>
-                      <th className="px-6 py-3 text-center">Aksi</th> {/* Kolom baru untuk tombol */}
+                      <th className="w-2/5 px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        Course Name
+                      </th>
+                      <th className="w-1/5 px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        Progress
+                      </th>
+                      <th className="w-1/5 px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        Last Accessed
+                      </th>
+                      <th className="w-1/5 px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {historyData.map((item, index) => (
                       <tr
                         key={index}
-                        // onClick={() => handleRowClick(item)} // Hapus onClick dari <tr>
-                        className="hover:bg-gray-50 transition" // Biarkan hover untuk visual, tapi tidak ada klik baris
+                        className="hover:bg-gray-50 transition"
                       >
-                        <td className="px-6 py-4 font-medium text-gray-900">
+                        <td className="w-2/5 px-6 py-4 text-sm font-medium text-gray-900 truncate">
                           {item.courseName}
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getProgressColor(item.progress)}`}>
+                        <td className="w-1/5 px-6 py-4 text-center">
+                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getProgressColor(item.progress)}`}>
                             {item.progress}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-gray-700">{item.lastAccessed}</td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleContinueButtonClick(item)} // Dipanggil oleh tombol
-                            disabled={!item.lastAccessedLessonId && !item.courseId} // Nonaktifkan jika tidak ada ID pelajaran atau ID kursus
-                            className={`py-2 px-4 rounded-lg font-medium text-sm transition ${
-                              (item.lastAccessedLessonId || item.courseId)
-                                ? 'bg-blue-500 text-white hover:bg-blue-700'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                          >
-                            {item.lastAccessedLessonId || item.courseId ? getContinueButtonText(item.progress) : 'Tidak Ada Aksi'}
-                          </button>
+                        <td className="w-1/5 px-6 py-4 text-center text-sm text-gray-700">
+                          {item.lastAccessed}
+                        </td>
+                        <td className="w-1/5 px-6 py-4 text-center">
+                          {shouldShowButton(item.progress) ? (
+                            <button
+                              onClick={() => handleContinueButtonClick(item)}
+                              disabled={!item.lastAccessedLessonId && !item.courseId}
+                              className="inline-flex items-center justify-center w-24 py-2 px-4 rounded-lg text-sm font-medium transition bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                            >
+                              {getContinueButtonText(item.progress)}
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
                         </td>
                       </tr>
                     ))}
