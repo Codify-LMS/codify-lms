@@ -1,3 +1,5 @@
+// frontend/src/app/upload-material/standalone-module/page.tsx
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -60,11 +62,12 @@ const UploadStandaloneModulePage = () => {
     setIsSubmitting(true);
 
     try {
+      // 🐛 PERBAIKAN DI SINI: Kirim courseId langsung, bukan objek course bersarang.
       const modulePayload = {
         title,
         description,
         orderInCourse,
-        course: { id: selectedCourseId }, // Kaitkan modul dengan course yang dipilih
+        courseId: selectedCourseId, // Kirim courseId langsung
       };
 
       const response = await axios.post(`${API_BASE_URL}/modules`, modulePayload);
@@ -200,7 +203,7 @@ const UploadStandaloneModulePage = () => {
                   <Button
                     type="submit"
                     disabled={isSubmitting || !selectedCourseId || loading}
-                    className="flex items-center justify-center gap-2 w-full sm:w-auto" // Tambahkan 'flex items-center justify-center gap-2'
+                    className="flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
                     <FiUpload /> {isSubmitting ? 'Mengunggah...' : 'Unggah Modul'}
                     </Button>
