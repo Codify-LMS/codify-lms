@@ -47,7 +47,7 @@ function LessonPage() {
   const [quizResults, setQuizResults] = useState<QuizSubmissionResponse['answerResults'] | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showCompleteAnimation, setShowCompleteAnimation] = useState(false);
-  const [setIsTransitionLoading] = useState(false);
+  const [isTransitionLoading, setIsTransitionLoading] = useState(false);
   const [userAttempts, setUserAttempts] = useState(0);
   const [maxAttempts, setMaxAttempts] = useState(3);
 
