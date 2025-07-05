@@ -1,4 +1,3 @@
-// frontend/src/app/course/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,7 +7,8 @@ import Sidebar from '@/components/Sidebar';
 import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useUser } from '@/hooks/useUser';
 import { Search } from 'lucide-react';
-import CourseCard from '@/components/CourseCard'; // Import komponen baru
+import CourseCard from '@/components/CourseCard';
+import Image from 'next/image'; // Import Image for mascot
 
 interface Course {
   id: string;
@@ -20,8 +20,8 @@ interface Course {
   moduleCount: number;
   lessonCount: number;
   quizCount: number;
-  currentLessonId?: string; // Tambahkan ini
-  currentModuleId?: string;  // Tambahkan ini
+  currentLessonId?: string;
+  currentModuleId?: string;
 }
 
 export default function CourseListPage() {
@@ -31,11 +31,15 @@ export default function CourseListPage() {
   const { user } = useUser();
   const router = useRouter();
 
+  // --- State Baru untuk Modal ---
+  const [showCourseModal, setShowCourseModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  // --- Akhir State Baru ---
+
   useEffect(() => {
     const fetchCourses = async () => {
       if (!user?.id) return;
       try {
-        // Endpoint ini sekarang akan mengembalikan currentLessonId dan currentModuleId
         const res = await axios.get<Course[]>(`https://codify-lms-production.up.railway.app/api/v1/courses/all-with-progress?userId=${user.id}`);
         setCourses(res.data);
       } catch (err) {
@@ -57,16 +61,28 @@ export default function CourseListPage() {
     fetchBookmarks();
   }, [user?.id]);
 
-  // Modifikasi fungsi handleCourseClick
-  const handleCourseClick = async (course: Course) => { // Terima objek course lengkap
-    if (course.currentLessonId) {
-      // Jika ada currentLessonId, langsung navigasi ke sana
-      router.push(`/course/lesson/${course.currentLessonId}`);
+  // Modifikasi fungsi handleCourseClick: sekarang akan membuka modal
+  const handleCourseClick = (course: Course) => { // Terima objek course lengkap
+    setSelectedCourse(course); // Set kursus yang dipilih
+    setShowCourseModal(true); // Tampilkan modal
+  };
+
+  // --- Fungsi baru untuk navigasi dari modal setelah melihat detail ---
+  const startCourseFromModal = async () => {
+    if (!selectedCourse) return;
+
+    const courseToStart = selectedCourse;
+    setShowCourseModal(false); // Tutup modal sebelum navigasi
+    setSelectedCourse(null); // Reset selected course
+
+    // Jika ada currentLessonId, langsung navigasi ke sana
+    if (courseToStart.currentLessonId) {
+      router.push(`/course/lesson/${courseToStart.currentLessonId}`);
     } else {
       // Fallback: Jika tidak ada currentLessonId (misalnya, kursus baru belum dimulai),
       // maka ambil data kursus lengkap untuk menemukan pelajaran pertama.
       try {
-        const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${course.id}/full`);
+        const res = await axios.get(`https://codify-lms-production.up.railway.app/api/v1/courses/${courseToStart.id}/full`);
         const courseData = res.data;
         const firstLessonId = courseData.modules?.[0]?.lessons?.[0]?.id;
 
@@ -143,6 +159,112 @@ export default function CourseListPage() {
           )}
         </div>
       </Sidebar>
+
+      {/* --- Modal Penjelasan Kursus Baru --- */}
+        {showCourseModal && selectedCourse && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl p-10 w-full max-w-5xl max-h-[600px] overflow-y-auto relative">
+              {/* Tombol Close */}
+              <button
+                onClick={() => setShowCourseModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                &times;
+              </button>
+
+              {/* Welcome Heading */}
+              <h1 className="text-3xl font-bold text-center mb-10 text-transparent bg-clip-text bg-gradient-to-r from-[#7A4FD6] via-[#6B62D9] to-[#2BAEF4]">
+                Welcome to Codify Academy!
+              </h1>
+
+              {/* Thumbnail + Info */}
+              <div className="flex flex-col md:flex-row items-center  gap-8 mb-10">
+                {/* Thumbnail */}
+                <div className="w-64 h-40 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-500 shadow-inner">
+                  <img
+                    src={selectedCourse.thumbnailUrl || '/default-thumbnail.jpg'}
+                    alt="thumbnail"
+                    className="w-full h-full object-cover rounded-md"
+                  />
+                </div>
+
+                {/* Title + Deskripsi */}
+                <div className="text-center md:text-left">
+                  <h2 className="text-2xl text-gray-900 font-bold mb-1">{selectedCourse.title}</h2>
+                  <p className="text-sm text-gray-600 mb-3">{selectedCourse.description || '[No description]'}</p>
+                  <div className="flex justify-center md:justify-start gap-4 text-sm text-gray-500">
+                    <span>📚 {selectedCourse.moduleCount} Modules</span>
+                    <span>📖 {selectedCourse.lessonCount} Lessons</span>
+                    <span>🧠 {selectedCourse.quizCount} Quizzes</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Maskot Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+                {/* Cora */}
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 relative">
+                    <Image src="/cora.svg" alt="Cora" fill className="object-contain" />
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm text-gray-800 font-semibold">
+                      Hello! I’m <span className="text-blue-600">Cora</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      “Let’s explore and complete the <strong>interactive courses</strong> in Codify!”
+                    </p>
+                    <button
+                      onClick={startCourseFromModal}
+                      className="mt-3 bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800 transition text-sm w-fit"
+                    >
+                      Start Learning
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quizzel */}
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 relative">
+                    <Image src="/quizzel.svg" alt="Quizzel" fill className="object-contain" />
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm text-gray-800 font-semibold">
+                      Hi! I’m <span className="text-yellow-500">Quizzel</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      “Go try our <strong>question bank</strong> and see how far you’ve come!”
+                    </p>
+                    <button
+                      onClick={() => router.push('/question-bank')}
+                      className="mt-3 bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800 transition text-sm w-fit"
+                    >
+                      Practice Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tombol Aksi */}
+              <div className="mt-10 flex justify-end gap-3">
+                {/* <button
+                  onClick={() => setShowCourseModal(false)}
+                  className="px-5 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                >
+                  Tutup
+                </button> */}
+                <button
+                  onClick={startCourseFromModal}
+                  className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                >
+                  Mulai Belajar Sekarang!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* --- Akhir Modal --- */}
     </div>
   );
 }

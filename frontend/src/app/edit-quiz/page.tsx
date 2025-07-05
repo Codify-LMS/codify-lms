@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { FiSearch } from 'react-icons/fi'; // Import FiSearch for the search icon
 
 import SidebarAdmin from '@/app/dashboard/admin/components/SidebarAdmin';
 import DashboardHeader from '@/app/dashboard/components/DashboardHeader';
@@ -12,7 +13,7 @@ import Button from '@/components/Button';
 interface Quiz {
   id: string;
   title: string;
-  description: string;
+  description: string; // Add description to filter by it
   type: string;
   maxAttempts: number;
   passScore: number;
@@ -21,6 +22,7 @@ interface Quiz {
 const QuizListPage = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(''); // State for the search term
   const router = useRouter();
 
   useEffect(() => {
@@ -39,7 +41,6 @@ const QuizListPage = () => {
     fetchQuizzes();
   }, []);
 
-
   const handleDelete = async (quizId: string) => {
     const confirmed = confirm('Are you sure you want to delete this quiz?');
     if (!confirmed) return;
@@ -53,6 +54,13 @@ const QuizListPage = () => {
       toast.error('Failed to delete quiz');
     }
   };
+
+  // Filter quizzes based on the search term
+  const filteredQuizzes = quizzes.filter(quiz =>
+    quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    quiz.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    quiz.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex w-full h-screen bg-gray-50">
@@ -68,10 +76,24 @@ const QuizListPage = () => {
                 </Button>
               </div>
 
+              {/* Search Bar */}
+              <div className="relative w-full max-w-md mb-6">
+                <FiSearch className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cari Quiz berdasarkan judul, deskripsi, atau tipe..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 text-gray-600 w-full border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
               {loading ? (
                 <p className="text-gray-600 text-sm">Loading quizzes...</p>
-              ) : quizzes.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center">No quizzes found.</p>
+              ) : filteredQuizzes.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  {searchTerm ? `Tidak ada quiz ditemukan untuk "${searchTerm}".` : 'Tidak ada quiz ditemukan.'}
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full border divide-y divide-gray-200">
@@ -85,7 +107,7 @@ const QuizListPage = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
-                      {quizzes.map((quiz) => (
+                      {filteredQuizzes.map((quiz) => (
                         <tr key={quiz.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-gray-800">{quiz.title}</td>
                           <td className="px-4 py-3 text-gray-700">{quiz.type}</td>

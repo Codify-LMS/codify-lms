@@ -1,4 +1,3 @@
-// backend/codify-lms/src/main/java/com/codify/codify_lms/dto/CourseWithProgressDTO.java
 package com.codify.codify_lms.dto;
 
 import java.util.UUID;
@@ -6,50 +5,67 @@ import java.util.UUID;
 public class CourseWithProgressDTO {
     private UUID id;
     private String title;
+    private String description; // ✅ Field baru
     private String thumbnailUrl;
     private boolean isPublished;
-    private Double progressPercentage; // nilai 0 - 100
+    private Double progressPercentage;
 
     private int moduleCount;
     private int lessonCount;
     private int quizCount;
 
-    private UUID currentLessonId; // Tambahkan ini
-    private UUID currentModuleId; // Tambahkan ini
+    private UUID currentLessonId;
+    private UUID currentModuleId;
 
     public CourseWithProgressDTO() {}
 
-    // Perbarui konstruktor jika Anda menggunakan konstruktor ini
-    public CourseWithProgressDTO(UUID id, String title, String thumbnailUrl, boolean isPublished, Double progressPercentage) {
+    // ✅ Constructor minimal
+    public CourseWithProgressDTO(UUID id, String title, String description, String thumbnailUrl, boolean isPublished, Double progressPercentage) {
         this.id = id;
         this.title = title;
+        this.description = description;
         this.thumbnailUrl = thumbnailUrl;
         this.isPublished = isPublished;
         this.progressPercentage = progressPercentage;
     }
 
-    // Perbarui konstruktor lengkap untuk menyertakan field baru
-    public CourseWithProgressDTO(UUID id, String title, String thumbnailUrl, boolean isPublished,
-                                 Double progressPercentage, int moduleCount, int lessonCount, int quizCount,
-                                 UUID currentLessonId, UUID currentModuleId) { // Tambahkan field baru di parameter
+    // ✅ Constructor lengkap
+    public CourseWithProgressDTO(
+        UUID id,
+        String title,
+        String description,
+        String thumbnailUrl,
+        boolean isPublished,
+        Double progressPercentage,
+        int moduleCount,
+        int lessonCount,
+        int quizCount,
+        UUID currentLessonId,
+        UUID currentModuleId
+    ) {
         this.id = id;
         this.title = title;
+        this.description = description;
         this.thumbnailUrl = thumbnailUrl;
         this.isPublished = isPublished;
         this.progressPercentage = progressPercentage;
         this.moduleCount = moduleCount;
         this.lessonCount = lessonCount;
         this.quizCount = quizCount;
-        this.currentLessonId = currentLessonId; // Inisialisasi field baru
-        this.currentModuleId = currentModuleId; // Inisialisasi field baru
+        this.currentLessonId = currentLessonId;
+        this.currentModuleId = currentModuleId;
     }
 
-    // Getters and Setters (pastikan getter dan setter untuk field baru ada)
+    // ✅ Getters & Setters
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; } // ✅ Getter baru
+    public void setDescription(String description) { this.description = description; } // ✅ Setter baru
 
     public String getThumbnailUrl() { return thumbnailUrl; }
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
@@ -69,9 +85,9 @@ public class CourseWithProgressDTO {
     public int getQuizCount() { return quizCount; }
     public void setQuizCount(int quizCount) { this.quizCount = quizCount; }
 
-    public UUID getCurrentLessonId() { return currentLessonId; } // Getter baru
-    public void setCurrentLessonId(UUID currentLessonId) { this.currentLessonId = currentLessonId; } // Setter baru
+    public UUID getCurrentLessonId() { return currentLessonId; }
+    public void setCurrentLessonId(UUID currentLessonId) { this.currentLessonId = currentLessonId; }
 
-    public UUID getCurrentModuleId() { return currentModuleId; } // Getter baru
-    public void setCurrentModuleId(UUID currentModuleId) { this.currentModuleId = currentModuleId; } // Setter baru
+    public UUID getCurrentModuleId() { return currentModuleId; }
+    public void setCurrentModuleId(UUID currentModuleId) { this.currentModuleId = currentModuleId; }
 }

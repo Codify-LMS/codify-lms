@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import SidebarCourse from '../../components/SidebarCourse';
@@ -50,7 +51,6 @@ function LessonPage() {
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
   const [userAttempts, setUserAttempts] = useState(0);
   const [maxAttempts, setMaxAttempts] = useState(3);
-
 
   const handleAnswerChange = (questionId: string, value: any, isEssay = false) => {
     if (quizSubmitted) return;
