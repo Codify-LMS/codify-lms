@@ -4,6 +4,23 @@
 
 ---
 
+👥 Team Members
+This project was developed by an awesome team of Information Systems students from UIN Syarif Hidayatullah Jakarta:
+
+Sarah Fajriah Rahmah – Frontend Developer and Backend Developer
+🔗 nupers.site
+
+‘Aisyah Syifa Nur Azzahra – Frontend Developer and UI/UX Designer
+📱 @Syiffanzh
+
+Alysa Rismaira – Backend Developer and UI/UX Developer
+📱 @Alysasyl
+
+Dio Rendra Rinanto – Frontend Developer & QA
+📱 @diorndraa
+
+---
+
 ## 🚀 Features
 
 - 📚 **Learning Materials**: Structured into Course → Module → Lesson
