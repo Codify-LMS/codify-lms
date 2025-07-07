@@ -21,7 +21,7 @@ export default function HistoryPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
 
-  const API_BASE_URL = 'http://localhost:8080/api';
+  const API_BASE_URL = 'https://codify-lms-production.up.railway.app/api';
 
   const fetchHistoryData = async (userId: string) => {
     try {

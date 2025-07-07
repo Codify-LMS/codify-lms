@@ -482,7 +482,7 @@ function LessonPage() {
           )}
 
           {showModal && (
-            <div className="fixed inset-0 bg-gradient-to-br from-indigo-300 via-purple-300 to-pink-300 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                 <h3 className="text-xl font-bold mb-2 text-gray-800">Selesaikan Course</h3>
                 <p className="mb-4 text-gray-600">Apakah kamu yakin ingin menyelesaikan course ini?</p>
@@ -499,7 +499,7 @@ function LessonPage() {
           )}
 
           {showCompleteAnimation && (
-            <div className="fixed inset-0 bg-gradient-to-br from-indigo-300 via-purple-300 to-pink-300 bg-opacity-60 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-lg">
                 <Lottie animationData={celebrateAnimation} loop={false} className="w-48 h-48 mx-auto" />
                 <h2 className="text-2xl font-bold text-green-700 mt-4">Selamat! 🎉</h2>
