@@ -43,7 +43,7 @@ export default function PublicProfilePage() {
 
   const getRewardBadge = (points: number) => {
     if (points >= 1000) {
-      return { label: '🏆 Master', color: 'bg-purple-100 text-purple-700' };
+      return { label: '🏆 Raja Iblis 👿', color: 'bg-purple-100 text-purple-700' };
     } else if (points >= 500) {
       return { label: '🥇 Gold', color: 'bg-yellow-100 text-yellow-700' };
     } else if (points >= 300) {

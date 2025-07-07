@@ -13,21 +13,21 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.codify.codify_lms.repository.ModuleRepository; // Impor ini
-import com.codify.codify_lms.repository.LessonRepository; // Impor ini
-import com.codify.codify_lms.repository.UserLessonsCompletionRepository; // Impor ini
+import com.codify.codify_lms.repository.ModuleRepository; 
+import com.codify.codify_lms.repository.LessonRepository; 
+import com.codify.codify_lms.repository.UserLessonsCompletionRepository; 
 
 @Service
 public class CourseProgressService {
 
     private final UserCourseProgressRepository userCourseProgressRepository;
     private final JdbcTemplate jdbcTemplate;
-    private final ModuleRepository moduleRepository; // Suntikkan ini
-    private final LessonRepository lessonRepository; // Suntikkan ini
-    private final UserLessonsCompletionRepository userLessonsCompletionRepository; // Suntikkan ini
+    private final ModuleRepository moduleRepository; 
+    private final LessonRepository lessonRepository; 
+    private final UserLessonsCompletionRepository userLessonsCompletionRepository; 
 
 
-    @Autowired // Perbarui konstruktor untuk menyuntikkan repository baru
+    @Autowired
     public CourseProgressService(UserCourseProgressRepository userCourseProgressRepository,
                                  JdbcTemplate jdbcTemplate,
                                  ModuleRepository moduleRepository,
@@ -46,10 +46,8 @@ public class CourseProgressService {
         UUID moduleId = getModuleIdFromLesson(lessonId);
 
         int completedLessons = getCompletedLessonsCount(userId, courseId);
-        // Pastikan kita hanya menambahkan hitungan jika pelajaran ini belum selesai sebelumnya
         if (!userLessonsCompletionRepository.existsByUserIdAndLessonId(userId, lessonId)) {
             completedLessons++;
-            // Juga, masukkan entri di user_lessons_completion jika belum ada
             jdbcTemplate.update(
                 "INSERT INTO user_lessons_completion (id, user_id, lesson_id, completed_at) " +
                 "VALUES (?, ?, ?, NOW()) ON CONFLICT (user_id, lesson_id) DO NOTHING",
@@ -71,7 +69,6 @@ public class CourseProgressService {
             return p;
         });
 
-        // Set atau perbarui pelajaran dan modul terkini yang diakses
         progressEntity.setCurrentModuleId(moduleId);
         progressEntity.setCurrentLessonId(lessonId);
 
@@ -121,7 +118,6 @@ public class CourseProgressService {
         userCourseProgressRepository.save(progress);
     }
 
-    // ... (metode helper lainnya, pastikan tidak ada duplikasi kode dari QuizSubmissionController)
 
     private UUID getCourseIdFromLesson(UUID lessonId) {
         String sql = """
